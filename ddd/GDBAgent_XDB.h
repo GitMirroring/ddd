@@ -67,4 +67,7 @@ public:
         { return GDBAgent_XDB_settings; }
     string prompt_start() override { return "("; }
     void parse_break_info (BreakPoint *bp, string &info) override;
+    void restore_breakpoint_command (std::ostream& os, BreakPoint *bp,
+                                     string pos, string num, string cond,
+                                     bool as_dummy) override;
 };

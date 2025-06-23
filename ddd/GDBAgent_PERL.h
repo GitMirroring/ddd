@@ -59,4 +59,7 @@ public:
                               bool &strip_qualifiers) override;
     void clean_history_line (string &line) override;
     void parse_break_info (BreakPoint *bp, string &info) override;
+    void restore_breakpoint_command (std::ostream& os, BreakPoint *bp,
+                                     string pos, string num, string cond,
+                                     bool as_dummy) override;
 };

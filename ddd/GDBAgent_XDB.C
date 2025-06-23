@@ -235,3 +235,33 @@ void GDBAgent_XDB::parse_break_info (BreakPoint *bp, string &info)
     // Actual parsing code is in BreakPoint
     bp->process_xdb (info);
 }
+
+// Command to restore breakpoint
+// Return commands to restore this breakpoint, using the dummy number
+// NR.  If AS_DUMMY is set, delete the breakpoint immediately in order
+// to increase the breakpoint number.  If ADDR is set, use ADDR as
+// (fake) address.  If COND is set, use COND as (fake) condition.
+// Return true iff successful.
+void GDBAgent_XDB::restore_breakpoint_command (std::ostream& os, 
+                        BreakPoint *bp, string pos, string num,
+                        string cond, bool as_dummy)
+{
+    string cond_suffix;
+    if (!cond.empty() && !has_condition_command())
+        cond_suffix = " {if " + cond + " {} {Q;c}}";
+
+    if (pos.contains('*', 0))
+        os << "ba " << pos.after('*') << cond_suffix << '\n';
+    else
+	os << "b " << pos << cond_suffix << "\n";
+
+    if (!as_dummy)
+    {
+        // Extra infos
+        if (!bp->enabled() && has_disable_command())
+            os << disable_command(num) << "\n";
+	int ignore = bp->ignore_count();
+	if (ignore > 0 && has_ignore_command())
+	    os << ignore_command(num, ignore) << "\n";
+    }
+}

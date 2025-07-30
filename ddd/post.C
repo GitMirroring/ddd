@@ -284,7 +284,7 @@ static void GDBOutCB(XtPointer client_data, XtIntervalId *)
     PostInfo *info = (PostInfo *)client_data;
     if (!info->text.empty())
     {
-	gdb_out("\r" + info->text + "\n");
+	gdb_out(info->text + "\n");
 	if (info->prompt)
 	    prompt();
     }

@@ -2431,8 +2431,8 @@ DispNode *DataDisp::selected_node()
 DispValue *DataDisp::selected_value()
 {
     DispNode *dn = selected_node();
-    if (dn == 0)
-	return 0;
+    if (dn == nullptr)
+	return nullptr;
     if (is_cluster(dn))
 	return dn->value();
 
@@ -3928,16 +3928,20 @@ DispNode *DataDisp::new_data_node(const string& given_name,
 
     if (plotted && (dn->value() == 0 || dn->value()->can_plot() == false))
     {
-	post_gdb_message("Nothing to plot.", true, last_origin);
-
 	if (gdb->has_display_command())
 	{
 	    gdb_command("undisplay " + itostring(dn->disp_nr()), 
 			last_origin, OQCProc(0));
 	}
 
+        // retry plotting with dereferenced pointer
+        if (dn->value()!=nullptr && dn->value()->type()==Pointer)
+            new_display("*"+given_name, 0, "", false, true, nullptr);
+	else
+	    post_gdb_message("Nothing to plot.", true, last_origin);
+
 	delete dn;
-	return 0;
+	return nullptr;
     }
 
     if (disabling_occurred)
@@ -6901,7 +6905,7 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     DispBox::vsllib_base_defs = app_data.vsl_base_defs;
     DispBox::vsllib_defs      = app_data.vsl_defs;
 
-    string ddd_themes_dir = resolvePath("themes/", true);
+    string ddd_themes_dir = resolvePath("themes/", false);
     string path = ":" + string(app_data.vsl_path) + ":";
     path.gsub(":user_themes:", ":" + session_themes_dir() + ":");
     path.gsub(":" ddd_NAME "_themes:", ":" + ddd_themes_dir + ":");

@@ -87,48 +87,48 @@ void gdbRedoCB(Widget, XtPointer, XtPointer)
 // Printing
 //-----------------------------------------------------------------------------
 
-void gdbPrintCB(Widget w, XtPointer client_data, XtPointer)
+void gdbPrintCB(Widget, XtPointer client_data, XtPointer)
 {
     const bool internal = (bool)(long)client_data;
 
     const string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command(gdb->print_command(arg, internal), w);
+	gdb_command(gdb->print_command(arg, internal));
 }
 
-void gdbPrintRefCB(Widget w, XtPointer client_data, XtPointer)
+void gdbPrintRefCB(Widget, XtPointer client_data, XtPointer)
 {
     const bool internal = (bool)(long)client_data;
 
     const string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command(gdb->print_command(deref(arg), internal), w);
+	gdb_command(gdb->print_command(deref(arg), internal));
 }
 
-void gdbDisplayCB(Widget w, XtPointer, XtPointer)
+void gdbDisplayCB(Widget, XtPointer, XtPointer)
 {
     string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command("graph display " + arg, w);
+	gdb_command("graph display " + arg);
 }
 
-void gdbDispRefCB(Widget w, XtPointer, XtPointer)
+void gdbDispRefCB(Widget, XtPointer, XtPointer)
 {
     string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command("graph display " + deref(arg), w);
+	gdb_command("graph display " + deref(arg));
 }
 
-void gdbWhatisCB(Widget w, XtPointer, XtPointer)
+void gdbWhatisCB(Widget, XtPointer, XtPointer)
 {
     string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command(gdb->whatis_command(arg), w);
+	gdb_command(gdb->whatis_command(arg));
 }
 
 
@@ -149,63 +149,63 @@ bool have_enabled_breakpoint_at_arg()
     return bp != 0 && bp->enabled();
 }
 
-void gdbBreakAtCB(Widget w, XtPointer, XtPointer)
+void gdbBreakAtCB(Widget, XtPointer, XtPointer)
 {
-    source_view->create_bp(current_arg(true), w);
+    source_view->create_bp(current_arg(true));
 }
 
-void gdbTempBreakAtCB(Widget w, XtPointer, XtPointer)
+void gdbTempBreakAtCB(Widget, XtPointer, XtPointer)
 {
-    source_view->create_temp_bp(current_arg(true), w);
+    source_view->create_temp_bp(current_arg(true));
 }
 
-void gdbRegexBreakAtCB(Widget w, XtPointer, XtPointer)
+void gdbRegexBreakAtCB(Widget, XtPointer, XtPointer)
 {
-    gdb_command("rbreak " + source_arg->get_string(), w);
+    gdb_command("rbreak " + source_arg->get_string());
 }
 
-void gdbClearAtCB(Widget w, XtPointer, XtPointer)
+void gdbClearAtCB(Widget, XtPointer, XtPointer)
 {
-    source_view->clear_bp(current_arg(true), w);
+    source_view->clear_bp(current_arg(true));
 }
 
-void gdbToggleBreakCB(Widget w, XtPointer, XtPointer)
+void gdbToggleBreakCB(Widget, XtPointer, XtPointer)
 {
     source_view->set_bp(current_arg(true), 
-		       !have_breakpoint_at_arg(), false, "", w);
+		       !have_breakpoint_at_arg(), false, "");
 }
 
-void gdbContUntilCB(Widget w, XtPointer, XtPointer)
+void gdbContUntilCB(Widget, XtPointer, XtPointer)
 {
-    source_view->temp_n_cont(current_arg(true), w);
+    source_view->temp_n_cont(current_arg(true));
 }
 
-void gdbSetPCCB(Widget w, XtPointer, XtPointer)
+void gdbSetPCCB(Widget, XtPointer, XtPointer)
 {
-    source_view->move_pc(current_arg(true), w);
+    source_view->move_pc(current_arg(true));
 }
 
-void gdbToggleEnableBreakpointCB(Widget w, XtPointer, XtPointer)
+void gdbToggleEnableBreakpointCB(Widget, XtPointer, XtPointer)
 {
     BreakPoint *bp = source_view->breakpoint_at(current_arg(true));
     if (bp != 0)
     {
 	if (bp->enabled())
-	    source_view->disable_bp(bp->number(), w);
+	    source_view->disable_bp(bp->number());
 	else
-	    source_view->enable_bp(bp->number(), w);
+	    source_view->enable_bp(bp->number());
     }
 }
 
-void gdbToggleEnableWatchpointCB(Widget w, XtPointer, XtPointer)
+void gdbToggleEnableWatchpointCB(Widget, XtPointer, XtPointer)
 {
     BreakPoint *bp = source_view->watchpoint_at(current_arg(true));
     if (bp != 0)
     {
 	if (bp->enabled())
-	    source_view->disable_bp(bp->number(), w);
+	    source_view->disable_bp(bp->number());
 	else
-	    source_view->enable_bp(bp->number(), w);
+	    source_view->enable_bp(bp->number());
     }
 }
 
@@ -246,7 +246,7 @@ bool have_enabled_watchpoint_at_arg()
     return bp != 0 && bp->enabled();
 }
 
-void gdbWatchCB(Widget w, XtPointer client_data, XtPointer call_data)
+void gdbWatchCB(Widget, XtPointer client_data, XtPointer call_data)
 {
     (void) call_data;		// Use it
     const string arg = current_arg();
@@ -260,16 +260,15 @@ void gdbWatchCB(Widget w, XtPointer client_data, XtPointer call_data)
 #endif
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command(gdb->watch_command(arg, 
-				       WatchMode((int)(long)client_data)), w);
+	gdb_command(gdb->watch_command(arg, WatchMode((int)(long)client_data)));
 }
 
-void gdbWatchRefCB(Widget w, XtPointer, XtPointer)
+void gdbWatchRefCB(Widget, XtPointer, XtPointer)
 {
     string arg = current_arg();
 
     if (!arg.empty() && !arg.matches(rxwhite))
-	gdb_command(gdb->watch_command(deref(arg)), w);
+	gdb_command(gdb->watch_command(deref(arg)));
 }
 
 void gdbUnwatchCB(Widget, XtPointer, XtPointer)

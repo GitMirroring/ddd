@@ -696,8 +696,7 @@ static void unredirect_reply(const string& answer, void *)
 }
 
 // Restore original redirection
-static void unredirect_process(string& command,
-                               Widget origin = 0)
+static void unredirect_process(string& command)
 {
     if (!gdb_redirection.empty())
     {
@@ -712,7 +711,7 @@ static void unredirect_process(string& command,
                 static string empty;
                 args.gsub(gdb_redirection, empty);
                 strip_space(args);
-                gdb_command("set args " + args, origin, unredirect_reply);
+                gdb_command("set args " + args, unredirect_reply);
             }
             else if (gdb->type() == PERL)
             {
@@ -945,7 +944,7 @@ void startup_exec_tty(string& command, Widget origin)
         kill_exec_tty();
 
         // Tell GDB not to redirect its process I/O
-        unredirect_process(command, origin);
+        unredirect_process(command);
 
         // deactivate external tty in appdata
         app_data.separate_exec_window = false;

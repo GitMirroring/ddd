@@ -284,7 +284,7 @@ static void gdbRunDCB(Widget, XtPointer, XtPointer)
 	else
 	    c = cmd;
 	cmd = cmd.after('\n');
-	gdb_command(c, run_dialog);
+	gdb_command(c);
     }
 }
 
@@ -491,7 +491,7 @@ static void RestartAndRunCB(Widget w,
     RestartDebuggerCB(w, client_data, call_data);
 
     const string& cmd = *((const string *)client_data);
-    gdb_command(cmd, w);
+    gdb_command(cmd);
 }
 
 bool add_running_arguments(string& cmd, Widget origin)

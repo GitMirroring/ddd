@@ -204,14 +204,14 @@ static string examine_command()
     return gdb->rewrite_examine_address (address, fmt);
 }
 
-static void DisplayExaminedCB(Widget w, XtPointer, XtPointer)
+static void DisplayExaminedCB(Widget, XtPointer, XtPointer)
 {
-    gdb_command("graph display `" + examine_command() + "`", w);
+    gdb_command("graph display `" + examine_command() + "`");
 }
 
-static void PrintExaminedCB(Widget w, XtPointer, XtPointer)
+static void PrintExaminedCB(Widget, XtPointer, XtPointer)
 {
-    gdb_command(examine_command(), w);
+    gdb_command(examine_command());
 }
 
 void gdbExamineCB(Widget w, XtPointer, XtPointer)

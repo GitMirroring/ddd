@@ -294,13 +294,11 @@ public:
 			      DeferMode deferred = DeferAlways,
 			      bool clustered = false,
 			      bool plotted = false,
-			      Widget origin = 0,
 			      bool verbose = true,
 			      bool prompt = true);
 
     // Refresh displays.  Sends `info display' and `display' to GDB.
-    static void refresh_displaySQ(Widget origin = 0, 
-				  bool verbose = true,
+    static void refresh_displaySQ(bool verbose = true,
 				  bool prompt = true);
 
     // Disable displays given in DISPLAY_NRS.  Sends `disable display' to GDB.
@@ -360,58 +358,54 @@ public:
 			    BoxPoint *pos = 0,
 			    string depends_on = "",
 			    bool clustered = false,
-			    bool plotted = false,
-			    Widget origin = 0)
+			    bool plotted = false)
     {
 	string c = new_display_cmd(display_expression, pos, 
 				   depends_on, clustered, plotted);
-	gdb_command(c, origin);
+	gdb_command(c);
     }
 
-    static void refresh_display(Widget origin = 0)
+    static void refresh_display()
     {
-	gdb_command(refresh_display_cmd(), origin);
+	gdb_command(refresh_display_cmd());
     }
 
-    static void disable_display(std::vector<int>& display_nrs, Widget origin = 0)
-    {
-	if (display_nrs.size() > 0)
-	    gdb_command(disable_display_cmd(display_nrs), origin);
-    }
-
-    static void enable_display(std::vector<int>& display_nrs, Widget origin = 0)
+    static void disable_display(std::vector<int>& display_nrs)
     {
 	if (display_nrs.size() > 0)
-	    gdb_command(enable_display_cmd(display_nrs), origin);
+	    gdb_command(disable_display_cmd(display_nrs));
     }
 
-    static void delete_display(std::vector<int>& display_nrs, Widget origin = 0)
+    static void enable_display(std::vector<int>& display_nrs)
     {
 	if (display_nrs.size() > 0)
-	    gdb_command(delete_display_cmd(display_nrs), origin);
+	    gdb_command(enable_display_cmd(display_nrs));
     }
 
-    static void delete_display(const string& name, Widget origin = 0)
+    static void delete_display(std::vector<int>& display_nrs)
     {
-	gdb_command(delete_display_cmd(name), origin);
+	if (display_nrs.size() > 0)
+	    gdb_command(delete_display_cmd(display_nrs));
     }
 
-    static void apply_theme(const string& theme, const string& pattern, 
-			    Widget origin = 0)
+    static void delete_display(const string& name)
     {
-	gdb_command(apply_theme_cmd(theme, pattern), origin);
+	gdb_command(delete_display_cmd(name));
     }
 
-    static void unapply_theme(const string& theme, const string& pattern, 
-			      Widget origin = 0)
+    static void apply_theme(const string& theme, const string& pattern)
     {
-	gdb_command(unapply_theme_cmd(theme, pattern), origin);
+	gdb_command(apply_theme_cmd(theme, pattern));
     }
 
-    static void toggle_theme(const string& theme, const string& pattern, 
-			     Widget origin = 0)
+    static void unapply_theme(const string& theme, const string& pattern)
     {
-	gdb_command(toggle_theme_cmd(theme, pattern), origin);
+	gdb_command(unapply_theme_cmd(theme, pattern));
+    }
+
+    static void toggle_theme(const string& theme, const string& pattern)
+    {
+	gdb_command(toggle_theme_cmd(theme, pattern));
     }
 
     // Process 'info display' output in INFO_DISPLAY_ANSWER.  If
@@ -488,7 +482,6 @@ private:
     //-----------------------------------------------------------------------
     static DispGraph *disp_graph;
     static Delay *delay;
-    static Widget last_origin;
     static Time last_select_time;
     static int next_ddd_display_number;
     static int next_gdb_display_number;
@@ -502,10 +495,6 @@ private:
 
     static Widget edit_displays_dialog_w;
     static Widget display_list_w;
-
-    // Origin handling
-    static void ClearOriginCB(Widget, XtPointer, XtPointer);
-    static void set_last_origin(Widget origin);
 
     // Alias checking
     static bool check_aliases();

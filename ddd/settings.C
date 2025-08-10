@@ -3754,19 +3754,19 @@ void update_define_later(const string& command)
     UpdateDefinePanelCB();
 }
 
-static void RecordCommandDefinitionCB(Widget w, XtPointer, XtPointer)
+static void RecordCommandDefinitionCB(Widget, XtPointer, XtPointer)
 {
     string name = current_name();
-    gdb_command("define " + name, w);
+    gdb_command("define " + name);
 }
 
-static void EndCommandDefinitionCB(Widget w, XtPointer, XtPointer)
+static void EndCommandDefinitionCB(Widget, XtPointer, XtPointer)
 {
     if (gdb->recording())
-	gdb_command("end", w);
+	gdb_command("end");
 }
 
-static void DoneEditCommandDefinitionCB(Widget w, XtPointer, XtPointer)
+static void DoneEditCommandDefinitionCB(Widget, XtPointer, XtPointer)
 {
     if (!XtIsManaged(XtParent(editor_w)))
 	return;
@@ -3803,10 +3803,10 @@ static void DoneEditCommandDefinitionCB(Widget w, XtPointer, XtPointer)
 	set_sensitive(record_w, false);
 	set_sensitive(end_w,    false);
 
-	gdb_command("define " + name, w);
+	gdb_command("define " + name);
 	for (int j = 0; j < int(commands.size()); j++)
-	    gdb_command(commands[j], w);
-	gdb_command("end", w);
+	    gdb_command(commands[j]);
+	gdb_command("end");
 
 	update_define_later(name);
     }
@@ -3857,7 +3857,7 @@ static void ApplyCB(Widget w, XtPointer client_data, XtPointer call_data)
 	if (XmToggleButtonGetState(arg_w))
 	    cmd += " " + source_arg->get_string();
 
-	gdb_command(cmd, w);
+	gdb_command(cmd);
     }
 }
 

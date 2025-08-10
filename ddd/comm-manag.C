@@ -108,7 +108,6 @@ public:
     string      command;	  // The command issued
     string      undo_command;	  // Undoing command, if any
     bool        undo_is_exec;	  // True if undoing command is exec command
-    Widget      origin;		  // Origin of this command
     Filtering   filter_disp;      // NoFilter:  do not filter displays.
 				  // TryFilter: do filter if present.
                                   // Filter:    do filter.
@@ -144,27 +143,12 @@ private:
     static void clear_origin(Widget w, XtPointer client_data, 
 			     XtPointer call_data);
 
-    void add_destroy_callback()
-    {
-	if (origin != 0)
-	    XtAddCallback(origin, XtNdestroyCallback, clear_origin, 
-			  (XtPointer)this);
-    }
-
-    void remove_destroy_callback()
-    {
-	if (origin != 0)
-	    XtRemoveCallback(origin, XtNdestroyCallback, clear_origin,
-			     (XtPointer)this);
-    }
-
 public:
     // Constructor
-    CmdData (Widget orig = 0, Filtering filter = TryFilter)
+    CmdData (Filtering filter = TryFilter)
 	: command(""),
 	  undo_command(""),
 	  undo_is_exec(true),
-	  origin(orig),
 	  filter_disp(filter),
 	  disp_buffer(0),
 	  pos_buffer(0),
@@ -193,13 +177,11 @@ public:
 	  position_timer(0),
 	  display_timer(0)
     {
-	add_destroy_callback();
     }
 
     // Destructor
     ~CmdData ()
     {
-	remove_destroy_callback();
 	delete disp_buffer;
 	delete pos_buffer;
 
@@ -213,17 +195,6 @@ private:
     CmdData(const CmdData&);
     CmdData& operator = (const CmdData&);
 };
-
-void CmdData::clear_origin(Widget w, XtPointer client_data, XtPointer)
-{
-    (void) w;                        // Use it 
-
-    // The widget is being destroyed.  Remove all references.
-    CmdData *cmd_data = (CmdData *)client_data;
-    assert(w == cmd_data->origin);
-    cmd_data->origin = 0;
-}
-
 
 // Data given to extra commands.
 class ExtraData {
@@ -364,7 +335,7 @@ static void extra_completed(std::vector<string>&, const VoidArray&, void *);
 // Handle graph command in CMD, with WHERE_ANSWER being the GDB reply
 // to a `where 1' command; return true iff recognized
 static bool handle_graph_cmd(string& cmd, const string& where_answer,
-			     Widget origin, bool verbose, bool prompt);
+			     bool verbose, bool prompt);
 
 // Handle output of initialization commands
 static void process_init(const string& answer, void *data = 0);
@@ -470,7 +441,7 @@ void start_gdb(bool config)
 	if (is_graph_cmd(command))
 	{
 	    // To be handled later by DDD - enqueue in command queue
-	    Command c(command, 0, process_batch);
+	    Command c(command, process_batch);
 	    c.priority = COMMAND_PRIORITY_INIT;
 	    gdb_command(c);
 	}
@@ -743,7 +714,7 @@ void init_session(const string& restart, const string& settings,
     // Process all start-up commands (load file, etc.)
     while (!init_commands.empty())
     {
-	Command c(init_commands.before('\n'), Widget(0), OQCProc(0));
+	Command c(init_commands.before('\n'), OQCProc(0));
 	c.priority = COMMAND_PRIORITY_INIT;
 	if (is_file_cmd(c.command, gdb) || is_core_cmd(c.command))
 	{
@@ -768,8 +739,7 @@ void init_session(const string& restart, const string& settings,
     if (info != 0)
     {
 	// Source remaining commands (settings, etc.)
-	Command c("source " + info->tempfile, Widget(0), 
-		  SourceDoneCB, (void *)info);
+	Command c("source " + info->tempfile, SourceDoneCB, (void *)info);
 	c.priority = COMMAND_PRIORITY_INIT;
 	c.check    = true;
 	gdb_command(c);
@@ -838,7 +808,7 @@ static bool command_was_cancelled = false;
 // PROMPT are set, issue command in GDB console.  If VERBOSE is set,
 // issue answer in GDB console.  If PROMPT is set, issue prompt.  If
 // CHECK is set, add extra GDB commands to get GDB state.
-void send_gdb_command(string cmd, Widget origin,
+void send_gdb_command(string cmd,
 		      OQCProc callback, OACProc extra_callback, void *data,
 		      bool echo, bool verbose, bool prompt, bool check,
 		      bool start_undo)
@@ -846,7 +816,7 @@ void send_gdb_command(string cmd, Widget origin,
     string echoed_cmd = cmd;
 
     // Setup extra command information
-    CmdData *cmd_data       = new CmdData(origin);
+    CmdData *cmd_data       = new CmdData();
     cmd_data->command       = cmd;
     cmd_data->disp_buffer   = new DispBuffer;
     cmd_data->pos_buffer    = new PosBuffer;
@@ -877,14 +847,13 @@ void send_gdb_command(string cmd, Widget origin,
 	    command_was_cancelled = true;
 
 	cmd_data->new_exec_pos = true;
-	cmd_data->origin       = origin;
 
 	if (cmd == '\004' && gdb_input_at_prompt)
 	    gdb_is_exiting = true;
 
 	bool send_ok = gdb->send_user_ctrl_cmd(cmd, cmd_data);
 	if (!send_ok)
-	    post_gdb_busy(origin);
+	    post_gdb_busy(nullptr);
 
 	return;
     }
@@ -905,7 +874,7 @@ void send_gdb_command(string cmd, Widget origin,
 	send_ok = gdb->send_user_ctrl_cmd(cmd);
 
 	if (!send_ok)
-	    post_gdb_busy(origin);
+	    post_gdb_busy(nullptr);
 
 	delete cmd_data;
 	return;
@@ -1855,7 +1824,7 @@ void send_gdb_command(string cmd, Widget origin,
 	// Deallocate resources
 	delete cmd_data;
 
-	post_gdb_busy(origin);
+	post_gdb_busy(nullptr);
       }
 }
 
@@ -2119,7 +2088,7 @@ static void command_completed(void *data)
 		continue;
 	    }
 
-	    Command c(command, cmd_data->origin);
+	    Command c(command);
 	    c.priority = COMMAND_PRIORITY_BATCH;
 	    c.echo    = false;
 	    c.verbose = true;
@@ -2136,7 +2105,6 @@ static void command_completed(void *data)
 	// Process graph command
 	string cmd = cmd_data->graph_cmd;
 	bool ok = handle_graph_cmd(cmd, cmd_data->user_answer, 
-				   cmd_data->origin,
 				   cmd_data->user_verbose,
 				   cmd_data->user_prompt);
 	if (!ok)
@@ -2380,7 +2348,7 @@ static bool read_displays(string arg, std::vector<int>& numbers, bool verbose)
 // Handle graph command in CMD, with WHERE_ANSWER being the GDB reply
 // to a `where 1' command; return true iff recognized
 static bool handle_graph_cmd(string& cmd, const string& where_answer, 
-			     Widget origin, bool verbose, bool do_prompt)
+			     bool verbose, bool do_prompt)
 {
     string scope;
     if (gdb->has_func_command())
@@ -2485,18 +2453,18 @@ static bool handle_graph_cmd(string& cmd, const string& where_answer,
 	{
 	    data_disp->new_displaySQ(display_expression, when_in, pos,
 				     depends_on, deferred, clustered, plotted,
-				     origin, verbose, do_prompt);
+				     verbose, do_prompt);
 	}
 	else
 	{
 	    data_disp->new_displaySQ(display_expression, scope, pos,
 				     depends_on, deferred, clustered, plotted,
-				     origin, verbose, do_prompt);
+				     verbose, do_prompt);
 	}
     }
     else if (is_refresh_cmd(cmd))
     {
-	data_disp->refresh_displaySQ(origin, verbose, do_prompt);
+	data_disp->refresh_displaySQ(verbose, do_prompt);
     }
     else if (is_data_cmd(cmd))
     {
@@ -2872,8 +2840,7 @@ static void FindSourceCB(const string& answer, void *)
 
     string current_file = source_view->file_of_cursor().before(':');
     if (current_file.empty() || gdb->is_windriver_gdb())
-	gdb_command(string("list ") + init_symbol, gdb_w, 
-		    FindSourceCB, 0, false, true);
+	gdb_command(string("list ") + init_symbol, FindSourceCB, 0, false, true);
 }
 
 static void find_some_source()

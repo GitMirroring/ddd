@@ -288,7 +288,7 @@ void clear_isearch(bool reset, bool show)
     isearch_motion_ok = false;
 }
 
-void interruptAct(Widget w, XEvent*, String *, Cardinal *)
+void interruptAct(Widget, XEvent*, String *, Cardinal *)
 {
     if (isearch_state != ISEARCH_NONE)
     {
@@ -297,7 +297,7 @@ void interruptAct(Widget w, XEvent*, String *, Cardinal *)
     else
     {
 	gdb_keyboard_command = true;
-	gdb_command("\003", w);
+	gdb_command("\003");
 	gdb_keyboard_command = true;
     }
 }
@@ -384,7 +384,7 @@ static bool from_keyboard(XEvent *ev)
     return ev == 0 || (ev->type != ButtonPress && ev->type != ButtonRelease);
 }
 
-void controlAct(Widget w, XEvent *ev, String *params, Cardinal *num_params)
+void controlAct(Widget, XEvent *ev, String *params, Cardinal *num_params)
 {
     clear_isearch();
 
@@ -395,7 +395,7 @@ void controlAct(Widget w, XEvent *ev, String *params, Cardinal *num_params)
     }
 
     gdb_keyboard_command = from_keyboard(ev);
-    gdb_command(ctrl(params[0]), w);
+    gdb_command(ctrl(params[0]));
     gdb_keyboard_command = from_keyboard(ev);
 }
 
@@ -770,7 +770,7 @@ void gdbChangeCB(Widget w, XtPointer, XtPointer)
 	    if (at_prompt)
 	    {
 		// We're typing at the GDB prompt: place CMD in command queue
-		gdb_command(cmd, w);
+		gdb_command(cmd);
 	    }
 	    else
 	    {
@@ -813,7 +813,7 @@ void gdb_button_command(const string& command, Widget origin)
 	string c = command;
 	c.gsub("()", source_arg->get_string());
 	if (add_running_arguments(c, origin))
-	    gdb_command(c, origin);
+	    gdb_command(c);
     }
 }
 

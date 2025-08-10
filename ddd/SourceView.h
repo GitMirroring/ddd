@@ -170,11 +170,10 @@ class SourceView {
     static void clearJumpBP(const string& answer, void *client_data);
 
     // Move/Copy breakpoint NR to ADDRESS; return true if changed
-    static bool move_bp(int nr, const string& address, Widget origin = 0,
-                        bool copy = false);
-    static bool copy_bp(int nr, const string& address, Widget origin = 0)
+    static bool move_bp(int nr, const string& address, bool copy = false);
+    static bool copy_bp(int nr, const string& address)
     {
-        return move_bp(nr, address, origin, true);
+        return move_bp(nr, address, true);
     }
 
     // Position history
@@ -190,30 +189,29 @@ class SourceView {
     //   the original condition.
     // * Otherwise, preserve the condition state.
     static void _set_bps_cond(const std::vector<int>& nrs, const string& cond,
-                              int make_false, Widget origin);
+                              int make_false);
 
     // Set condition of breakpoints NRS to COND.
-    inline static void set_bps_cond(const std::vector<int>& nrs, const string& cond,
-                                    Widget origin = 0)
+    inline static void set_bps_cond(const std::vector<int>& nrs, const string& cond)
     {
-        _set_bps_cond(nrs, cond, -1, origin);
+        _set_bps_cond(nrs, cond, -1);
     }
 
     // Enable and disable breakpoints via conditions.
-    inline static void set_bps_cond_enabled(const std::vector<int>& nrs, bool enabled,
-                                            Widget origin = 0)
+    inline static void set_bps_cond_enabled(const std::vector<int>& nrs, bool enabled)
     {
-        _set_bps_cond(nrs, char(-1), enabled ? 0 : 1, origin);
+        _set_bps_cond(nrs, char(-1), enabled ? 0 : 1);
     }
 
     // Custom calls
-    inline static void enable_bps_cond(const std::vector<int>& nrs, Widget origin = 0)
+    inline static void enable_bps_cond(const std::vector<int>& nrs)
     {
-        set_bps_cond_enabled(nrs, true, origin);
+        set_bps_cond_enabled(nrs, true);
     }
-    inline static void disable_bps_cond(const std::vector<int>& nrs, Widget origin = 0)
+
+    inline static void disable_bps_cond(const std::vector<int>& nrs)
     {
-        set_bps_cond_enabled(nrs, false, origin);
+        set_bps_cond_enabled(nrs, false);
     }
 
     // Find the line number at POS.  LINE_NR becomes the line number
@@ -730,60 +728,58 @@ public:
     // breakpoint; if not SET, delete it.  If TEMP, make the
     // breakpoint temporary.  If COND is given, break only iff COND
     // evals to true.  ORIGIN is the origin.
-    static void set_bp(const string& a, bool set, bool temp, 
-                       const char *cond = "", Widget origin = 0);
+    static void set_bp(const string& a, bool set, bool temp, const char *cond = "");
 
     // Custom calls
-    static void create_bp(const string& a, Widget origin = 0);
-    static void create_temp_bp(const string& a, Widget origin = 0);
-    static void clear_bp(const string& a, Widget origin = 0);
+    static void create_bp(const string& a);
+    static void create_temp_bp(const string& a);
+    static void clear_bp(const string& a);
 
     // Create a temporary breakpoint at A and continue execution.
-    static void temp_n_cont(const string& a, Widget origin = 0);
+    static void temp_n_cont(const string& a);
 
     // Enable/Disable/Delete/Edit breakpoints
-    static void enable_bps     (const std::vector<int>& nrs, Widget origin = 0);
-    static void disable_bps    (const std::vector<int>& nrs, Widget origin = 0);
-    static void delete_bps     (const std::vector<int>& nrs, Widget origin = 0);
-    static void edit_bps       (std::vector<int>& nrs, Widget origin = 0);
+    static void enable_bps     (const std::vector<int>& nrs0);
+    static void disable_bps    (const std::vector<int>& nrs);
+    static void delete_bps     (const std::vector<int>& nrs);
+    static void edit_bps       (std::vector<int>& nrs);
 
-    inline static void enable_bp(int nr, Widget origin = 0)
+    inline static void enable_bp(int nr)
     {
         std::vector<int> nrs;
         nrs.push_back(nr);
-        enable_bps(nrs, origin);
+        enable_bps(nrs);
     }
 
-    inline static void disable_bp(int nr, Widget origin = 0)
+    inline static void disable_bp(int nr)
     {
         std::vector<int> nrs;
         nrs.push_back(nr);
-        disable_bps(nrs, origin);
+        disable_bps(nrs);
     }
 
-    inline static void delete_bp(int nr, Widget origin = 0)
+    inline static void delete_bp(int nr)
     {
         std::vector<int> nrs;
         nrs.push_back(nr);
-        delete_bps(nrs, origin);
+        delete_bps(nrs);
     }
 
-    inline static void edit_bp(int nr, Widget origin = 0)
+    inline static void edit_bp(int nr)
     {
         std::vector<int> nrs;
         nrs.push_back(nr);
-        edit_bps(nrs, origin);
+        edit_bps(nrs);
     }
 
     // Set breakpoint commands
-    static void set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands,
-                                Widget origin = 0);
-    inline static void set_bp_commands(int nr, const std::vector<string>& commands,
-                                       Widget origin = 0)
+    static void set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands);
+
+    inline static void set_bp_commands(int nr, const std::vector<string>& commands)
     {
         std::vector<int> nrs;
         nrs.push_back(nr);
-        set_bp_commands(nrs, commands, origin);
+        set_bp_commands(nrs, commands);
     }
 
     static string numbers(const std::vector<int>& nrs);
@@ -791,7 +787,7 @@ public:
     static bool all_bps(const std::vector<int>& nrs);
             
     // Move PC to ADDRESS; return true if changed.
-    static bool move_pc(const string& address, Widget origin = 0);
+    static bool move_pc(const string& address);
 
     // Return `clear ARG' command.  If CLEAR_NEXT is set, attempt to
     // guess the next event number and clear this one as well.
@@ -898,19 +894,19 @@ public:
     static void showing_earlier_state(bool set);
 };
 
-inline void SourceView::create_bp(const string& a, Widget w)
+inline void SourceView::create_bp(const string& a)
 {
-    set_bp(a, true, false, "", w);
+    set_bp(a, true, false, "");
 }
 
-inline void SourceView::create_temp_bp(const string& a, Widget w)
+inline void SourceView::create_temp_bp(const string& a)
 {
-    set_bp(a, true, true, "", w);
+    set_bp(a, true, true, "");
 }
 
-inline void SourceView::clear_bp(const string& a, Widget w)
+inline void SourceView::clear_bp(const string& a)
 {
-    set_bp(a, false, false, "", w);
+    set_bp(a, false, false, "");
 }
 
 #endif // _DDD_SourceView_h

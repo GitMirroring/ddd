@@ -522,28 +522,27 @@ int SourceView::indent_amount_code(int pos)
 
 // ***************************************************************************
 //
-void SourceView::line_popup_setCB (Widget w,
+void SourceView::line_popup_setCB (Widget,
                                    XtPointer client_data,
                                    XtPointer)
 {
     const string address = *((const string *)client_data);
-    create_bp(address, w);
+    create_bp(address);
 }
 
-void SourceView::line_popup_set_tempCB (Widget w,
+void SourceView::line_popup_set_tempCB (Widget,
                                         XtPointer client_data,
                                         XtPointer)
 {
     const string address = *((const string *)client_data);
-    create_temp_bp(address, w);
+    create_temp_bp(address);
 }
 
 // Create or clear a breakpoint at position A.  If SET, create a
 // breakpoint; if not SET, delete it.  If TEMP, make the breakpoint
 // temporary.  If COND is given, break only iff COND evals to true. W
 // is the origin.
-void SourceView::set_bp(const string& a, bool set, bool temp, 
-                        const char *cond, Widget w)
+void SourceView::set_bp(const string& a, bool set, bool temp, const char *cond)
 {
     CommandGroup cg;
 
@@ -556,7 +555,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
     if (!set)
     {
         // Clear bp
-        gdb_command(clear_command(address), w);
+        gdb_command(clear_command(address));
     }
     else
     {
@@ -569,9 +568,9 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
         case MAKE:
         case PYDB:
             if (temp)
-                gdb_command("tbreak " + address, w);
+                gdb_command("tbreak " + address);
             else
-                gdb_command("break " + address, w);
+                gdb_command("break " + address);
             break;
 
         case DBX:
@@ -589,15 +588,14 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
             {
                 // Address given
                 address = address.after('*');
-                gdb_command("stopi at " + address + cond_suffix, w);
+                gdb_command("stopi at " + address + cond_suffix);
 
                 if (temp)
                 {
                     syncCommandQueue();
                     gdb_command("when $pc == " + address + " "
                                 + command_list(clear_command(address, true, 
-                                                             new_bps)),
-                                w);
+                                                             new_bps)));
                 }
             }
             else
@@ -607,7 +605,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                 {
                     // Line number given
                     line = address;
-                    gdb_command("stop at " + address + cond_suffix, w);
+                    gdb_command("stop at " + address + cond_suffix);
                 }
                 else if (is_file_pos(address))
                 {
@@ -617,8 +615,8 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                     string file = address.before(colon_index);
                     line = address.after(colon_index);
 
-                    gdb_command("file " + file, w);
-                    gdb_command("stop at " + line + cond_suffix, w);
+                    gdb_command("file " + file);
+                    gdb_command("stop at " + line + cond_suffix);
                 }
                 else
                 {
@@ -630,13 +628,13 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                         string file = pos.before(':');
                         line = pos.after(':');
 
-                        gdb_command("file " + file, w);
-                        gdb_command("stop at " + line + cond_suffix, w);
+                        gdb_command("file " + file);
+                        gdb_command("stop at " + line + cond_suffix);
                     }
                     else
                     {
                         // Cannot determine function position - try this one
-                        gdb_command("stop in " + address + cond_suffix, w);
+                        gdb_command("stop in " + address + cond_suffix);
                     }
                 }
 
@@ -644,8 +642,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                 {
                     syncCommandQueue();
                     const string clear_cmd = clear_command(line, true, new_bps);
-                    gdb_command("when at " + line + " " 
-                                + command_list(clear_cmd), w);
+                    gdb_command("when at " + line + " " + command_list(clear_cmd));
                 }
             }
             break;
@@ -674,7 +671,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
             if (strlen(cond) != 0 && !gdb->has_condition_command())
                 command += " {if " + string(cond) + " {} {Q;c}}";
 
-            gdb_command(command, w);
+            gdb_command(command);
             break;
         }
 
@@ -686,7 +683,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                 address = address.after(':');
 
                 if (!file_matches(file, sourcecode.get_filename()))
-                    gdb_command("f " + file, w);
+                    gdb_command("f " + file);
             }
 
             string command = "b " + address;
@@ -695,7 +692,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                 command += cond;
             }
 
-            gdb_command(command, w);
+            gdb_command(command);
 
             if (temp)
             {
@@ -707,7 +704,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
                 add_auto_command_prefix(clear);
 
                 command = "a " + address + " " + del + "; " + clear;
-                gdb_command(command, w);
+                gdb_command(command);
             }
 
             break;
@@ -717,7 +714,7 @@ void SourceView::set_bp(const string& a, bool set, bool temp,
         if (strlen(cond) != 0 && gdb->has_condition_command())
         {
             // Add condition
-            gdb_command(gdb->condition_command(itostring(new_bps), cond), w);
+            gdb_command(gdb->condition_command(itostring(new_bps), cond));
         }
     }
 }
@@ -756,15 +753,15 @@ void SourceView::clearJumpBP(const string& msg, void *data)
     }
 }
 
-void SourceView::line_popup_temp_n_contCB (Widget w,
+void SourceView::line_popup_temp_n_contCB (Widget,
                                            XtPointer client_data,
                                            XtPointer)
 {
     const string address = *((const string *)client_data);
-    temp_n_cont(address, w);
+    temp_n_cont(address);
 }
 
-void SourceView::temp_n_cont(const string& a, Widget w)
+void SourceView::temp_n_cont(const string& a)
 {
     CommandGroup cg;
 
@@ -788,10 +785,10 @@ void SourceView::temp_n_cont(const string& a, Widget w)
         int old_max_breakpoint_number_seen = max_breakpoint_number_seen;
 
         // Create a temporary breakpoint
-        create_temp_bp(address, w);
+        create_temp_bp(address);
 
         // Make sure the temporary breakpoint is deleted after `cont'
-        Command c("cont", w);
+        Command c("cont");
         c.callback = clearJumpBP;
         c.data     = XtPointer(intptr_t(old_max_breakpoint_number_seen));
         gdb_command(c);
@@ -801,30 +798,30 @@ void SourceView::temp_n_cont(const string& a, Widget w)
     case XDB:
         if (address.contains('*', 0))
             address = address.after('*');
-        gdb_command("c " + address, w);
+        gdb_command("c " + address);
         break;
 
     case PERL:
         if (is_file_pos(address))
             address = address.after(':');
-        gdb_command("c " + address, w);
+        gdb_command("c " + address);
         break;
     }
 }
 
 // ***************************************************************************
 //
-void SourceView::line_popup_set_pcCB(Widget w, 
+void SourceView::line_popup_set_pcCB(Widget,
                                      XtPointer client_data,
                                      XtPointer)
 {
     const string address = *((const string *)client_data);
-    move_pc(address, w);
+    move_pc(address);
 }
 
 // ***************************************************************************
 //
-bool SourceView::move_pc(const string& a, Widget w)
+bool SourceView::move_pc(const string& a)
 {
     string address = a;
 
@@ -856,7 +853,7 @@ bool SourceView::move_pc(const string& a, Widget w)
         case DBX:
             // DBX immediately resumes execution - create a temp
             // breakpoint at ADDRESS
-            create_temp_bp(address, w);
+            create_temp_bp(address);
 
             // DBX `cont at ' requires a line number.
             gdb_command("file " + address.before(':'));
@@ -870,7 +867,7 @@ bool SourceView::move_pc(const string& a, Widget w)
         case GDB:
             // GDB immediately resumes execution - create a temp
             // breakpoint at ADDRESS
-            create_temp_bp(address, w);
+            create_temp_bp(address);
             break;
 
         case BASH:
@@ -884,7 +881,7 @@ bool SourceView::move_pc(const string& a, Widget w)
 
         // Jump to the new address and clear the breakpoint again
         last_jump_address = a;
-        Command c(gdb->jump_command(address), w);
+        Command c(gdb->jump_command(address));
         c.callback = clearJumpBP;
         c.data     = XtPointer(intptr_t(old_max_breakpoint_number_seen));
         gdb_command(c);
@@ -911,7 +908,7 @@ bool SourceView::move_pc(const string& a, Widget w)
         }
         else
         {
-            gdb_command(gdb->assign_command("$pc", address), w);
+            gdb_command(gdb->assign_command("$pc", address));
             return true;
         }
     }
@@ -919,7 +916,7 @@ bool SourceView::move_pc(const string& a, Widget w)
     return false;
 }
 
-bool SourceView::move_bp(int bp_nr, const string& a, Widget w, bool copy)
+bool SourceView::move_bp(int bp_nr, const string& a, bool copy)
 {
     CommandGroup cg;
 
@@ -963,7 +960,7 @@ bool SourceView::move_bp(int bp_nr, const string& a, Widget w, bool copy)
     string commands(os);
     commands.gsub("@0@", itostring(new_bp_nr));
 
-    gdb_command(commands, w);
+    gdb_command(commands);
 
     if (copy)
     {
@@ -976,14 +973,14 @@ bool SourceView::move_bp(int bp_nr, const string& a, Widget w, bool copy)
         move_breakpoint_properties(bp_nr, new_bp_nr);
 
         // Delete old breakpoint
-        delete_bp(bp_nr, w);
+        delete_bp(bp_nr);
     }
 
     return true;
 }
 
 void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
-                               int make_false, Widget w)
+                               int make_false)
 {
     CommandGroup cg;
 
@@ -1012,7 +1009,7 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
         if (gdb->has_condition_command())
         {
             // Use the `cond' command to assign a condition
-            gdb_command(gdb->condition_command(itostring(bp_nr), c), w);
+            gdb_command(gdb->condition_command(itostring(bp_nr), c));
         }
         else
         {
@@ -1032,7 +1029,7 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
                 commands.gsub("@0@", itostring(new_bp_nr));
             }
 
-            gdb_command(commands, w);
+            gdb_command(commands);
 
             if (gdb->has_numbered_breakpoints())
             {
@@ -1040,7 +1037,7 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
                 move_breakpoint_properties(bp_nr, new_bp_nr);
 
                 // Delete old breakpoint
-                delete_bp(bp_nr, w);
+                delete_bp(bp_nr);
 
                 // Next breakpoint will get the next number
                 count++;
@@ -1052,18 +1049,18 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
 
 // ***************************************************************************
 //
-void SourceView::bp_popup_deleteCB (Widget w,
+void SourceView::bp_popup_deleteCB (Widget,
                                     XtPointer client_data,
                                     XtPointer)
 {
     int bp_nr = *((int *)client_data);
-    delete_bp(bp_nr, w);
+    delete_bp(bp_nr);
 }
 
 
 // ***************************************************************************
 //
-void SourceView::bp_popup_disableCB (Widget w, 
+void SourceView::bp_popup_disableCB (Widget,
                                      XtPointer client_data,
                                      XtPointer)
 {
@@ -1072,9 +1069,9 @@ void SourceView::bp_popup_disableCB (Widget w,
     if (bp != 0)
     {
         if (bp->enabled())
-            disable_bp(bp_nr, w);
+            disable_bp(bp_nr);
         else
-            enable_bp(bp_nr, w);
+            enable_bp(bp_nr);
     }
 }
 
@@ -1125,37 +1122,37 @@ bool SourceView::all_bps(const std::vector<int>& nrs)
     return true;
 }
 
-void SourceView::enable_bps(const std::vector<int>& nrs, Widget w)
+void SourceView::enable_bps(const std::vector<int>& nrs)
 {
     CommandGroup cg;
 
     if (gdb->has_enable_command())
     {
-        gdb_command(gdb->enable_command(all_numbers(nrs)), w);
+        gdb_command(gdb->enable_command(all_numbers(nrs)));
     }
     else if (gdb->has_conditions())
     {
         // Unset `false' breakpoint condition
-        enable_bps_cond(nrs, w);
+        enable_bps_cond(nrs);
     }
 }
 
-void SourceView::disable_bps(const std::vector<int>& nrs, Widget w)
+void SourceView::disable_bps(const std::vector<int>& nrs)
 {
     CommandGroup cg;
 
     if (gdb->has_disable_command())
     {
-        gdb_command(gdb->disable_command(all_numbers(nrs)), w);
+        gdb_command(gdb->disable_command(all_numbers(nrs)));
     }
     else if (gdb->has_conditions())
     {
         // Set breakpoint condition to `false'
-        disable_bps_cond(nrs, w);
+        disable_bps_cond(nrs);
     }
 }
 
-void SourceView::delete_bps(const std::vector<int>& nrs, Widget w)
+void SourceView::delete_bps(const std::vector<int>& nrs)
 {
     CommandGroup cg;
 
@@ -1172,7 +1169,7 @@ void SourceView::delete_bps(const std::vector<int>& nrs, Widget w)
     }
     else if (gdb->has_delete_command())
     {
-        gdb_command(gdb->delete_command(all_numbers(nrs)), w);
+        gdb_command(gdb->delete_command(all_numbers(nrs)));
     }
     else
     {
@@ -1362,96 +1359,96 @@ void SourceView::bp_popup_set_pcCB(Widget w, XtPointer client_data,
 
 // ***************************************************************************
 //
-void SourceView::text_popup_breakCB (Widget w,
+void SourceView::text_popup_breakCB (Widget,
                                      XtPointer client_data,
                                      XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
-    create_bp(fortranize(*word_ptr, true), w);
+    create_bp(fortranize(*word_ptr, true));
 }
 
-void SourceView::text_popup_clearCB (Widget w, 
+void SourceView::text_popup_clearCB (Widget,
                                      XtPointer client_data, 
                                      XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
-    clear_bp(fortranize(*word_ptr, true), w);
+    clear_bp(fortranize(*word_ptr, true));
 }
 
 
 
 // ***************************************************************************
 //
-void SourceView::text_popup_printCB (Widget w, 
+void SourceView::text_popup_printCB (Widget,
                                      XtPointer client_data, 
                                      XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command(gdb->print_command(fortranize(*word_ptr), false), w);
+    gdb_command(gdb->print_command(fortranize(*word_ptr), false));
 }
 
-void SourceView::text_popup_print_refCB (Widget w, 
+void SourceView::text_popup_print_refCB (Widget,
                                          XtPointer client_data, XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command(gdb->print_command(deref(fortranize(*word_ptr)), false), w);
+    gdb_command(gdb->print_command(deref(fortranize(*word_ptr)), false));
 }
 
 
 // ***************************************************************************
 //
-void SourceView::text_popup_watchCB (Widget w, 
+void SourceView::text_popup_watchCB (Widget,
                                      XtPointer client_data, 
                                      XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command(gdb->watch_command(fortranize(*word_ptr)), w);
+    gdb_command(gdb->watch_command(fortranize(*word_ptr)));
 }
 
-void SourceView::text_popup_watch_refCB (Widget w, 
+void SourceView::text_popup_watch_refCB (Widget,
                                          XtPointer client_data, XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command(gdb->watch_command(deref(fortranize(*word_ptr))), w);
+    gdb_command(gdb->watch_command(deref(fortranize(*word_ptr))));
 }
 
 
 // ***************************************************************************
 //
-void SourceView::text_popup_dispCB (Widget w, XtPointer client_data, XtPointer)
+void SourceView::text_popup_dispCB (Widget, XtPointer client_data, XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command("graph display " + fortranize(*word_ptr), w);
+    gdb_command("graph display " + fortranize(*word_ptr));
 }
 
-void SourceView::text_popup_disp_refCB (Widget w, 
+void SourceView::text_popup_disp_refCB (Widget,
                                         XtPointer client_data, XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command("graph display " + deref(fortranize(*word_ptr)), w);
+    gdb_command("graph display " + deref(fortranize(*word_ptr)));
 }
 
 // ***************************************************************************
 //
-void SourceView::text_popup_whatisCB (Widget w, XtPointer client_data, 
+void SourceView::text_popup_whatisCB (Widget, XtPointer client_data,
                                       XtPointer)
 {
     const string* word_ptr = (const string*)client_data;
     assert(word_ptr->length() > 0);
 
-    gdb_command(gdb->whatis_command(fortranize(*word_ptr)), w);
+    gdb_command(gdb->whatis_command(fortranize(*word_ptr)));
 }
 
 // ***************************************************************************
@@ -4767,9 +4764,9 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
     {
         // Clicked on breakpoint
         if (control)
-            delete_bp(bp_nr, text_w);
+            delete_bp(bp_nr);
         else
-            edit_bp(bp_nr, text_w);
+            edit_bp(bp_nr);
         return;
     }
 
@@ -4840,9 +4837,9 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
         {
             // In breakpoint area, and we already have a breakpoint.
             if (control)
-                delete_bps(bps, text_w);
+                delete_bps(bps);
             else
-                edit_bps(bps, text_w);
+                edit_bps(bps);
         }
         else
         {
@@ -4850,9 +4847,9 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
             if (*num_params >= 2)
                 gdb_button_command(params[1]);
             else if (control)
-                create_temp_bp(source_arg->get_string(), w);
+                create_temp_bp(source_arg->get_string());
             else
-                create_bp(source_arg->get_string(), w);
+                create_bp(source_arg->get_string());
         }
     }
 }
@@ -4877,7 +4874,7 @@ void SourceView::setArgAct(Widget w, XEvent *, String *, Cardinal *)
 // Breakpoint selection
 //----------------------------------------------------------------------------
 
-void SourceView::NewBreakpointDCB(Widget w, XtPointer client_data, XtPointer)
+void SourceView::NewBreakpointDCB(Widget, XtPointer client_data, XtPointer)
 {
     Widget text = Widget(client_data);
     String _input = XmTextFieldGetString(text);
@@ -4886,7 +4883,7 @@ void SourceView::NewBreakpointDCB(Widget w, XtPointer client_data, XtPointer)
     if (input.empty())
         return;
 
-    create_bp(input, w);
+    create_bp(input);
 }
 
 void SourceView::NewBreakpointCB(Widget w, XtPointer, XtPointer)
@@ -4940,7 +4937,7 @@ void SourceView::SetWatchModeCB(Widget, XtPointer client_data,
         selected_watch_mode = WatchMode((int)(long)client_data);
 }
 
-void SourceView::NewWatchpointDCB(Widget w, XtPointer client_data, XtPointer)
+void SourceView::NewWatchpointDCB(Widget, XtPointer client_data, XtPointer)
 {
     Widget text = Widget(client_data);
     String _input = XmTextFieldGetString(text);
@@ -4951,7 +4948,7 @@ void SourceView::NewWatchpointDCB(Widget w, XtPointer client_data, XtPointer)
     if (input.empty())
         return;
 
-    gdb_command(gdb->watch_command(input, selected_watch_mode), w);
+    gdb_command(gdb->watch_command(input, selected_watch_mode));
 }
 
 void SourceView::NewWatchpointCB(Widget w, XtPointer, XtPointer)
@@ -5460,7 +5457,7 @@ void SourceView::EditBreakpointPropertiesCB(Widget,
     edit_bps(breakpoint_nrs);
 }
 
-void SourceView::edit_bps(std::vector<int>& breakpoint_nrs, Widget /* origin */)
+void SourceView::edit_bps(std::vector<int>& breakpoint_nrs)
 {
     if (breakpoint_nrs.size() == 0)
         return;                        // No breakpoints given
@@ -5614,7 +5611,7 @@ void SourceView::edit_bps(std::vector<int>& breakpoint_nrs, Widget /* origin */)
 }
 
 // Set breakpoint condition
-void SourceView::SetBreakpointConditionCB(Widget w,
+void SourceView::SetBreakpointConditionCB(Widget,
                                           XtPointer client_data, 
                                           XtPointer call_data)
 {
@@ -5641,7 +5638,7 @@ void SourceView::SetBreakpointConditionCB(Widget w,
         (BreakpointPropertiesInfo *)client_data;
 
     String cond = XmTextFieldGetString(info->condition);
-    set_bps_cond(info->nrs, cond, w);
+    set_bps_cond(info->nrs, cond);
     XtFree(cond);
 }
 
@@ -5659,7 +5656,7 @@ void SourceView::ApplyBreakpointPropertiesCB(Widget w,
 
     // Apply condition
     String cond = XmTextFieldGetString(info->condition);
-    set_bps_cond(info->nrs, cond, w);
+    set_bps_cond(info->nrs, cond);
     XtFree(cond);
 
     if (XtIsManaged(XtParent(info->editor)))
@@ -5733,23 +5730,23 @@ void SourceView::MakeBreakpointsTempCB(Widget, XtPointer client_data,
 
 
 // Delete Breakpoint
-void SourceView::DeleteBreakpointsCB(Widget w, XtPointer client_data, 
+void SourceView::DeleteBreakpointsCB(Widget, XtPointer client_data,
                                      XtPointer)
 {
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    delete_bps(info->nrs, w);
+    delete_bps(info->nrs);
 }
 
 // Enable Breakpoints
-void SourceView::EnableBreakpointsCB(Widget w, XtPointer client_data,
+void SourceView::EnableBreakpointsCB(Widget, XtPointer client_data,
                                      XtPointer)
 {
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    enable_bps(info->nrs, w);
+    enable_bps(info->nrs);
 }
 
 // Disable Breakpoints
@@ -5762,7 +5759,7 @@ void SourceView::DisableBreakpointsCB(Widget, XtPointer client_data, XtPointer)
 }
 
 // Record breakpoint commands
-void SourceView::RecordBreakpointCommandsCB(Widget w,
+void SourceView::RecordBreakpointCommandsCB(Widget,
                                             XtPointer client_data, 
                                             XtPointer)
 {
@@ -5771,13 +5768,13 @@ void SourceView::RecordBreakpointCommandsCB(Widget w,
 
     gdb->removeHandler(Recording, RecordingHP, (void *)info);
     gdb->addHandler(Recording, RecordingHP, (void *)info);
-    gdb_command("commands " + itostring(info->nrs[0]), w);
+    gdb_command("commands " + itostring(info->nrs[0]));
 }
 
 // End recording breakpoint commands
-void SourceView::EndBreakpointCommandsCB(Widget w, XtPointer, XtPointer)
+void SourceView::EndBreakpointCommandsCB(Widget, XtPointer, XtPointer)
 {
-    gdb_command("end", w);
+    gdb_command("end");
 }
 
 void SourceView::RefreshBreakpointsHP(Agent *, void *, void *call_data)
@@ -5831,8 +5828,7 @@ void SourceView::RecordingHP(Agent *, void *client_data, void *call_data)
 }
 
 // Set breakpoint commands
-void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands,
-                                 Widget origin)
+void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands)
 {
     CommandGroup cg;
 
@@ -5901,10 +5897,10 @@ void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string
         {
         case GDB:
         {
-            gdb_command("commands " + itostring(nrs[i]), origin);
+            gdb_command("commands " + itostring(nrs[i]));
             for (int j = 0; j < int(commands.size()); j++)
-                gdb_command(commands[j], origin);
-            gdb_command("end", origin);
+                gdb_command(commands[j]);
+            gdb_command("end");
             break;
         }
 
@@ -5924,7 +5920,7 @@ void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string
             }
 
             cmd += " { " + action + " }";
-            gdb_command(cmd, origin);
+            gdb_command(cmd);
             break;
         }
 
@@ -5935,17 +5931,17 @@ void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string
                 bp->file_name() + ":" + 
                 itostring(bp->line_nr()) + 
                 " {" + action + "}";
-            gdb_command(cmd, origin);
-            delete_bp(bp->number(), origin);
+            gdb_command(cmd);
+            delete_bp(bp->number());
             break;
         }
 
         case PERL:
         {
             // Just set an action.
-            gdb_command("f " + bp->file_name(), origin);
+            gdb_command("f " + bp->file_name());
             const string cmd = "a " + itostring(bp->line_nr()) + " " + action;
-            gdb_command(cmd, origin);
+            gdb_command(cmd);
             break;
         }
 
@@ -5957,7 +5953,7 @@ void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string
 
 
 // Edit breakpoint commands
-void SourceView::EditBreakpointCommandsCB(Widget w,
+void SourceView::EditBreakpointCommandsCB(Widget,
                                           XtPointer client_data, 
                                           XtPointer)
 {
@@ -5986,7 +5982,7 @@ void SourceView::EditBreakpointCommandsCB(Widget w,
             cmd = cmd.after('\n');
         }
 
-        set_bp_commands(info->nrs, commands, w);
+        set_bp_commands(info->nrs, commands);
 
         // Update all panels in the next run
         gdb->addHandler(Recording, RecordingHP, (void *)0);
@@ -6075,7 +6071,7 @@ void SourceView::LookupBreakpointCB(Widget, XtPointer client_data, XtPointer)
     }
 }
 
-void SourceView::PrintWatchpointCB(Widget w, XtPointer client_data, XtPointer)
+void SourceView::PrintWatchpointCB(Widget, XtPointer client_data, XtPointer)
 {
     if (breakpoint_list_w == 0)
         return;
@@ -6108,7 +6104,7 @@ void SourceView::PrintWatchpointCB(Widget w, XtPointer client_data, XtPointer)
         break;
 
     case WATCHPOINT:
-        gdb_command(gdb->print_command(bp->expr(), false), w);
+        gdb_command(gdb->print_command(bp->expr(), false));
         break;
     }
 }
@@ -7050,7 +7046,7 @@ void SourceView::ThreadDialogPoppedDownCB(Widget, XtPointer, XtPointer)
     thread_dialog_popped_up = false;
 }
 
-void SourceView::ThreadCommandCB(Widget w, XtPointer client_data, XtPointer)
+void SourceView::ThreadCommandCB(Widget, XtPointer client_data, XtPointer)
 {
     string command = (char *)client_data;
 
@@ -7061,10 +7057,10 @@ void SourceView::ThreadCommandCB(Widget w, XtPointer client_data, XtPointer)
     for (int i = 0; i < int(threads.size()); i++)
         command += " " + itostring(threads[i]);
 
-    gdb_command(command, w);
+    gdb_command(command);
 }
 
-void SourceView::SelectThreadCB(Widget w, XtPointer, XtPointer)
+void SourceView::SelectThreadCB(Widget, XtPointer, XtPointer)
 {
     // Get the selected threads
     std::vector<int> threads;
@@ -7073,7 +7069,7 @@ void SourceView::SelectThreadCB(Widget w, XtPointer, XtPointer)
     if (threads.size() == 1)
     {
         // Make single thread the default thread.
-        gdb_command("thread " + itostring(threads[0]), w);
+        gdb_command("thread " + itostring(threads[0]));
     }
     else if (threads.size() == 0 &&
              ( gdb->type() == JDB || (gdb->type() == DBX && gdb->isSunDBX()) )
@@ -7107,13 +7103,14 @@ void SourceView::SelectThreadCB(Widget w, XtPointer, XtPointer)
                   if (threadgroup == current_threadgroup)
                     threadgroup = "system"; // show all threadgroups
 
-                  gdb_command("threadgroup " + threadgroup, w);
+                  gdb_command("threadgroup " + threadgroup);
                 }
-            } else
+            } 
+            else
             {
                 string thread = item.after("t@");
                 thread = thread.before(" ");
-                gdb_command("thread t@" + thread, w);
+                gdb_command("thread t@" + thread);
             }
         }
     }
@@ -8673,12 +8670,12 @@ void SourceView::dropGlyphAct (Widget glyph, XEvent *e,
     if (current_drag_breakpoint)
     {
         // Move breakpoint
-        changed = move_bp(current_drag_breakpoint, address, text_w, copy);
+        changed = move_bp(current_drag_breakpoint, address, copy);
     }
     else
     {
         // Move exec pos
-        changed = move_pc(address, text_w);
+        changed = move_pc(address);
     }
 
     if (changed)
@@ -8797,7 +8794,7 @@ void SourceView::deleteGlyphAct(Widget glyph, XEvent *, String *, Cardinal *)
         }
     }
 
-    delete_bps(bps, glyph);
+    delete_bps(bps);
 }
 
 
@@ -9124,7 +9121,7 @@ void SourceView::show_pc(const string& pc, XmHighlightMode mode,
         RefreshDisassembleInfo *info = 
             new RefreshDisassembleInfo(pc, mode, msg);
 
-        gdb_command(gdb->disassemble_command(start, end), 0,
+        gdb_command(gdb->disassemble_command(start, end),
                     refresh_codeOQC, (void *)info);
         return;
     }

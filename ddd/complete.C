@@ -295,7 +295,7 @@ static void complete(Widget w, XEvent *e, const string& input, string cmd)
 	XmTextSetEditable(w, False);
     XmTextSetEditable(gdb_w, False);
     
-    gdb_command(complete_cmd, gdb_w, complete_reply, (void *)&info);
+    gdb_command(complete_cmd, complete_reply, (void *)&info);
 
     completion_delay = new Delay;
 }

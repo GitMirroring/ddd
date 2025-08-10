@@ -5706,7 +5706,6 @@ static void WhenReady(Widget w, XtPointer client_data, XtPointer call_data)
     set_status_mstring(msg);
 
     Command c(gdb->nop_command(XtName(w)));
-    c.origin   = w;
     c.callback = DoneCB;
     c.data     = (void *)info;
     c.verbose  = false;
@@ -5761,7 +5760,7 @@ static void gdb_echo_detectedHP(Agent *, void *, void *call_data)
             set_status(gdb->title() + " is running in echo mode.");
 
             // Attempt to disable echo mode explicitly via stty command.
-            gdb_command(gdb->shell_command("stty -echo -onlcr"), 0, 0, 0, 
+            gdb_command(gdb->shell_command("stty -echo -onlcr"), 0, 0,
                         false, false, COMMAND_PRIORITY_AGAIN);
         }
         else

@@ -1366,7 +1366,7 @@ static void get_confirm(const string& complete_answer, void *qu_data)
 static void detach()
 {
     bool confirm = true;
-    gdb_command("show confirm", 0, get_confirm, &confirm);
+    gdb_command("show confirm", get_confirm, &confirm);
     syncCommandQueue();
 
     if (confirm)

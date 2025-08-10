@@ -390,7 +390,7 @@ void ddd_show_signal(int sig)
 
     // Interrupt current GDB action
     gdb_keyboard_command = true;
-    gdb_command("\003", gdb_w);
+    gdb_command("\003");
 
     // Show the message in an error dialog,
     // allowing the user to clean up manually.
@@ -421,7 +421,7 @@ void ddd_show_exception(const char *c, const char *what)
 
     // Interrupt current GDB action
     gdb_keyboard_command = true;
-    gdb_command("\003", gdb_w);
+    gdb_command("\003");
 
     // Show the message in an error dialog,
     // allowing the user to clean up manually.
@@ -1208,7 +1208,7 @@ static void DDDDoneCB(Widget w, XtPointer client_data, XtPointer call_data)
 
     if (can_do_gdb_command())
     {
-	Command c("quit", w);	// This works for all inferior debuggers
+	Command c("quit");	// This works for all inferior debuggers
 	c.callback = DDDQuitCanceledCB;
 	gdb_command(c);
 	return;

@@ -71,7 +71,6 @@ typedef void (*OQCProc)(const string& complete_answer, void *qu_data);
 struct Command
 {
     string command;		// Command text
-    Widget origin;		// Origin
     OQCProc callback;		// Completion of COMMAND
     OACProc extra_callback;	// Completion of extra commands
     void *data;			// Data for callbacks
@@ -82,56 +81,42 @@ struct Command
     bool start_undo;		// Flag: individual undo command?
     int priority;		// Priority (highest get executed first)
 
-private:
-    static void clear_origin(Widget w, XtPointer client_data, 
-			     XtPointer call_data);
-    void add_destroy_callback();
-    void remove_destroy_callback();
-
-public:
-    Command(const string& cmd, Widget w, OQCProc cb, void *d = 0,
+    Command(const string& cmd, OQCProc cb, void *d = 0,
 	    bool v = false, bool c = false, int p = COMMAND_PRIORITY_SYSTEM)
-	: command(cmd), origin(w), callback(cb), extra_callback(0), data(d),
+	: command(cmd), callback(cb), extra_callback(0), data(d),
 	  echo(v), verbose(v), prompt(v), check(c),
 	  start_undo(!CommandGroup::active || CommandGroup::first_command),
 	  priority(p)
     {
-	add_destroy_callback();
 	CommandGroup::first_command = false;
     }
 
-    Command(const string& cmd, Widget w = 0)
-	: command(cmd), origin(w), callback(0), extra_callback(0), data(0),
+    Command(const string& cmd)
+	: command(cmd), callback(0), extra_callback(0), data(0),
 	  echo(true), verbose(true), prompt(true), check(true),
 	  start_undo(!CommandGroup::active || CommandGroup::first_command),
 	  priority(COMMAND_PRIORITY_USER)
     {
-	add_destroy_callback();
 	CommandGroup::first_command = false;
     }
 
     Command(const Command& c)
-	: command(c.command), origin(c.origin), callback(c.callback),
+	: command(c.command), callback(c.callback),
 	  extra_callback(c.extra_callback), data(c.data), 
 	  echo(c.echo), verbose(c.verbose), prompt(c.prompt),
 	  check(c.check), start_undo(c.start_undo), priority(c.priority)
     {
-	add_destroy_callback();
     }
 
     ~Command()
     {
-	remove_destroy_callback();
     }
 
     Command& operator = (const Command& c)
     {
 	if (this != &c)
 	{
-	    remove_destroy_callback();
-
 	    command        = c.command;
-	    origin         = c.origin;
 	    callback       = c.callback;
 	    extra_callback = c.extra_callback;
 	    data           = c.data;
@@ -141,8 +126,6 @@ public:
 	    check          = c.check;
 	    start_undo     = c.start_undo;
 	    priority       = c.priority;
-
-	    add_destroy_callback();
 	}
 	return *this;
     }
@@ -150,7 +133,6 @@ public:
     {
 	return ((this == &c) || 
 	    (command == c.command 
-	    && origin == c.origin 
 	    && callback == c.callback 
 	    && extra_callback == c.extra_callback 
 	    && data == c.data
@@ -166,32 +148,32 @@ public:
 // Enqueue COMMAND in command queue
 extern void gdb_command(const Command& command);
 
-inline void gdb_command(const string &command, Widget origin,
+inline void gdb_command(const string &command,
 			OQCProc callback, void *data = 0,
 			bool verbose = false, bool check = false,
 			int priority = COMMAND_PRIORITY_SYSTEM)
 {
-    gdb_command(Command(command, origin, callback, data,
+    gdb_command(Command(command, callback, data,
 			verbose, check, priority));
 }
 
-inline void gdb_command(const string &command, Widget origin = 0)
+inline void gdb_command(const string &command)
 {
-    gdb_command(Command(command, origin));
+    gdb_command(Command(command));
 }
 
-inline void gdb_batch(const string &command, Widget origin,
+inline void gdb_batch(const string &command,
 		      OQCProc callback, void *data = 0,
 		      bool verbose = false, bool check = false,
 		      int priority = COMMAND_PRIORITY_BATCH)
 {
-    gdb_command(Command(command, origin, callback, data,
+    gdb_command(Command(command, callback, data,
 			verbose, check, priority));
 }
 
-inline void gdb_batch(const string &command, Widget origin = 0)
+inline void gdb_batch(const string &command)
 {
-    gdb_command(Command(command, origin, OQCProc(0), 0,
+    gdb_command(Command(command, OQCProc(0), 0,
 			false, true, COMMAND_PRIORITY_BATCH));
 }
 

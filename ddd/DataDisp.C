@@ -408,7 +408,6 @@ MMDesc DataDisp::display_area[] =
 DispGraph *DataDisp::disp_graph             = 0;
 Widget     DataDisp::graph_edit             = 0;
 Widget     DataDisp::graph_form_w           = 0;
-Widget     DataDisp::last_origin            = 0;
 ArgField  *DataDisp::graph_arg              = 0;
 Widget     DataDisp::graph_cmd_w            = 0;
 Widget     DataDisp::graph_selection_w      = 0;
@@ -472,35 +471,6 @@ static void sort(std::vector<int>& a, bool (*le)(int, int) = default_le)
 	}
     } while (h != 1);
 }
-
-
-//----------------------------------------------------------------------------
-// Origin
-//-----------------------------------------------------------------------------
-
-void DataDisp::ClearOriginCB(Widget w, XtPointer, XtPointer)
-{
-    if (last_origin == w)
-    {
-	last_origin = 0;
-    }
-}
-
-void DataDisp::set_last_origin(Widget w)
-{
-    if (last_origin != 0)
-    {
-	XtRemoveCallback(last_origin, XtNdestroyCallback, ClearOriginCB, 0);
-    }
-
-    last_origin = find_shell(w);
-
-    if (last_origin != 0)
-    {
-	XtAddCallback(last_origin, XtNdestroyCallback, ClearOriginCB, 0);
-    }
-}
-
 
 
 //----------------------------------------------------------------------------
@@ -633,8 +603,6 @@ string DataDisp::pattern(const string& expr, bool shorten)
 void DataDisp::applyThemeCB (Widget w, XtPointer client_data, 
 			     XtPointer call_data)
 {
-    set_last_origin(w);
-
     string theme = String(client_data);
 
     if (gdb->recording())
@@ -702,10 +670,8 @@ void DataDisp::applyThemeCB (Widget w, XtPointer client_data,
 }
 
 // Unapply the theme in CLIENT_DATA from the selected item.
-void DataDisp::unapplyThemeCB (Widget w, XtPointer client_data, XtPointer)
+void DataDisp::unapplyThemeCB (Widget, XtPointer client_data, XtPointer)
 {
-    set_last_origin(w);
-
     string theme = String(client_data);
 
     if (gdb->recording())
@@ -731,7 +697,7 @@ void DataDisp::unapplyThemeCB (Widget w, XtPointer client_data, XtPointer)
     tp.remove(pattern(expr, false));
     if (!tp.matches(expr))
     {
-	unapply_theme(theme, pattern(expr, false), w);
+	unapply_theme(theme, pattern(expr, false));
 	return;
     }
 
@@ -739,7 +705,7 @@ void DataDisp::unapplyThemeCB (Widget w, XtPointer client_data, XtPointer)
     tp.remove(pattern(expr));
     if (!tp.matches(expr))
     {
-	unapply_theme(theme, pattern(expr), w);
+	unapply_theme(theme, pattern(expr));
 	return;
     }
 
@@ -750,7 +716,7 @@ void DataDisp::unapplyThemeCB (Widget w, XtPointer client_data, XtPointer)
 	tp.remove(patterns[i]);
 	if (!tp.matches(expr))
 	{
-	    unapply_theme(theme, patterns[i], w);
+	    unapply_theme(theme, patterns[i]);
 	    return;
 	}
     }
@@ -881,8 +847,6 @@ void DataDisp::toggle_themeSQ(const string& theme, const string& pattern,
 void DataDisp::dereferenceCB(Widget w, XtPointer client_data, 
 			     XtPointer call_data)
 {
-    set_last_origin(w);
-
     DispNode *disp_node_arg   = selected_node();
     DispValue *disp_value_arg = selected_value();
     if (disp_node_arg == 0 || disp_value_arg == 0)
@@ -901,11 +865,11 @@ void DataDisp::dereferenceCB(Widget w, XtPointer client_data,
     else
 	depends_on = itostring(disp_node_arg->disp_nr());
 
-    new_display(display_expression, 0, depends_on, false, false, w);
+    new_display(display_expression, 0, depends_on, false, false);
 }
 
 // Replace node by its dereferenced variant
-void DataDisp::dereferenceInPlaceCB(Widget w, XtPointer, XtPointer)
+void DataDisp::dereferenceInPlaceCB(Widget, XtPointer, XtPointer)
 {
     DispNode *disp_node_arg   = selected_node();
     DispValue *disp_value_arg = selected_value();
@@ -916,11 +880,11 @@ void DataDisp::dereferenceInPlaceCB(Widget w, XtPointer, XtPointer)
 
     static BoxPoint p;
     p = disp_node_arg->pos();
-    new_display(display_expression, &p, "", false, false, w);
+    new_display(display_expression, &p, "", false, false);
 
     std::vector<int> nrs;
     nrs.push_back(disp_node_arg->disp_nr());
-    delete_display(nrs, w);
+    delete_display(nrs);
 }
 
 void DataDisp::dereferenceArgCB(Widget w, XtPointer client_data, 
@@ -932,7 +896,7 @@ void DataDisp::dereferenceArgCB(Widget w, XtPointer client_data,
 	return;
     }
 
-    new_display(deref(source_arg->get_string()), 0, "", false, false, w);
+    new_display(deref(source_arg->get_string()), 0, "", false, false);
 }
 
 void DataDisp::toggleDetailCB(Widget dialog,
@@ -946,8 +910,6 @@ void DataDisp::toggleDetailCB(Widget dialog,
     }
 
     int depth = (int)(long)client_data;
-
-    set_last_origin(dialog);
 
     std::vector<int> disable_nrs;
     std::vector<int> enable_nrs;
@@ -1004,9 +966,9 @@ void DataDisp::toggleDetailCB(Widget dialog,
     }
 
     if (enable_nrs.size() > 0)
-	enable_display(enable_nrs, dialog);
+	enable_display(enable_nrs);
     else if (disable_nrs.size() > 0)
-	disable_display(disable_nrs, dialog);
+	disable_display(disable_nrs);
 
     if (changed)
 	refresh_graph_edit();
@@ -1025,10 +987,8 @@ void DataDisp::showMoreDetailCB(Widget dialog, XtPointer client_data,
     show(dialog, 0, more);
 }
 
-void DataDisp::show(Widget dialog, int depth, int more)
+void DataDisp::show(Widget, int depth, int more)
 {
-    set_last_origin(dialog);
-
     if (gdb->recording())
     {
 	gdb_command("graph enable display " + source_arg->get_string());
@@ -1074,7 +1034,7 @@ void DataDisp::show(Widget dialog, int depth, int more)
 	}
     }
 
-    enable_display(disp_nrs, dialog);
+    enable_display(disp_nrs);
 
     if (changed)
 	refresh_graph_edit();
@@ -1082,10 +1042,8 @@ void DataDisp::show(Widget dialog, int depth, int more)
 
 
 
-void DataDisp::hideDetailCB (Widget dialog, XtPointer, XtPointer)
+void DataDisp::hideDetailCB (Widget, XtPointer, XtPointer)
 {
-    set_last_origin(dialog);
-
     if (gdb->recording())
     {
 	gdb_command("graph disable display " + source_arg->get_string());
@@ -1121,7 +1079,7 @@ void DataDisp::hideDetailCB (Widget dialog, XtPointer, XtPointer)
 	}
     }
 
-    disable_display(disp_nrs, dialog);
+    disable_display(disp_nrs);
 
     if (changed)
 	refresh_graph_edit();
@@ -1179,11 +1137,9 @@ void DataDisp::rotate_node(DispNode *dn, bool all)
     dn->refresh();
 }
 
-void DataDisp::rotateCB(Widget w, XtPointer client_data, XtPointer)
+void DataDisp::rotateCB(Widget, XtPointer client_data, XtPointer)
 {
     bool rotate_all = bool(client_data);
-
-    set_last_origin(w);
 
     MapRef ref;
     for (DispNode* dn = disp_graph->first(ref); 
@@ -1197,9 +1153,8 @@ void DataDisp::rotateCB(Widget w, XtPointer client_data, XtPointer)
     refresh_graph_edit();
 }
 
-void DataDisp::toggleDisableCB (Widget dialog, XtPointer, XtPointer)
+void DataDisp::toggleDisableCB (Widget, XtPointer, XtPointer)
 {
-    set_last_origin(dialog);
     std::vector<int> disp_nrs;
 
     bool do_enable  = true;
@@ -1221,9 +1176,9 @@ void DataDisp::toggleDisableCB (Widget dialog, XtPointer, XtPointer)
     }
 
     if (do_enable)
-	enable_display(disp_nrs, dialog);
+	enable_display(disp_nrs);
     else if (do_disable)
-	disable_display(disp_nrs, dialog);
+	disable_display(disp_nrs);
 }
 
 void DataDisp::select_with_all_descendants(GraphNode *node)
@@ -1266,8 +1221,6 @@ void DataDisp::select_with_all_ancestors(GraphNode *node)
 void DataDisp::deleteCB (Widget dialog, XtPointer /* client_data */,
 			 XtPointer call_data)
 {
-    set_last_origin(dialog);
-
     DispValue *dv = selected_value();
     DispNode  *dn = selected_node();
 
@@ -1321,10 +1274,10 @@ void DataDisp::deleteCB (Widget dialog, XtPointer /* client_data */,
     for (i = 0; i < int(descendants.size()); i++)
 	select_with_all_ancestors(descendants[i]);
 
-    delete_display(disp_nrs, dialog);
+    delete_display(disp_nrs);
 }
 
-void DataDisp::refreshCB(Widget w, XtPointer, XtPointer)
+void DataDisp::refreshCB(Widget, XtPointer, XtPointer)
 {
     // Unmerge all displays
     MapRef ref;
@@ -1336,33 +1289,27 @@ void DataDisp::refreshCB(Widget w, XtPointer, XtPointer)
     }
 
     // Refresh them
-    refresh_display(w);
+    refresh_display();
 }
 
-void DataDisp::selectAllCB(Widget w, XtPointer, XtPointer)
+void DataDisp::selectAllCB(Widget, XtPointer, XtPointer)
 {
     // StatusDelay d("Selecting all displays");
-
-    set_last_origin(w);
     XtCallActionProc(graph_edit, 
 		     "select-all", (XEvent *)0, (String *)0, 0);
     refresh_graph_edit();
 }
 
-void DataDisp::unselectAllCB(Widget w, XtPointer, XtPointer)
+void DataDisp::unselectAllCB(Widget, XtPointer, XtPointer)
 {
     // StatusDelay d("Unselecting all displays");
-
-    set_last_origin(w);
     XtCallActionProc(graph_edit, 
 		     "unselect-all", (XEvent *)0, (String *)0, 0);
     refresh_graph_edit();
 }
 
-void DataDisp::enableCB(Widget w, XtPointer, XtPointer)
+void DataDisp::enableCB(Widget, XtPointer, XtPointer)
 {
-    set_last_origin(w);
-
     std::vector<int> disp_nrs;
 
     MapRef ref;
@@ -1376,13 +1323,11 @@ void DataDisp::enableCB(Widget w, XtPointer, XtPointer)
 	}
     }
 
-    enable_display(disp_nrs, w);
+    enable_display(disp_nrs);
 }
 
-void DataDisp::disableCB(Widget w, XtPointer, XtPointer)
+void DataDisp::disableCB(Widget, XtPointer, XtPointer)
 {
-    set_last_origin(w);
-
     std::vector<int> disp_nrs;
 
     MapRef ref;
@@ -1396,18 +1341,16 @@ void DataDisp::disableCB(Widget w, XtPointer, XtPointer)
 	}
     }
 
-    disable_display(disp_nrs, w);
+    disable_display(disp_nrs);
 }
 
 
-void DataDisp::shortcutCB(Widget w, XtPointer client_data, XtPointer)
+void DataDisp::shortcutCB(Widget, XtPointer client_data, XtPointer)
 {
     int number = ((int)(long)client_data) - 1;
 
     assert (number >= 0);
     assert (number < int(shortcut_exprs.size()));
-
-    set_last_origin(w);
 
     string expr = shortcut_exprs[number];
 
@@ -1432,7 +1375,7 @@ void DataDisp::shortcutCB(Widget w, XtPointer client_data, XtPointer)
 
     expr.gsub("()", arg);
 
-    new_display(expr, 0, depends_on, false, false, w);
+    new_display(expr, 0, depends_on, false, false);
 }
 
 // Set shortcut menu to expressions EXPRS
@@ -1676,14 +1619,12 @@ void DataDisp::DoubleClickCB(Widget w, XtPointer, XtPointer call_data)
 // Popup menu callbacks
 //-----------------------------------------------------------------------------
 
-void DataDisp::popup_new_argCB (Widget    display_dialog,
+void DataDisp::popup_new_argCB (Widget,
 				XtPointer client_data,
 				XtPointer)
 {
-    set_last_origin(display_dialog);
-
     BoxPoint *p = (BoxPoint *) client_data;
-    new_display(source_arg->get_string(), p, "", false, false, display_dialog);
+    new_display(source_arg->get_string(), p, "", false, false);
 }
 
 
@@ -1691,8 +1632,6 @@ void DataDisp::popup_newCB (Widget    display_dialog,
 			    XtPointer client_data,
 			    XtPointer)
 {
-    set_last_origin(display_dialog);
-
     BoxPoint *p = (BoxPoint *) client_data;
     new_displayCD(display_dialog, *p);
 }
@@ -1712,7 +1651,6 @@ public:
     BoxPoint point;
     BoxPoint *point_ptr;
     string depends_on;
-    Widget origin;
     Widget shortcut;
     Widget text;
     bool verbose;
@@ -1733,7 +1671,6 @@ public:
 	  point(),
 	  point_ptr(0),
 	  depends_on(),
-	  origin(0),
 	  shortcut(0),
 	  text(0),
 	  verbose(false),
@@ -1756,7 +1693,6 @@ public:
 	  point(info.point),
 	  point_ptr(info.point_ptr),
 	  depends_on(info.depends_on),
-	  origin(info.origin),
 	  shortcut(info.shortcut),
 	  text(info.text),
 	  verbose(info.verbose),
@@ -1776,10 +1712,8 @@ private:
 int NewDisplayInfo::cluster_nr     = 0;
 int NewDisplayInfo::cluster_offset = 0;
 
-void DataDisp::new_displayDCB (Widget dialog, XtPointer client_data, XtPointer)
+void DataDisp::new_displayDCB (Widget, XtPointer client_data, XtPointer)
 {
-    set_last_origin(dialog);
-
     NewDisplayInfo *info = (NewDisplayInfo *)client_data;
 
     char *inp = XmTextFieldGetString(info->text);
@@ -1792,7 +1726,7 @@ void DataDisp::new_displayDCB (Widget dialog, XtPointer client_data, XtPointer)
     if (!expr.empty())
     {
 	new_display(expr, info->point_ptr, info->depends_on, info->clustered,
-		    info->plotted, info->origin);
+		    info->plotted);
 
 	if (info->shortcut != 0 && XmToggleButtonGetState(info->shortcut))
 	{
@@ -1869,7 +1803,6 @@ void DataDisp::new_displayCD (Widget w, const BoxPoint &box_point)
     static NewDisplayInfo info;
     if (info.point_ptr == 0)
 	info.point_ptr = new BoxPoint;
-    info.origin = w;
 
     static Widget new_display_dialog = 
 	create_display_dialog(w, "new_display_dialog", info);
@@ -1886,7 +1819,6 @@ void DataDisp::new_displayCD (Widget w, const BoxPoint &box_point)
 // Create a new display
 void DataDisp::newCB(Widget w, XtPointer, XtPointer)
 {
-    set_last_origin(w);
     new_displayCD(w);
 }
 
@@ -1894,8 +1826,6 @@ void DataDisp::newCB(Widget w, XtPointer, XtPointer)
 void DataDisp::dependentCB(Widget w, XtPointer client_data, 
 			   XtPointer call_data)
 {
-    set_last_origin(w);
-
     DispNode *disp_node_arg   = selected_node();
     DispValue *disp_value_arg = selected_value();
     if (disp_node_arg == 0 
@@ -1911,8 +1841,6 @@ void DataDisp::dependentCB(Widget w, XtPointer client_data,
 	info.depends_on = disp_node_arg->name();
     else
 	info.depends_on = itostring(disp_node_arg->disp_nr());
-
-    info.origin = w;
 
     static Widget dependent_display_dialog = 
 	create_display_dialog(w, "dependent_display_dialog", info);
@@ -1954,10 +1882,10 @@ void DataDisp::displayArgCB(Widget w, XtPointer client_data,
 	    depends_on = itostring(disp_node_arg->disp_nr());
     }
 
-    new_display(arg, 0, depends_on, false, false, w);
+    new_display(arg, 0, depends_on, false, false);
 }
 
-void DataDisp::plotArgCB(Widget w, XtPointer, XtPointer)
+void DataDisp::plotArgCB(Widget, XtPointer, XtPointer)
 {
     DispValue *disp_value_arg = selected_value();
     if (disp_value_arg != 0)
@@ -1969,14 +1897,14 @@ void DataDisp::plotArgCB(Widget w, XtPointer, XtPointer)
 
     // Create new display and plot it
     string arg = source_arg->get_string();
-    new_display(arg, 0, "", false, true, w);
+    new_display(arg, 0, "", false, true);
 }
 
-void DataDisp::plotHistoryCB(Widget w, XtPointer, XtPointer)
+void DataDisp::plotHistoryCB(Widget, XtPointer, XtPointer)
 {
     // Create new display and plot its history
     const string arg = "`graph history " + source_arg->get_string() + "`";
-    new_display(arg, 0, "", false, true, w);
+    new_display(arg, 0, "", false, true);
 }
 
 void DataDisp::deleteArgCB(Widget dialog, XtPointer client_data, 
@@ -3399,7 +3327,7 @@ void DataDisp::again_new_displaySQ (XtPointer client_data, XtIntervalId *)
     NewDisplayInfo *info = (NewDisplayInfo *)client_data;
     new_displaySQ(info->display_expression, info->scope, info->point_ptr, 
 		  info->depends_on, info->deferred, info->clustered,
-		  info->plotted, info->origin, info->verbose, info->prompt);
+		  info->plotted, info->verbose, info->prompt);
     delete info;
 }
 
@@ -3441,7 +3369,7 @@ void DataDisp::new_displaySQ (const string& display_expression,
 			      const string& depends_on,
 			      DeferMode deferred, 
 			      bool clustered, bool plotted,
-			      Widget origin, bool verbose, bool do_prompt)
+			      bool verbose, bool do_prompt)
 {
     CommandGroup cg;
 
@@ -3473,7 +3401,6 @@ void DataDisp::new_displaySQ (const string& display_expression,
 	info.point_ptr = 0;
     }
     info.depends_on = depends_on;
-    info.origin     = origin;
 
     static Delay *reading_delay = 0;
     if (!DispBox::vsllib_initialized)
@@ -3496,9 +3423,6 @@ void DataDisp::new_displaySQ (const string& display_expression,
     }
     delete reading_delay;
     reading_delay = 0;
-
-    if (origin)
-	set_last_origin(origin);
 
     if (display_expression.empty())
 	return;
@@ -3530,8 +3454,7 @@ void DataDisp::new_displaySQ (const string& display_expression,
 	}
 	else
 	{
-	    gdb_command(cmd, last_origin, new_user_displayOQC, 
-			new NewDisplayInfo(info));
+	    gdb_command(cmd, new_user_displayOQC, new NewDisplayInfo(info));
 	}
     }
     else
@@ -3563,7 +3486,7 @@ void DataDisp::new_displaySQ (const string& display_expression,
 	    if (gdb->display_prints_values())
 	    {
 		gdb_command(gdb->display_command(expressions[i]),
-			    last_origin, new_data_displayOQC, infop);
+			    new_data_displayOQC, infop);
 	    }
 	    else
 	    {
@@ -3572,9 +3495,9 @@ void DataDisp::new_displaySQ (const string& display_expression,
 		info.cluster_offset = expressions.size() - 1;
 
 		gdb_command(gdb->display_command(expressions[i]),
-			    last_origin, OQCProc(0), (void *)0);
+			    OQCProc(0), (void *)0);
 		gdb_command(gdb->print_command(expressions[i], true),
-			    last_origin, new_data_displayOQC, infop);
+			    new_data_displayOQC, infop);
 	    }
 
 	    info.create_cluster = false;
@@ -3651,7 +3574,7 @@ void DataDisp::read_number_and_name(string& answer, string& nr, string& name)
 		// Could not determine number
 		post_warning("Could not determine number of display " 
 			     + quote(name), 
-			     "no_display_number_warning", last_origin);
+			     "no_display_number_warning", nullptr);
 	    }
 	}
 	
@@ -3878,7 +3801,7 @@ DispNode *DataDisp::new_data_node(const string& given_name,
     int nr = get_nr(nr_s);
     if (nr == 0 || display_name.empty())
     {
-	post_gdb_message(answer, true, last_origin);
+	post_gdb_message(answer, true, nullptr);
 	return 0;
     }
 
@@ -3915,7 +3838,7 @@ DispNode *DataDisp::new_data_node(const string& given_name,
     if (is_disabling(value, gdb))
     {
 	string error_msg = get_disp_value_str(value, gdb);
-	post_gdb_message(error_msg, true, last_origin);
+	post_gdb_message(error_msg, true, nullptr);
 	value = " ";
 	disabling_occurred = true;
     }
@@ -3930,15 +3853,14 @@ DispNode *DataDisp::new_data_node(const string& given_name,
     {
 	if (gdb->has_display_command())
 	{
-	    gdb_command("undisplay " + itostring(dn->disp_nr()), 
-			last_origin, OQCProc(0));
+	    gdb_command("undisplay " + itostring(dn->disp_nr()), OQCProc(0));
 	}
 
         // retry plotting with dereferenced pointer
         if (dn->value()!=nullptr && dn->value()->type()==Pointer)
-            new_display("*"+given_name, 0, "", false, true, nullptr);
+            new_display("*"+given_name, 0, "", false, true);
 	else
-	    post_gdb_message("Nothing to plot.", true, last_origin);
+	    post_gdb_message("Nothing to plot.", true, nullptr);
 
 	delete dn;
 	return nullptr;
@@ -3982,7 +3904,7 @@ DispNode *DataDisp::new_user_node(const string& name,
 
     if (plotted && (dn->value() == 0 || dn->value()->can_plot() == false))
     {
-	post_gdb_message("Nothing to plot.", true, last_origin);
+	post_gdb_message("Nothing to plot.", true, nullptr);
 	delete dn;
 	return 0;
     }
@@ -4057,10 +3979,8 @@ void DataDisp::new_data_displayOQC (const string& answer, void* data)
 	if (gdb->has_display_command())
 	{
 	    // No display output (GDB bug).  Refresh displays explicitly.
-	    gdb_command(gdb->display_command(), last_origin,
-			new_data_display_extraOQC, data,
-			false, false,
-			COMMAND_PRIORITY_AGAIN);
+	    gdb_command(gdb->display_command(), new_data_display_extraOQC, data,
+			false, false, COMMAND_PRIORITY_AGAIN);
 	}
 	else
 	{
@@ -4110,7 +4030,7 @@ void DataDisp::new_data_displayOQC (const string& answer, void* data)
 	else if (!have_valid_answer)
 	{
 	    if (info->verbose)
-		post_gdb_message(answer, info->prompt, last_origin);
+		post_gdb_message(answer, info->prompt, nullptr);
 	}
 
 	delete info;
@@ -4261,7 +4181,7 @@ int DataDisp::new_cluster(const string& name, bool plotted)
     if (!name.empty())
 	base += " " + name;
 
-    gdb_command("graph " + cmd + " `"  + base + "`", last_origin, 0);
+    gdb_command("graph " + cmd + " `"  + base + "`", 0);
     return -next_ddd_display_number;
 }
 
@@ -4365,11 +4285,8 @@ string DataDisp::refresh_display_cmd()
 #define PROCESS_USER         2
 #define PROCESS_ADDR         3
 
-void DataDisp::refresh_displaySQ(Widget origin, bool verbose, bool do_prompt)
+void DataDisp::refresh_displaySQ(bool verbose, bool do_prompt)
 {
-    if (origin)
-	set_last_origin(origin);
-
     // Some sanitizing actions...
     make_sane();
 
@@ -4475,7 +4392,7 @@ void DataDisp::refresh_displayOQAC (std::vector<string>& answers,
 	// If we had a `disabling' message, refresh displays once more
 	if (disabling_occurred)
 	{
-	    refresh_displaySQ(0, info->verbose, info->prompt);
+	    refresh_displaySQ(info->verbose, info->prompt);
 	    info->prompt = false;	// No more prompts
 	}
     }
@@ -4598,7 +4515,7 @@ void DataDisp::disable_displaySQ(std::vector<int>& display_nrs, bool verbose,
 	info.verbose = verbose;
 	info.prompt  = do_prompt;
 
-	gdb_command(cmd, last_origin, disable_displayOQC, (void *)&info);
+	gdb_command(cmd, disable_displayOQC, (void *)&info);
     }
 
     int disabled_user_displays = 0;
@@ -4679,7 +4596,7 @@ void DataDisp::enable_displaySQ(std::vector<int>& display_nrs, bool verbose,
 	info.verbose = verbose;
 	info.prompt  = do_prompt;
 
-	gdb_command(cmd, last_origin, enable_displayOQC, (void *)&info);
+	gdb_command(cmd, enable_displayOQC, (void *)&info);
     }
 
     // Handle user displays
@@ -4717,7 +4634,7 @@ void DataDisp::enable_displayOQC (const string& answer, void *data)
     if (info->verbose)
 	post_gdb_message(answer, false);
 
-    refresh_displaySQ(0, info->verbose, info->prompt);
+    refresh_displaySQ(info->verbose, info->prompt);
 }
 
 
@@ -4818,7 +4735,7 @@ void DataDisp::delete_displaySQ(std::vector<int>& display_nrs, bool verbose,
 	info.prompt      = do_prompt;
 	info.display_nrs = display_nrs;
 
-	Command c(cmd, last_origin, delete_displayOQC, (void *)&info);
+	Command c(cmd, delete_displayOQC, (void *)&info);
 	if (gdb->has_redisplaying_undisplay())
 	    c.verbose = false;
 	else
@@ -5114,7 +5031,7 @@ void DataDisp::process_info_display(string& info_display_answer,
 	    new_displaySQ(dn->name(), dn->scope(), &pos,
 			  depends_on, DeferIfNeeded, 
 			  dn->clustered(), dn->plotted(),
-			  0, false, false);
+			  false, false);
 	}
     }
 
@@ -6044,7 +5961,7 @@ void DataDisp::setDCB(Widget, XtPointer client_data, XtPointer call_data)
     string value(value_s);
     XtFree(value_s);
 
-    Command c(gdb->assign_command(info->name, value), last_origin);
+    Command c(gdb->assign_command(info->name, value));
     if (cbs->reason != XmCR_APPLY)
     {
 	// We've pressed OK => destroy widget as soon as command completes.
@@ -6081,7 +5998,7 @@ void DataDisp::new_user_display(const string& name)
     if (have_user_display(name))
 	return;
 
-    gdb_command("graph display `" + name + "`", last_origin);
+    gdb_command("graph display `" + name + "`");
 }
 
 void DataDisp::delete_user_display(const string& name)
@@ -6951,8 +6868,6 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
 	graph_edit = createScrolledGraphEdit(parent, "graph_edit", args, arg);
 	graph_form_w = scrollerOfGraphEdit(graph_edit);
     }
-
-    set_last_origin(graph_edit);
 
     // Add actions
     XtAppAddActions (app_context, actions, XtNumber (actions));

@@ -68,9 +68,6 @@ char Command_rcsid[] =
 #undef XtIsRealized
 #endif
 
-// Origin of last command
-static Widget gdb_last_origin;
-
 // True if a user command was processed
 static bool had_user_command = false;
 
@@ -119,12 +116,6 @@ void strip_auto_command_prefix(string& cmd)
 //-----------------------------------------------------------------------------
 // GDB command management
 //-----------------------------------------------------------------------------
-
-static void ClearOriginCB(Widget w, XtPointer, XtPointer)
-{
-    if (gdb_last_origin == w)
-	gdb_last_origin = 0;
-}
 
 // Translate frequently used commands
 void translate_command(string& command)
@@ -280,7 +271,7 @@ static void _do_gdb_command(const Command& c, bool is_command = true)
 	    bool saved_processing_gdb_commands = processing_gdb_commands;
 	    processing_gdb_commands = false;
 
-	    handle_running_commands(cmd, c.origin);
+	    handle_running_commands(cmd, nullptr);
 
 	    processing_gdb_commands = saved_processing_gdb_commands;
 	}
@@ -297,20 +288,6 @@ static void _do_gdb_command(const Command& c, bool is_command = true)
 
     gdb_keyboard_command = private_gdb_input;
 
-    if (gdb_last_origin != 0)
-    {
-	XtRemoveCallback(gdb_last_origin, XtNdestroyCallback, 
-			 ClearOriginCB, 0);
-    }
-
-    gdb_last_origin = find_shell(gdb_keyboard_command ? gdb_w : c.origin);
-
-    if (gdb_last_origin != 0)
-    {
-	XtAddCallback(gdb_last_origin, XtNdestroyCallback, 
-		      ClearOriginCB, 0);
-    }
-
     translate_command(cmd);
 
     // Allow for recursive calls in `send_gdb_command'
@@ -323,7 +300,7 @@ static void _do_gdb_command(const Command& c, bool is_command = true)
     }
     else
     {
-	send_gdb_command(cmd, c.origin, c.callback, c.extra_callback, c.data, 
+	send_gdb_command(cmd, c.callback, c.extra_callback, c.data,
 			 c.echo, c.verbose, c.prompt, c.check, c.start_undo);
     }
 
@@ -529,30 +506,6 @@ bool CommandGroup::first_command = true;
 //-----------------------------------------------------------------------------
 // Command queue
 //-----------------------------------------------------------------------------
-
-void Command::add_destroy_callback()
-{
-    if (origin != 0)
-	XtAddCallback(origin, XtNdestroyCallback, clear_origin, 
-		      (XtPointer)this);
-}
-
-void Command::remove_destroy_callback()
-{
-    if (origin != 0)
-	XtRemoveCallback(origin, XtNdestroyCallback, clear_origin,
-			 (XtPointer)this);
-}
-
-void Command::clear_origin(Widget w, XtPointer client_data, XtPointer)
-{
-    (void) w;			// Use it
-
-    // The widget is being destroyed.  Remove all references.
-    Command *command = (Command *)client_data;
-    assert(w == command->origin);
-    command->origin = 0;
-}
 
 typedef Queue<Command> CommandQueue;
 typedef QueueIter<Command> CommandQueueIter;
@@ -802,8 +755,6 @@ void syncCommandQueue()
 // Shell finder
 Widget find_shell(Widget w)
 {
-    if (w == 0)
-	w = gdb_last_origin;
     if (w == 0)
 	return command_shell;
 

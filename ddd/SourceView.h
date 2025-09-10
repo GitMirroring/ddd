@@ -62,7 +62,6 @@
 #include "ArgField.h"
 #include "GDBAgent.h"
 #include "template/Map.h"
-//#include "BreakPoint.h"
 #include "CodeCache.h"
 #include "x11/Delay.h"
 #include "template/StringSA.h"
@@ -304,9 +303,6 @@ class SourceView {
     static bool signal_received;              // Did we receive a signal?
 
     static WatchMode selected_watch_mode;     // Last selected watch mode
-
-    // The breakpoint map
-    static Map<int, BreakPoint> bp_map;
 
     // File attributes
     static IntIntArrayAssoc bps_in_line;  // non-glyph breakpoints in current source

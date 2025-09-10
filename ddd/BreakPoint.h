@@ -75,6 +75,8 @@ enum BPDispo {
     BPDIS			// Disable (`enable once' in GDB)
 };
 
+extern Map<int, BreakPoint> bp_map;
+
 class BreakPoint;
 
 class BreakPointLocn {

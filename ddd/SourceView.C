@@ -347,8 +347,6 @@ int  SourceView::code_indent_amount   = 4;
 int  SourceView::lines_above_cursor   = 2;
 int  SourceView::lines_below_cursor   = 3;
 
-Map<int, BreakPoint> SourceView::bp_map;
-
 IntIntArrayAssoc SourceView::bps_in_line;
 std::vector<string> SourceView::bp_addresses;
 CodeCache SourceView::code_cache;

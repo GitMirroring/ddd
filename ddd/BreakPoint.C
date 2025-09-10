@@ -1107,3 +1107,24 @@ bool BreakPoint::get_state(std::ostream& os, int nr, bool as_dummy,
 
     return true;
 }
+
+// Return if BP is in file & line
+bool BreakPoint::is_match(const string& file, int line)
+{
+    int i;
+    switch (type())
+    {
+    case BREAKPOINT:
+    case ACTIONPOINT:
+    case TRACEPOINT:
+        for (i = 0; i < n_locations(); i++) {
+            BreakPointLocn &locn = get_location(i);
+            if (locn.is_match(file, line)) return true;
+        }
+        return false;
+    case WATCHPOINT:
+        return false;
+    }
+
+    return false;                // Never reached
+}

@@ -41,6 +41,9 @@
 #include "base/strclass.h"
 #include "base/bool.h"
 #include "GDBAgent.h"
+#include "SourceView.h"
+
+extern class SourceView *source_view;
 
 // Breakpoint type, respectively:
 //  Breakpoint
@@ -100,6 +103,20 @@ public:
     // Associated glyphs in source and machine code
     Widget& source_glyph() { return mysource_glyph; }
     Widget& code_glyph()   { return mycode_glyph; }
+    // Check if BP Locn in file & line
+    bool is_match(const string& file, int line = 0)
+    {
+        return ((line == 0 || myline_nr == line) &&
+                (myfile_name.empty()
+                 || source_view->file_matches(myfile_name, file)));
+    }
+    // Check if BP Locn is in the curent source
+    bool is_match(int line = 0)
+    {
+        return (is_match(source_view->name_of_source(), line) ||
+                is_match(source_view->name_of_file(), line));
+    }
+
     friend class BreakPoint;
 };
 
@@ -230,6 +247,16 @@ public:
 
     // Stuff for constructing `false' breakpoint conditions
     static string make_false(const string& cond);
+
+    // Check if BP matches file & line
+    bool is_match(const string& file, int line = 0);
+
+    // Check if BP matches current source
+    bool is_match(int line = 0) 
+    {
+        return (is_match(source_view->name_of_source(), line) ||
+                is_match(source_view->name_of_file(), line));
+    }
 };
 
 #endif // _DDD_BreakPoint_h

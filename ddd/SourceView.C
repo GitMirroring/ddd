@@ -124,6 +124,7 @@ char SourceView_rcsid[] =
 #include "version.h"
 #include "windows.h"
 #include "wm.h"
+#include "BreakPoint.h"
 
 // Motif stuff
 #include <Xm/Xm.h>
@@ -944,7 +945,7 @@ bool SourceView::move_bp(int bp_nr, const string& a, bool copy)
             string file = address.before(':');
             int line    = get_positive_nr(address.after(':'));
 
-            if (bp_matches(bp, file, line))
+            if (bp->is_match(file, line))
                 return false;        // Breakpoint already at address
         }
     }
@@ -1251,8 +1252,8 @@ string SourceView::clear_command(string pos, bool clear_next, int first_bp)
                         need_clear_actions = true;
                     }
 
-                    if (!bp_matches(bp, file, line_no) &&
-                        bp->type() == BREAKPOINT && 
+                    if (!bp->is_match(file, line_no) &&
+                        bp->type() == BREAKPOINT &&
                         bp->commands().size() > 0)
                     {
                         // We have other breakpoints with actions.
@@ -1263,7 +1264,7 @@ string SourceView::clear_command(string pos, bool clear_next, int first_bp)
                 for (bp = bp_map.first(ref); bp != 0; bp = bp_map.next(ref))
                 {
                     // If we have any associated actions, clear them all
-                    if (bp_matches(bp, file, line_no) && 
+                    if (bp->is_match(file, line_no) &&
                         bp->commands().size() > 0)
                     {
                         // This breakpoint has actions that must be cleared
@@ -1312,7 +1313,7 @@ string SourceView::clear_command(string pos, bool clear_next, int first_bp)
          bp = bp_map.next(ref))
     {
         if (bp->number() >= first_bp
-            && bp_matches(bp, file, line_no))
+            && bp->is_match(file, line_no))
             {
                 if (!bps.empty())
                     bps += gdb->wants_delete_comma() ? ", " : " ";
@@ -1531,6 +1532,8 @@ string SourceView::full_path(string file)
     return file;
 }
 
+//TODO:  file_matches() and base_matches() should not be member functions.
+
 bool SourceView::file_matches(const string& file1, const string& file2)
 {
     if (gdb->type() == JDB)
@@ -1568,46 +1571,6 @@ bool SourceView::is_current_file(const string& file)
 bool SourceView::base_matches(const string& file1, const string& file2)
 {
     return string(basename(file1.chars())) == string(basename(file2.chars()));
-}
-
-// Check if BP occurs in the current source text
-bool SourceView::bp_matches(BreakPoint *bp, int line)
-{
-    return bp_matches(bp, sourcecode.current_source_name(), line) ||
-        bp_matches(bp, sourcecode.get_filename(), line);
-}
-
-bool SourceView::bp_matches(BreakPoint *bp, const string& file, int line)
-{
-    int i;
-    switch (bp->type())
-    {
-    case BREAKPOINT:
-    case ACTIONPOINT:
-    case TRACEPOINT:
-        for (i = 0; i < bp->n_locations(); i++) {
-            BreakPointLocn &locn = bp->get_location(i);
-            if (bp_matches(locn, file, line)) return true;
-        }
-        return false;
-    case WATCHPOINT:
-        return false;
-    }
-
-    return false;                // Never reached
-}
-
-// Check if BP occurs in the current source text
-bool SourceView::bp_matches(BreakPointLocn &locn, int line)
-{
-    return bp_matches(locn, sourcecode.current_source_name(), line) ||
-        bp_matches(locn, sourcecode.get_filename(), line);
-}
-
-bool SourceView::bp_matches(BreakPointLocn &locn, const string& file, int line)
-{
-    return ((line == 0 || locn.line_nr() == line) &&
-            (locn.file_name().empty() || file_matches(locn.file_name(), file)));
 }
 
 // ***************************************************************************
@@ -1743,7 +1706,7 @@ void SourceView::set_source_argCB(Widget text_w,
                      bp != 0;
                      bp = bp_map.next(ref))
                 {
-                    bp->selected() = (bp_matches(bp, line_nr));
+                    bp->selected() = (bp->is_match(line_nr));
                 }
             }
         }
@@ -1827,7 +1790,7 @@ BreakPoint *SourceView::breakpoint_at(const string& arg)
         if (arg.matches(rxint))
         {
             // Line number for current source given
-            if (bp_matches(bp, atoi(arg.chars())))
+            if (bp->is_match(atoi(arg.chars())))
                 return bp;
         }
         else
@@ -1849,7 +1812,7 @@ BreakPoint *SourceView::breakpoint_at(const string& arg)
                 string file = pos.before(':');
                 string line = pos.after(':');
 
-                if (bp_matches(bp, file, atoi(line.chars())))
+                if (bp->is_match(file, atoi(line.chars())))
                     return bp;
             }
         }
@@ -2262,7 +2225,7 @@ void SourceView::refresh_source_bp_disp(bool reset)
     for (BreakPoint* bp = bp_map.first(ref); bp != 0; bp = bp_map.next(ref))
     {
         if ((bp->type() == BREAKPOINT || bp->type() == TRACEPOINT) && 
-            bp_matches(bp))
+            bp->is_match())
         {
             // ASSUME: multi-location breakpoints all have same source line
             bps_in_line[bp->line_nr()].push_back(bp->number());
@@ -3719,7 +3682,7 @@ void SourceView::process_info_bp (string& info_output,
         BreakPoint *bp = bp_map.get(bps_not_read[i]);
 
         // Older Perl versions only listed breakpoints in the current file
-        if (gdb->type() == PERL && !bp_matches(bp, sourcecode.get_filename()))
+        if (gdb->type() == PERL && !bp->is_match(sourcecode.get_filename()))
             continue;
 
         // Delete it
@@ -4790,7 +4753,7 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
                  bp != 0;
                  bp = bp_map.next(ref))
             {
-                if (bp_matches(bp, line_nr))
+                if (bp->is_match(line_nr))
                     bps.push_back(bp->number());
             }
         }
@@ -6145,7 +6108,7 @@ int SourceView::breakpoint_number(const string& bp_info, string& file)
 
     MapRef ref;
     for (BreakPoint* bp = bp_map.first(ref); bp != 0; bp = bp_map.next(ref))
-        if (bp_matches(bp, file, line))
+        if (bp->is_match(file, line))
             return bp->number(); // Existing breakpoint
 
     return 0;                       // New breakpoint
@@ -8106,7 +8069,7 @@ void SourceView::update_glyphs_now()
                     if (k == 0)
                     {
                         // Find source position
-                        if (!bp_matches(bp)
+                        if (!bp->is_match()
                             || sourcecode.get_num_lines() <= 0
                             || locn.line_nr() <= 0
                             || locn.line_nr() > sourcecode.get_num_lines())

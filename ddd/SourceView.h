@@ -62,7 +62,7 @@
 #include "ArgField.h"
 #include "GDBAgent.h"
 #include "template/Map.h"
-#include "BreakPoint.h"
+//#include "BreakPoint.h"
 #include "CodeCache.h"
 #include "x11/Delay.h"
 #include "template/StringSA.h"
@@ -311,24 +311,6 @@ class SourceView {
     // File attributes
     static IntIntArrayAssoc bps_in_line;  // non-glyph breakpoints in current source
     static std::vector<string> bp_addresses; // breakpoint addresses in current code
-
-    // True iff breakpoint BP is in current file (at LINE, if given)
-    static bool bp_matches(BreakPoint *bp, int line = 0);
-
-    // True iff breakpoint BP is in FILE (at LINE, if given)
-    static bool bp_matches(BreakPoint *bp, const string& file, int line = 0);
-
-    // True iff breakpoint location locn is in current file (at LINE, if given)
-    static bool bp_matches(BreakPointLocn &locn, int line = 0);
-
-    // True iff breakpoint location locn is in FILE (at LINE, if given)
-    static bool bp_matches(BreakPointLocn &locn, const string& file, int line = 0);
-
-    // True iff FILE1 is equal to FILE2
-    static bool file_matches(const string& file1, const string& file2);
-
-    // True iff the base names of FILE1 and FILE2 are equal
-    static bool base_matches(const string& file1, const string& file2);
 
     // True iff FILE is the currently loaded file
     static bool is_current_file(const string& file);
@@ -806,6 +788,8 @@ public:
     // Return current source file name
     static string name_of_source() { return sourcecode.current_source_name(); }
 
+    static string name_of_file() { return sourcecode.get_filename(); }
+
     // Return source text and machine code widget (read-only)
     static Widget source() { return source_text_w; }
     static Widget code()   { return code_text_w; }
@@ -889,6 +873,12 @@ public:
 
     // Set or unset showing earlier state
     static void showing_earlier_state(bool set);
+
+    // True iff FILE1 is equal to FILE2
+    static bool file_matches(const string& file1, const string& file2);
+
+    // True iff the base names of FILE1 and FILE2 are equal
+    static bool base_matches(const string& file1, const string& file2);
 };
 
 inline void SourceView::create_bp(const string& a)

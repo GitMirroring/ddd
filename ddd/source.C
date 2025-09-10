@@ -48,6 +48,7 @@ char source_rcsid[] =
 #include "shell.h"
 #include "status.h"
 #include "fortranize.h"
+#include "BreakPoint.h"
 
 #include <iostream>
 #include <Xm/Xm.h>

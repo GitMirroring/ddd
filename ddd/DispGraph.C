@@ -267,7 +267,6 @@ BoxPoint DispGraph::adjust_position (DispNode *new_node,
             else
                 off[Y] = overlapY + grid[Y];
 
-            printf("horiz %d  overlapX %d   overlapY %d  off %d %d\n", horizontal, overlapX, overlapY, off[X], off[Y]);
             pos                 += off;
             new_region.origin() += off;
 

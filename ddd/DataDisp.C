@@ -6715,6 +6715,23 @@ static bool Yes(RegionGraphNode *, const BoxSize&)
     return true;
 }
 
+bool DataDisp::bumpposition(const GraphGC& gc, GraphNode *node, const BoxPoint delta)
+{
+    for (GraphNode *r = disp_graph->firstNode(); r != 0; r = disp_graph->nextNode(r))
+    {
+        if (r == node)
+            continue;
+
+        if (!(node->region(gc) <= r->region(gc)))
+            continue;
+
+        r->moveTo(r->pos()+delta);
+        bumpposition(gc, r, delta);
+    }
+
+    return true;
+}
+
 // This one is called whenever NODE is to be resized to NEWSIZE
 bool DataDisp::bump(RegionGraphNode *node, const BoxSize& newSize)
 {
@@ -6745,6 +6762,9 @@ bool DataDisp::bump(RegionGraphNode *node, const BoxSize& newSize)
     // DELTA is the difference between old and new size
     BoxSize delta  = node->space(gc) - oldRegion.space();
 
+    if (delta[X]<=0 && delta[Y]<=0)
+        return true; // nothing to do
+
     // NODE_ORIGIN is the (old) upper left corner of NODE
     // BoxPoint node_origin = oldRegion.origin();
 
@@ -6762,6 +6782,9 @@ bool DataDisp::bump(RegionGraphNode *node, const BoxSize& newSize)
 	if (rn != 0 && (!rn->active() || rn->clustered()))
 	    continue;
 
+        if (!(node->region(gc) <= r->region(gc)))
+            continue;
+
 	// If ORIGIN (the upper left corner of R) is right of BUMPER,
 	// move R DELTA units to the right.  If it is below BUMPER,
 	// move R DELTA units down.
@@ -6770,13 +6793,16 @@ bool DataDisp::bump(RegionGraphNode *node, const BoxSize& newSize)
 	// BoxPoint r_bumper = r->origin(gc) + r->space(gc);
 
 	BoxPoint r_pos = r->pos();
+        BoxPoint r_old = r_pos;
 
 	if (r_origin[X] > node_bumper[X])
 	    r_pos[X] += delta[X];
 	if (r_origin[Y] > node_bumper[Y])
 	    r_pos[Y] += delta[Y];
 
-	r->moveTo(r_pos);
+        r->moveTo(r_pos);
+        // recursively test for overlaps of the moved box
+        bumpposition(gc, r, r_pos-r_old);
     }
 
     // All is done - don't use default behavior.

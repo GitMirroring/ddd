@@ -853,62 +853,6 @@ static uint32_t decode_utf8(const char *s, Utf8Pos len, Utf8Pos off, Utf8Pos *ne
     return 0xFFFD;
 }
 
-// static int cp_columns(uint32_t cp)
-// {
-//     // // Very simple heuristic; it can be replaced with wcwidth() or a full table.
-//     // if (cp < 0x80)
-//     //     return 1;      // ASCII
-//     //
-//     // // CJK Unified Ideographs & Hangul & Fullwidth forms → 2 columns
-//     // if ((cp >= 0x1100 && cp <= 0x115F) ||   // Hangul Jamo
-//     //     (cp >= 0x2E80 && cp <= 0xA4CF) ||   // CJK, Yi, etc.
-//     //     (cp >= 0xAC00 && cp <= 0xD7A3) ||   // Hangul Syllables
-//     //     (cp >= 0xF900 && cp <= 0xFAFF) ||   // CJK Compatibility Ideographs
-//     //     (cp >= 0xFF01 && cp <= 0xFF60) ||   // Fullwidth ASCII variants
-//     //     (cp >= 0xFFE0 && cp <= 0xFFE6))
-//     //     return 2;
-//     // return 1;
-//     // Control characters
-//     wchar_t wc = (wchar_t)cp;
-//     int w = wcwidth(wc);
-//     if (w >= 0)
-//         return w;      // 0, 1 or 2
-//
-//     // Fallback heuristic if wcwidth doesn’t know this char
-//     if (cp == 0)
-//         return 0;
-//
-//     if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0))
-//         return 0;
-//
-//     // Common combining mark ranges (not exhaustive, but much better)
-//     if ((cp >= 0x0300 && cp <= 0x036F) ||  // Combining Diacritical Marks
-//         (cp >= 0x1AB0 && cp <= 0x1AFF) ||  // Combining Diacritical Marks Extended
-//         (cp >= 0x1DC0 && cp <= 0x1DFF) ||  // Combining Diacritical Marks Supplement
-//         (cp >= 0x20D0 && cp <= 0x20FF) ||  // Combining Diacritical Marks for Symbols
-//         (cp >= 0xFE20 && cp <= 0xFE2F))    // Combining Half Marks
-//         return 0;
-//
-//     if (cp < 0x80)
-//         return 1; // printable ASCII
-//
-//     // CJK Unified Ideographs & Hangul & Fullwidth forms → 2 columns
-//     if ((cp >= 0x1100 && cp <= 0x115F) ||   // Hangul Jamo
-//         (cp >= 0x2E80 && cp <= 0xA4CF) ||   // CJK, Yi, etc.
-//         (cp >= 0xAC00 && cp <= 0xD7A3) ||   // Hangul Syllables
-//         (cp >= 0xF900 && cp <= 0xFAFF) ||   // CJK Compatibility Ideographs
-//         (cp >= 0xFF01 && cp <= 0xFF60) ||   // Fullwidth ASCII variants
-//         (cp >= 0xFFE0 && cp <= 0xFFE6) ||
-//         (cp >= 0x1F300 && cp <= 0x1F64F) || // many emoji + pictographs
-//         (cp >= 0x1F900 && cp <= 0x1F9FF))
-//         return 2;
-//
-//     // Emoji skin tone modifiers: U+1F3FB..U+1F3FF
-//     if (cp >= 0x1F3FB && cp <= 0x1F3FF)
-//         return 0;
-//
-//     return 1;
-// }
 static int cp_columns(uint32_t cp)
 {
     wchar_t wc = (wchar_t)cp;
@@ -916,9 +860,9 @@ static int cp_columns(uint32_t cp)
     if (w >= 0)
         return w;      // 0, 1 or 2
 
-        // Fallback heuristic if wcwidth doesn’t know this char
-        if (cp == 0)
-            return 0;
+    // Fallback heuristic if wcwidth doesn’t know this char
+    if (cp == 0)
+        return 0;
 
     if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0))
         return 0;
@@ -947,18 +891,18 @@ static int cp_columns(uint32_t cp)
     if (cp < 0x80)
         return 1; // printable ASCII
 
-        // CJK Unified Ideographs & Hangul & Fullwidth forms → 2 columns
-        if ((cp >= 0x1100 && cp <= 0x115F) ||   // Hangul Jamo
-            (cp >= 0x2E80 && cp <= 0xA4CF) ||   // CJK, Yi, etc.
-            (cp >= 0xAC00 && cp <= 0xD7A3) ||   // Hangul Syllables
-            (cp >= 0xF900 && cp <= 0xFAFF) ||   // CJK Compatibility Ideographs
-            (cp >= 0xFF01 && cp <= 0xFF60) ||   // Fullwidth ASCII variants
-            (cp >= 0xFFE0 && cp <= 0xFFE6) ||
-            (cp >= 0x1F300 && cp <= 0x1F64F) || // many emoji + pictographs
-            (cp >= 0x1F900 && cp <= 0x1F9FF))
-            return 2;
+    // CJK Unified Ideographs & Hangul & Fullwidth forms → 2 columns
+    if ((cp >= 0x1100 && cp <= 0x115F) ||   // Hangul Jamo
+        (cp >= 0x2E80 && cp <= 0xA4CF) ||   // CJK, Yi, etc.
+        (cp >= 0xAC00 && cp <= 0xD7A3) ||   // Hangul Syllables
+        (cp >= 0xF900 && cp <= 0xFAFF) ||   // CJK Compatibility Ideographs
+        (cp >= 0xFF01 && cp <= 0xFF60) ||   // Fullwidth ASCII variants
+        (cp >= 0xFFE0 && cp <= 0xFFE6) ||
+        (cp >= 0x1F300 && cp <= 0x1F64F) || // many emoji + pictographs
+        (cp >= 0x1F900 && cp <= 0x1F9FF))
+        return 2;
 
-        return 1;
+    return 1;
 }
 
 static int line_index_from_pos(CtvCtx *ctx, Utf8Pos p)
@@ -1691,7 +1635,6 @@ static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
         int h = 0, hslider = 0;
         if (ctx->hbar && XtIsManaged(ctx->hbar))
             XtVaGetValues(ctx->hbar, XmNvalue, &h, XmNsliderSize, &hslider, NULL);
-// printf("Button1: x=%d y=%d  h=%d sliderH=%d\n", x, y, h, hslider);
         ctx->drag_anchor = xy_to_pos(ctx, x, y, CTV_COORD_VIEWPORT);
         ctx->caret = ctx->drag_anchor;
         ctx->sel_start = ctx->sel_end = ctx->drag_anchor;
@@ -2851,28 +2794,6 @@ void XmhColorTextViewSetFontPattern(Widget w, const char *xft_pattern)
     queue_redraw(ctx);
 }
 
-// Ensure ctx->font_pt is updated when setting size/family
-// void XmhColorTextViewSetFont(Widget w, const char *family, double pt)
-// {
-//     CtvCtx *ctx = get_ctx(w);
-//     if (!ctx)
-//         return;
-//
-//     if (!family || !*family)
-//         family = "monospace";
-//
-//     if (pt <= 0)
-//         pt = 11.0;
-//
-//     // Update context so styled faces use the same size/family
-//     free((char*)ctx->font_family);
-//     ctx->font_family = strdup(family);
-//     ctx->font_pt = pt;
-//
-//     char pat[128];
-//     snprintf(pat, sizeof(pat), "%s:size=%.1f", family, pt);
-//     XmhColorTextViewSetFontPattern(w, pat);
-// }
 void XmhColorTextViewSetFont(Widget w, const char *family, double pt)
 {
     CtvCtx *ctx = get_ctx(w);

@@ -60,11 +60,6 @@ private:
     // Tab width
     int tab_width = DEFAULT_TAB_WIDTH;
 
-    // The indenting amounts
-    int source_indent_amount = 4;         // Source
-    int line_indent_amount = 4;           // Extra columns for line numbers
-    int script_indent_amount = 4;         // Minimum for scripts
-
     // File attributes
     string current_file_name = "";
     int line_count = 0;
@@ -136,16 +131,10 @@ public:
     int getLineOfBytepos(Utf8Pos pos);
     Utf8Pos getStartOfLineAtBytepos(Utf8Pos pos);
 
-    Utf8Pos charpos_to_bytepos(XmTextPosition pos);
-    XmTextPosition bytepos_to_charpos(Utf8Pos pos);
-
-
-
     // Read source text
     int read_current(string& file_name, bool force_reload, bool silent, Widget w);
 
     bool set_tab_width(int width);
-    bool set_indent(int source_indent, int script_indent);
 
     // Return current breakpoint indent amount.  If POS is given, add
     // the whitespace from POS.

@@ -472,7 +472,7 @@ bool SourceView::is_source_widget(Widget w)
 
 static const int MAX_INDENT = 64;
 
-int SourceView::indent_amount(Widget w, int pos)
+int SourceView::indent_amount(Widget w, Utf8Pos pos)
 {
     assert(is_source_widget(w) || is_code_widget(w));
 
@@ -482,7 +482,7 @@ int SourceView::indent_amount(Widget w, int pos)
     }
     else
     {
-        int line = sourcecode.line_of_pos(pos);
+        int line = sourcecode.getLineOfBytepos(pos);
         return sourcecode.calculate_indent(line);
     }
 }
@@ -2049,12 +2049,6 @@ void SourceView::set_indent(int source_indent, int code_indent, int script_inden
 {
     if (source_indent < 0 || code_indent < 0 || script_indent < 0)
         return;
-
-    if (sourcecode.set_indent(source_indent, script_indent))
-    {
-        StatusDelay delay("Reformatting");
-        reload();
-    }
 
     if (code_indent != code_indent_amount)
     {
@@ -4030,7 +4024,6 @@ void SourceView::find(const string& s,
 
     if (XmhColorTextViewGetSelectionPosition(source_text_w, &startpos, &endpos))
     {
-        cursor = sourcecode.charpos_to_bytepos(cursor);
         switch (direction)
         {
         case forward:
@@ -4116,13 +4109,9 @@ void SourceView::find(const string& s,
     else
     {
         // Highlight occurrence
-        int endpos = pos + matchlen;
-        pos = sourcecode.bytepos_to_charpos(pos);
-        endpos = sourcecode.bytepos_to_charpos(endpos);
-        TextSetSelection(source_text_w, pos, pos + matchlen, time);
+        CTV_TextSetSelection(source_text_w, pos, pos + matchlen, time);
 
         // Set position
-        cursor = sourcecode.bytepos_to_charpos(cursor);
         SetInsertionPosition(source_text_w, cursor, false);
 
         if (cursor == initial_cursor)

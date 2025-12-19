@@ -891,48 +891,6 @@ const subString SourceCode::get_source_at(int pos, int length)
     return current_source.at(pos, length);
 }
 
-Utf8Pos SourceCode::charpos_to_bytepos(XmTextPosition pos)
-{
-    int startline = line_of_pos(pos) - 1;
-    XmTextPosition charpos = textpos_of_line[startline];
-    Utf8Pos bytepos = bytepos_of_line[startline];
-    while (bytepos<int(current_source.length()))
-    {
-        wchar_t unicode;
-        bool res = utf8toUnicode(unicode, current_source.chars(), bytepos, current_source.length());
-        if (res==false)
-            break;
-        charpos++;
-
-        if (charpos==pos)
-            return bytepos;
-    }
-
-    return 0;
-}
-
-XmTextPosition SourceCode::bytepos_to_charpos(int pos)
-{
-    int startline = getLineOfBytepos(pos) - 1;
-    XmTextPosition charpos = textpos_of_line[startline];
-    Utf8Pos bytepos = bytepos_of_line[startline];
-    while (bytepos<int(current_source.length()))
-    {
-        wchar_t unicode;
-        bool res = utf8toUnicode(unicode, current_source.chars(), bytepos, current_source.length());
-        if (res==false)
-            break;
-        charpos++;
-
-        if (bytepos==pos)
-            return charpos;
-    }
-
-    return 0;
-}
-
-
-
 // Clear the file cache
 void SourceCode::clear_file_cache()
 {
@@ -954,21 +912,6 @@ bool SourceCode::set_tab_width(int width)
 
     // Make sure the tab width stays within reasonable ranges
     tab_width = min(max(width, 1), MAX_TAB_WIDTH);
-
-    return !current_file_name.empty();
-}
-
-//Change indentation
-bool SourceCode::set_indent(int source_indent, int script_indent)
-{
-    if (source_indent < 0 || script_indent < 0)
-        return false;
-
-    if (source_indent == source_indent_amount && script_indent == script_indent_amount)
-        return false;
-
-    source_indent_amount = min(max(source_indent, 0), MAX_INDENT);
-    script_indent_amount = min(max(script_indent, 0), MAX_INDENT);
 
     return !current_file_name.empty();
 }

@@ -306,7 +306,6 @@ static size_t scanCharLiteral(const char* s, size_t n, size_t i)
 static size_t scanNumber(const char* s, size_t n, size_t i)
 {
     size_t j = i;
-    bool seenDot = false, seenExp = false, isHexFloat = false;
     // prefixes
     if (j + 1 < n && s[j] == '0' && (s[j+1] == 'x' || s[j+1] == 'X'))
     {
@@ -316,14 +315,13 @@ static size_t scanNumber(const char* s, size_t n, size_t i)
         // hex float exponent p/P
         if (j < n && (s[j] == '.')) 
         {
-            seenDot = true; ++j;
+            ++j;
             while (j < n && (isxdigit(static_cast<unsigned char>(s[j])) || s[j] == '\'' || s[j] == '_')) 
                 ++j;
         }
 
         if (j < n && (s[j] == 'p' || s[j] == 'P')) 
         {
-            isHexFloat = true; 
             ++j;
             if (j < n && (s[j] == '+' || s[j] == '-')) 
                 ++j;
@@ -351,14 +349,15 @@ static size_t scanNumber(const char* s, size_t n, size_t i)
             ++j;
         if (j < n && s[j] == '.')
         {
-            seenDot = true; ++j;
+            ++j;
             while (j < n && (isdigit(static_cast<unsigned char>(s[j])) || s[j] == '\'' || s[j] == '_')) 
                 ++j;
         }
         if (j < n && (s[j] == 'e' || s[j] == 'E'))
         {
-            seenExp = true; ++j;
-            if (j < n && (s[j] == '+' || s[j] == '-')) ++j;
+            ++j;
+            if (j < n && (s[j] == '+' || s[j] == '-'))
+                ++j;
             while (j < n && (isdigit(static_cast<unsigned char>(s[j])) || s[j] == '\'' || s[j] == '_')) 
                 ++j;
         }
@@ -390,7 +389,6 @@ static size_t scanIdentifier(const char* s, size_t n, size_t i)
 // Tokenize a single preprocessor line; returns end-of-line index
 static size_t tokenizePreprocessor(const char* s, size_t n, size_t i, std::vector<XmhColorToken>& out)
 {
-    size_t lineStart = i;
     size_t j = i;
     // consume leading whitespace
     while (j < n && (s[j] == ' ' || s[j] == '\t')) 
@@ -499,8 +497,6 @@ void TokenizeCpp_BreezeLight(const char* text, size_t length, std::vector<XmhCol
         else
         {
             // If at line start with leading spaces then '#'
-            size_t k = i;
-            size_t lineStart = i;
             // find beginning of line
             size_t back = i;
             while (back > 0 && s[back-1] != '\n' && s[back-1] != '\r') 

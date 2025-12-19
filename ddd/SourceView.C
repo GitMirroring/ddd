@@ -70,6 +70,7 @@ char SourceView_rcsid[] =
 //-----------------------------------------------------------------------------
 
 #include "SourceView.h"
+#include "SourceTokenizer.h"
 
 // DDD stuff
 #include "AppData.h"
@@ -138,6 +139,7 @@ char SourceView_rcsid[] =
 #include <Xm/List.h>
 #include <Xm/PanedW.h>
 #include <Xm/ToggleB.h>
+#include <Xm/ScrolledW.h>
 #include <X11/StringDefs.h>
 #include <X11/cursorfont.h>
 #include <X11/extensions/shapeconst.h>
@@ -160,8 +162,6 @@ char SourceView_rcsid[] =
 
 #include <algorithm>
 
-
-
 //-----------------------------------------------------------------------
 // Xt stuff
 //-----------------------------------------------------------------------
@@ -169,7 +169,7 @@ XtActionsRec SourceView::actions [] = {
     {XTARECSTR("source-popup-menu"),        SourceView::srcpopupAct        },
     {XTARECSTR("source-start-select-word"), SourceView::startSelectWordAct },
     {XTARECSTR("source-end-select-word"),   SourceView::endSelectWordAct   },
-    {XTARECSTR("source-update-glyphs"),     SourceView::updateGlyphsAct    },
+    // {XTARECSTR("source-update-glyphs"),     SourceView::updateGlyphsAct    },
     {XTARECSTR("source-drag-glyph"),        SourceView::dragGlyphAct       },
     {XTARECSTR("source-follow-glyph"),      SourceView::followGlyphAct     },
     {XTARECSTR("source-drop-glyph"),        SourceView::dropGlyphAct       },
@@ -346,6 +346,11 @@ int  SourceView::code_indent_amount   = 4;
 int  SourceView::lines_above_cursor   = 2;
 int  SourceView::lines_below_cursor   = 3;
 
+
+string SourceView::fontname = "monospace";
+int SourceView::fontsize = 11;
+
+
 Map<int, BreakPoint> SourceView::bp_map;
 
 IntIntArrayAssoc SourceView::bps_in_line;
@@ -361,18 +366,6 @@ string SourceView::current_code_end;
 
 string SourceView::current_pwd        = cwd();
 string SourceView::current_class_path = NO_GDB_ANSWER;
-
-XmTextPosition SourceView::last_top                = 0;
-XmTextPosition SourceView::last_pos                = 0;
-XmTextPosition SourceView::last_start_highlight    = 0;
-XmTextPosition SourceView::last_end_highlight      = 0;
-Position SourceView::last_x                        = 0;
-Position SourceView::last_y                        = 0;
-
-XmTextPosition SourceView::last_top_pc             = 0;
-XmTextPosition SourceView::last_pos_pc             = 0;
-XmTextPosition SourceView::last_start_highlight_pc = 0;
-XmTextPosition SourceView::last_end_highlight_pc   = 0;
 
 string SourceView::last_execution_file = "";
 int    SourceView::last_execution_line = 0;
@@ -399,8 +392,8 @@ static void DestroyOldWidgets(WidgetArray& Array);
 // Selection stuff
 //-----------------------------------------------------------------------
 
-static XmTextPosition selection_startpos;
-static XmTextPosition selection_endpos;
+static Utf8Pos selection_startpos;
+static Utf8Pos selection_endpos;
 static Time           selection_time;
 #if XtSpecificationRelease < 6
 static XEvent         selection_event;
@@ -1613,6 +1606,38 @@ bool SourceView::bp_matches(BreakPointLocn &locn, const string& file, int line)
 // ***************************************************************************
 //
 
+
+static void AppSelectOnClickEH(Widget w, XtPointer client, XEvent *ev, Boolean *cont)
+{
+    (void)client; (void)cont;
+    if (ev->type != ButtonPress) 
+        return;
+
+    if (ev->xbutton.button != Button1) 
+        return;
+
+    // If no selection, select the word at click
+    Utf8Pos selL=0, selR=0;
+    bool haveSel = XmhColorTextViewGetSelectionPosition(w, &selL, &selR) != 0;
+    if (haveSel) 
+        return;
+
+    Position x = ev->xbutton.x, y = ev->xbutton.y;
+    Utf8Pos pos = XmhColorTextViewXYToPos(w, x, y);
+    Utf8Pos wl=0, wr=0;
+    XmhColorTextViewWordBoundsAt(w, pos, &wl, &wr);
+    if (wr > wl) 
+    {
+        XmhColorTextViewSelectRange(w, wl, wr);
+    } 
+    else 
+    {
+        // Fallback: just move caret to click
+        XmhColorTextViewSetInsertionPosition(w, pos);
+    }
+    
+}
+
 // If this is true, no motion occurred while selecting
 static bool selection_click = false;
 
@@ -1633,14 +1658,15 @@ void SourceView::set_source_argCB(Widget text_w,
             return;
     }
 
+    Utf8Pos startPos, endPos;
+    Boolean have_selection =
+    XmhColorTextViewGetSelectionPosition(text_w, &startPos, &endPos);
+
     XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *)call_data;
     bool motion = bool((int)(long)client_data);
     if (motion)
         selection_click = false;
 
-    XmTextPosition startPos, endPos;
-    Boolean have_selection = 
-        XmTextGetSelectionPosition(text_w, &startPos, &endPos);
 
     if (!have_selection)
     {
@@ -1652,13 +1678,8 @@ void SourceView::set_source_argCB(Widget text_w,
             if (event == 0)
             {
                 // LessTif 0.79 may not pass a reasonable event here.
-#if XtSpecificationRelease >= 6
                 // Use the last processed event instead.
                 event = XtLastEventProcessed(XtDisplay(text_w));
-#else
-                // Use the last recorded selection event instead.
-                event = &selection_event;
-#endif
                 selection_click = true;
             }
 
@@ -1685,11 +1706,6 @@ void SourceView::set_source_argCB(Widget text_w,
         have_selection = True;
     }
 
-#if XtSpecificationRelease < 6
-    // Don't use this selection event again.
-    selection_event.type = KeyPress;
-#endif
-
     if (!have_selection)
     {
         // No selection - sorry
@@ -1701,8 +1717,8 @@ void SourceView::set_source_argCB(Widget text_w,
     bool sameline;
     if (is_source_widget(text_w))
     {
-        int lineofstart = sourcecode.line_of_pos(startPos);
-        int lineofend = sourcecode.line_of_pos(endPos);
+        int lineofstart = sourcecode.getLineOfBytepos(startPos);
+        int lineofend = sourcecode.getLineOfBytepos(endPos);
         sameline = (lineofstart == lineofend);
     }
     else
@@ -1798,13 +1814,10 @@ void SourceView::set_source_argCB(Widget text_w,
         {
             s = sourcecode.get_source_at((int)startPos, (int)(endPos - startPos));
         }
-        else
+        else if (startPos < Utf8Pos(current_code.length())
+                && endPos < Utf8Pos(current_code.length()))
         {
-            if (startPos < XmTextPosition(current_code.length())
-                && endPos < XmTextPosition(current_code.length()))
-            {
-                s = current_code.at((int)startPos, (int)(endPos - startPos));
-            }
+            s = current_code.at((int)startPos, (int)(endPos - startPos));
         }
 
         while (s.contains('\n'))
@@ -1906,7 +1919,7 @@ BreakPoint *SourceView::watchpoint_at(const string& expr)
 // ***************************************************************************
 
 // Show position POS in TEXT_W, scrolling nicely
-void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
+void SourceView::ShowPosition(Widget text_w, Utf8Pos pos, bool fromTop)
 {
    if (!XtIsRealized(text_w))
        return;
@@ -1917,14 +1930,12 @@ void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
             return;
 
         short rows = 0;
-        XmTextPosition current_top = 0;
-        XtVaGetValues(text_w,
-                    XmNrows, &rows,
-                    XmNtopCharacter, &current_top,
-                    XtPointer(0));
+        Utf8Pos current_top = 0;
+        rows = XmhColorTextViewGetVisibleRows(text_w);
+        current_top = XmhColorTextViewGetTopCharacter(text_w);
 
-        int toprow = sourcecode.line_of_pos(current_top);
-        int currentrow = sourcecode.line_of_pos(pos);
+        int toprow = sourcecode.getLineOfBytepos(current_top);
+        int currentrow = sourcecode.getLineOfBytepos(pos);
         int relative_row = currentrow - toprow;
 
        if (relative_row <= lines_above_cursor || relative_row >= rows - (lines_below_cursor + 1))
@@ -1936,9 +1947,9 @@ void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
             else if (relative_row >= rows - (lines_below_cursor + 1))
                 n = rows - (lines_below_cursor + 1);
 
-            XmTextPosition new_top = sourcecode.pos_of_line(currentrow+n);
+            Utf8Pos new_top = sourcecode.getBytePosOfLine(currentrow-n);
 
-            XmTextSetTopCharacter(text_w, new_top);
+            XmhColorTextViewSetTopCharacter(text_w, new_top);
         }
     }
     else
@@ -1948,15 +1959,13 @@ void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
             return;                        // No position to show
 
         short rows = 0;
-        XmTextPosition current_top = 0;
-        XtVaGetValues(text_w,
-                    XmNrows, &rows,
-                    XmNtopCharacter, &current_top,
-                    XtPointer(0));
+        Utf8Pos current_top = 0;
+        rows = XmhColorTextViewGetVisibleRows(text_w);
+        current_top = XmhColorTextViewGetTopCharacter(text_w);
 
         // Find current relative row
         short relative_row = 1;
-        for (XmTextPosition p = min(text.length() - 1, pos); p > current_top; p--)
+        for (Utf8Pos p = min(text.length() - 1, pos); p > current_top; p--)
             if (text[p] == '\n')
                 relative_row++;
 
@@ -1970,7 +1979,7 @@ void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
             else if (relative_row >= rows - (lines_below_cursor + 1))
                 n = rows - (lines_below_cursor + 1);
 
-            XmTextPosition new_top = pos;
+            Utf8Pos new_top = pos;
             for (;;) {
                 while (new_top > 0 && text[new_top - 1] != '\n')
                     new_top--;
@@ -1979,18 +1988,18 @@ void SourceView::ShowPosition(Widget text_w, XmTextPosition pos, bool fromTop)
                 new_top--;
             }
 
-            XmTextSetTopCharacter(text_w, new_top);
+            XmhColorTextViewSetTopCharacter(text_w, new_top);
         }
     }
 
-    XmTextShowPosition(text_w, pos);        // just to make sure
+    //XmhColorTextViewShowPosition(text_w, pos);        // just to make sure
 }
 
 void SourceView::SetInsertionPosition(Widget text_w, 
-                                      XmTextPosition pos, bool fromTop)
+                                      Utf8Pos pos, bool fromTop)
 {
     ShowPosition(text_w, pos, fromTop);
-    XmTextSetInsertionPosition(text_w, pos);
+    XmhColorTextViewSetInsertionPosition(text_w, pos);
 }
 
 
@@ -2014,7 +2023,7 @@ void SourceView::reload()
     read_file(file, atoi(line.chars()), true);
 
     // Restore breakpoints
-    refresh_bp_disp(true);
+    update_glyphs();
 
     // Restore execution position
     if (!last_execution_file.empty())
@@ -2100,11 +2109,18 @@ void SourceView::read_file (string file_name,
     Delay delay;
 
     // Set source and initial line
-    XmTextSetString(source_text_w, XMST(sourcecode.get_source().chars()));
+    XmhColorTextViewSetString(source_text_w, XMST(sourcecode.get_source().chars()));
 
-    XmTextPosition initial_pos = 0;
+    std::vector<XmhColorToken> toks;
+    TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
+
+    XmhColorToken *toksptr = &toks[0];
+    int tok_count = toks.size();
+    XmhColorTextViewSetTokens(source_text_w, toksptr, tok_count);
+
+    Utf8Pos initial_pos = 0;
     if (initial_line > 0 && initial_line <= sourcecode.get_num_lines())
-        initial_pos = sourcecode.pos_of_line(initial_line) + sourcecode.calculate_indent();
+        initial_pos = sourcecode.getBytePosOfLine(initial_line) + sourcecode.calculate_indent();
 
     SetInsertionPosition(source_text_w, initial_pos, true);
 
@@ -2116,7 +2132,7 @@ void SourceView::read_file (string file_name,
     bps_in_line = empty_bps;
     static const std::vector<string> empty_addresses;
     bp_addresses = empty_addresses;
-    refresh_bp_disp(true);
+    update_glyphs();
 
     XtManageChild(source_text_w);
 
@@ -2156,12 +2172,9 @@ void SourceView::read_file (string file_name,
 
     set_status_mstring(msg);
 
-    XmTextClearSelection(source_text_w, 
+    XmhColorTextViewClearSelection(source_text_w, 
                          XtLastTimestampProcessed(XtDisplay(source_text_w)));
-    XmTextSetHighlight(source_text_w,
-                       0, XmTextGetLastPosition(source_text_w),
-                       XmHIGHLIGHT_NORMAL);
-    last_top = last_pos = last_start_highlight = last_end_highlight = 0;
+
     update_glyphs(source_text_w);
 
     if (app_data.source_window)
@@ -2208,186 +2221,6 @@ void SourceView::update_title()
                   XtPointer(0));
 }
 
-
-
-//-----------------------------------------------------------------------
-// Breakpoint handling
-//-----------------------------------------------------------------------
-
-// Update breakpoint locations
-void SourceView::refresh_bp_disp(bool reset)
-{
-    refresh_source_bp_disp(reset);
-    refresh_code_bp_disp(reset);
-    update_glyphs();
-}
-
-void SourceView::refresh_source_bp_disp(bool reset)
-{
-    if (display_glyphs && !reset)
-        return;
-
-    // Overwrite old breakpoint displays - - - - - - - - - - - - -
-    for (IntIntArrayAssocIter b_i_l_iter(bps_in_line);
-         b_i_l_iter.ok(); 
-         ++b_i_l_iter)
-    {
-        int line_nr = b_i_l_iter.key();
-        if (line_nr < 0 || line_nr > sourcecode.get_num_lines())
-            continue;
-
-        int pos = sourcecode.pos_of_line(line_nr);
-        int indent = sourcecode.calculate_indent(line_nr);
-
-        if (indent > 0)
-        {
-            string s(sourcecode.get_source_at(pos, indent - 1));
-
-            if (s.length() > 0)
-                XmTextReplace(source_text_w,
-                              sourcecode.pos_of_line(line_nr),
-                              sourcecode.pos_of_line(line_nr) + s.length(),
-                              XMST(s.chars()));
-        }
-    }
-
-    static const IntIntArrayAssoc empty_bps;
-    bps_in_line = empty_bps;
-
-    if (display_glyphs)
-        return;
-
-    // Find all breakpoints referring to this file
-    MapRef ref;
-    for (BreakPoint* bp = bp_map.first(ref); bp != 0; bp = bp_map.next(ref))
-    {
-        if ((bp->type() == BREAKPOINT || bp->type() == TRACEPOINT) && 
-            bp_matches(bp))
-        {
-            // ASSUME: multi-location breakpoints all have same source line
-            bps_in_line[bp->line_nr()].push_back(bp->number());
-        }
-    }
-
-    // Show breakpoints in text
-    for (IntIntArrayAssocIter b_i_l_iter2(bps_in_line);
-         b_i_l_iter2.ok();
-         ++b_i_l_iter2)
-    {
-        int line_nr = b_i_l_iter2.key();
-        if (line_nr < 0 || line_nr > sourcecode.get_num_lines())
-            continue;
-
-        XmTextPosition pos = sourcecode.pos_of_line(line_nr);
-        int indent = sourcecode.calculate_indent(line_nr);
-
-        if (indent > 0)
-        {
-            // Display all breakpoints in a line
-            std::vector<int>& bps = bps_in_line[line_nr];
-
-            string insert_string = "";
-            for (int i = 0; i < int(bps.size()); i++)
-            {
-                BreakPoint *bp = bp_map.get(bps[i]);
-                insert_string += bp->symbol();
-            }
-
-            if (int(insert_string.length()) >= indent - 1)
-            {
-                insert_string = insert_string.before(indent - 1);
-            }
-            else
-            {
-                for (int i = insert_string.length(); i < indent - 1; i++)
-                {
-                    insert_string += sourcecode.get_source_at(pos + i, 1);
-                }
-            }
-
-            assert(int(insert_string.length()) == indent - 1);
-
-            if (insert_string.length() > 0)
-                XmTextReplace(source_text_w, pos, 
-                              pos + indent - 1,
-                              XMST(insert_string.chars()));
-        }
-    }
-}
-
-void SourceView::refresh_code_bp_disp(bool reset)
-{
-    if (display_glyphs && !reset)
-        return;
-
-    // Clear all addresses
-    int i;
-    for (i = 0; i < int(bp_addresses.size()); i++)
-    {
-        const string& address = bp_addresses[i];
-        XmTextPosition pos = find_pc(address);
-        if (pos == XmTextPosition(-1))
-            continue;
-
-        // Process all breakpoints at ADDRESS
-        int indent = indent_amount_code(pos);
-        if (indent > 0)
-        {
-            string spaces = replicate(' ', indent);
-            XmTextReplace(code_text_w, pos, pos + indent, XMST(spaces.chars()));
-        }
-    }
-
-    static const std::vector<string> empty;
-    bp_addresses = empty;
-
-    if (display_glyphs)
-        return;
-
-    // Collect all addresses
-    MapRef ref;
-    for (BreakPoint *bp = bp_map.first(ref); bp != 0;
-         bp = bp_map.next(ref))
-    {
-        if (bp->type() != BREAKPOINT)
-            continue;
-
-        for (i = 0; i < bp->n_locations(); i++)
-            bp_addresses.push_back(bp->get_location(i).address());
-    }
-
-    // Process all bp_addresses
-    for (i = 0; i < int(bp_addresses.size()); i++)
-    {
-        const string& address = bp_addresses[i];
-        XmTextPosition pos = find_pc(address);
-        if (pos == XmTextPosition(-1))
-            continue;
-
-        // Process all breakpoints at ADDRESS
-        string insert_string = "";
-        for (BreakPoint *bp = bp_map.first(ref);
-             bp != 0;
-             bp = bp_map.next(ref))
-        {
-            for (int j = 0; j < bp->n_locations(); j++)
-                if (bp->get_location(j).address() == address)
-                    insert_string += bp->symbol();
-        }
-
-        int indent = indent_amount_code(pos);
-        if (indent > 0)
-        {
-            insert_string += replicate(' ', indent);
-            insert_string = insert_string.before(indent);
-
-            XmTextReplace(code_text_w, pos, pos + indent, 
-                          XMST(insert_string.chars()));
-        }
-    }
-}
-
-
 //-----------------------------------------------------------------------
 // Position management
 //-----------------------------------------------------------------------
@@ -2402,7 +2235,7 @@ void SourceView::refresh_code_bp_disp(bool reset)
  * \return Return false iff failure
  */
 bool SourceView::get_line_of_pos (Widget   w,
-                                  XmTextPosition pos,
+                                  Utf8Pos pos,
                                   int&     line_nr,
                                   string&  address,
                                   bool&    in_text,
@@ -2453,14 +2286,14 @@ bool SourceView::get_line_of_pos (Widget   w,
         if (sourcecode.have_source()==false)
             return false;
 
-        line_nr = sourcecode.line_of_pos(pos);
-        if (pos > sourcecode.get_num_characters())
+        line_nr = sourcecode.getLineOfBytepos(pos);
+        if (pos > int(sourcecode.get_length()))
         {
             in_text = false;
             return true;
         }
 
-        int offset = pos - sourcecode.pos_of_line(line_nr);
+        int offset = pos - sourcecode.getBytePosOfLine(line_nr);
 
         if (offset > sourcecode.calculate_indent(line_nr) - 1)
         {
@@ -2486,11 +2319,11 @@ bool SourceView::get_line_of_pos (Widget   w,
         else if (bps.size() > 1)
         {
             // Find which breakpoint was selected
-            XmTextPosition bp_disp_pos = sourcecode.pos_of_line(line_nr);
+            Utf8Pos bp_disp_pos = sourcecode.getBytePosOfLine(line_nr);
             for (int i = 0; i < int(bps.size()); i++)
             {
                 BreakPoint* bp = bp_map.get(bps[i]);
-                assert(bp != NULL);
+                assert(bp != nullptr);
 
                 bp_disp_pos += 2; // respect '#' and '_';
                 bp_disp_pos += itostring(bp->number()).length();
@@ -2506,10 +2339,10 @@ bool SourceView::get_line_of_pos (Widget   w,
     else if (text_w == code_text_w)
     {
         // Search in machine code
-        if (pos >= current_code.length() || pos < 0)
+        if (pos >= int(current_code.length()) || pos < 0)
             return false;
 
-        XmTextPosition line_pos = pos;
+        Utf8Pos line_pos = pos;
 
         while (line_pos >= 0 && current_code[line_pos] != '\n')
             line_pos--;
@@ -2547,7 +2380,7 @@ bool SourceView::get_line_of_pos (Widget   w,
                 {
                     // Find which breakpoint was selected
                     int i;
-                    XmTextPosition bp_disp_pos = line_pos;
+                    Utf8Pos bp_disp_pos = line_pos;
                     for (i = 0; i < int(bps.size()); i++)
                     {
                         BreakPoint* bp = bp_map.get(bps[i]);
@@ -2574,21 +2407,21 @@ bool SourceView::get_line_of_pos (Widget   w,
 // Find word around POS.  STARTPOS is the first character, ENDPOS + 1
 // is the last character in the word.
 void SourceView::find_word_bounds (Widget text_w,
-                                   const XmTextPosition pos,
-                                   XmTextPosition& startpos,
-                                   XmTextPosition& endpos)
+                                   const Utf8Pos pos,
+                                   Utf8Pos& startpos,
+                                   Utf8Pos& endpos)
 {
     startpos = endpos = pos;
     string text;
-    XmTextPosition lineoffset = 0;
+    Utf8Pos lineoffset = 0;
     if (is_source_widget(text_w))
     {
         if (sourcecode.have_source()==false)
             return;
 
-        lineoffset = sourcecode.startofline_at_pos(pos);
-        int line = sourcecode.line_of_pos(pos);
-        text = sourcecode.get_source_lineASCII(line);
+        lineoffset = sourcecode.getStartOfLineAtBytepos(pos);
+        int line = sourcecode.getLineOfBytepos(pos);
+        text = sourcecode.getSourceLine(line);
         int offset = pos - lineoffset;
         if (offset == 0 || offset < sourcecode.calculate_indent(line))
         {
@@ -2605,8 +2438,8 @@ void SourceView::find_word_bounds (Widget text_w,
     else
     {
         text = current_code;
-        XmTextPosition line_pos = pos;
-        if (line_pos < XmTextPosition(text.length()))
+        Utf8Pos line_pos = pos;
+        if (line_pos < Utf8Pos(text.length()))
             while (line_pos > 0 && text[line_pos - 1] != '\n')
             line_pos--;
 
@@ -2623,7 +2456,7 @@ void SourceView::find_word_bounds (Widget text_w,
     // The exception to this is $$. 
     // We also dispose of the special automatic variables of GNU make: 
     // $@, $<, etc and special variables of BASH: $*, $@, $? $$, etc.
-    if ( '$' == text[endpos] && endpos < XmTextPosition(text.length()) 
+    if ( '$' == text[endpos] && endpos < Utf8Pos(text.length()) 
          && (endpos - 1 >= 0 || '$' != text[endpos-1]) )
     {
         if ( gdb->program_language() == LANGUAGE_BASH )
@@ -2687,12 +2520,12 @@ void SourceView::find_word_bounds (Widget text_w,
     }
 
     // Find end of word - Start scanning for a non-identifier
-    while (endpos < XmTextPosition(text.length()) && isid(text[endpos]))
+    while (endpos < Utf8Pos(text.length()) && isid(text[endpos]))
         endpos++;
 
     // Find start of word
-    if (startpos >= XmTextPosition(text.length()))
-        startpos = XmTextPosition(text.length() - 1);
+    if (startpos >= Utf8Pos(text.length()))
+        startpos = Utf8Pos(text.length() - 1);
 
     while (startpos > 0)
     {
@@ -2715,7 +2548,7 @@ void SourceView::find_word_bounds (Widget text_w,
           int brace_count=1;
           int new_endpos=startpos;
           for (new_endpos=startpos+1; 
-               new_endpos < XmTextPosition(text.length()) 
+               new_endpos < Utf8Pos(text.length()) 
                  && new_endpos-startpos < 30; 
                new_endpos++) 
             {
@@ -2739,7 +2572,7 @@ void SourceView::find_word_bounds (Widget text_w,
           int brace_count=1;
           int new_endpos=startpos;
           for (new_endpos=startpos+1; 
-               new_endpos < XmTextPosition(text.length()) 
+               new_endpos < Utf8Pos(text.length()) 
                  && new_endpos-startpos < 30; 
                new_endpos++) 
             {
@@ -2788,16 +2621,17 @@ void SourceView::find_word_bounds (Widget text_w,
 // Get the word at event position
 string SourceView::get_word_at_event(Widget text_w,
                                      XEvent *event,
-                                     XmTextPosition& startpos,
-                                     XmTextPosition& endpos)
+                                     Utf8Pos& startpos,
+                                     Utf8Pos& endpos)
 {
     if (!XtIsRealized(text_w))
        return string("");
 
     BoxPoint event_pos = point(event);
-    XmTextPosition pos = XmTextXYToPos(text_w, event_pos[X], event_pos[Y]);
+    Utf8Pos pos = XmhColorTextViewXYToPos(text_w, event_pos[X], event_pos[Y]);
 
-    return get_word_at_pos(text_w, pos, startpos, endpos);
+    string res = get_word_at_pos(text_w, pos, startpos, endpos);
+    return res;
 }
 
 
@@ -2809,9 +2643,9 @@ string SourceView::get_word_at_event(Widget text_w,
  * \return returns word of pos or ""
  */
 string SourceView::get_word_at_pos(Widget text_w,
-                                   XmTextPosition pos,
-                                   XmTextPosition& startpos,
-                                   XmTextPosition& endpos)
+                                   Utf8Pos pos,
+                                   Utf8Pos& startpos,
+                                   Utf8Pos& endpos)
 {
     string word = "";
 
@@ -2824,11 +2658,10 @@ string SourceView::get_word_at_pos(Widget text_w,
             return "";
         }
 
-        if (!XmTextGetSelectionPosition(text_w, &startpos, &endpos)|| pos < startpos || pos > endpos)
+        if (!XmhColorTextViewGetSelectionPosition(text_w, &startpos, &endpos)|| pos < startpos || pos > endpos)
             find_word_bounds(text_w, pos, startpos, endpos);
-
+        
         word = sourcecode.get_source_at(int(startpos), int(endpos - startpos));
-
     }
     else
     {
@@ -2839,10 +2672,10 @@ string SourceView::get_word_at_pos(Widget text_w,
             return "";
         }
 
-        if (!XmTextGetSelectionPosition(text_w, &startpos, &endpos) || pos < startpos || pos > endpos)
+        if (!XmhColorTextViewGetSelectionPosition(text_w, &startpos, &endpos) || pos < startpos || pos > endpos)
             find_word_bounds(text_w, pos, startpos, endpos);
 
-        if (startpos < XmTextPosition(current_code.length()) && startpos < endpos)
+        if (startpos < Utf8Pos(current_code.length()) && startpos < endpos)
             word = current_code.at(int(startpos), int(endpos - startpos));
     }
     strip_space(word);
@@ -3232,20 +3065,31 @@ void SourceView::create_text(Widget parent, const char *base,
 
     arg = 0;
     XtSetArg(args[arg], XmNselectionArrayCount, 1);               arg++;
-    XtSetArg(args[arg], XmNtopAttachment,     XmATTACH_FORM);     arg++;
-    XtSetArg(args[arg], XmNbottomAttachment,  XmATTACH_FORM);     arg++;
-    XtSetArg(args[arg], XmNleftAttachment,    XmATTACH_FORM);     arg++;
-    XtSetArg(args[arg], XmNrightAttachment,   XmATTACH_FORM);     arg++;
     XtSetArg(args[arg], XmNallowResize,       True);              arg++;
     XtSetArg(args[arg], XmNeditMode,          XmMULTI_LINE_EDIT); arg++;
     XtSetArg(args[arg], XmNcursorPositionVisible, True);          arg++;
-
     XtSetArg(args[arg], XmNautoShowCursorPosition, True);     arg++;
 
     const string text_name = string(base) + "_text_w";
-    text = verify(XmCreateScrolledText(form, XMST(text_name.chars()), args, arg));
-    XtManageChild(text);
 
+    text = CreateXmhColorTextView(form, XMST(text_name.chars()), NULL, 0);
+    Widget sw = XmhColorTextViewGetScrolledWindow(text);
+    XtVaSetValues(sw,
+                    XmNleftAttachment,   XmATTACH_FORM,
+                    XmNrightAttachment,  XmATTACH_FORM,
+                    XmNtopAttachment,    XmATTACH_FORM,
+                    XmNbottomAttachment, XmATTACH_FORM,
+                    NULL);
+
+    XmhColorTextViewSetBackgroundName(text, "#f5f5f5");
+    XmhColorTextViewSetFont(text, fontname.chars(), fontsize);
+    //XmhColorTextViewSetSelectionColorName(text, "#94caef", 0.55);
+
+
+
+    XtAddEventHandler(text, ButtonPressMask, False, AppSelectOnClickEH, NULL);
+
+    XtManageChild(text);
     // Set up the scrolled window
     XtVaSetValues(XtParent(text),
                   XmNspacing,         0,
@@ -3254,33 +3098,20 @@ void SourceView::create_text(Widget parent, const char *base,
                   XtPointer(0));
 
     // Give the form the size specified for the text
-    set_scrolled_window_size(text, form);
+   set_scrolled_window_size(text, XmhColorTextViewGetScrolledWindow(text), form);
 
     // Set callbacks
-    XtAddCallback(text, XmNgainPrimaryCallback, 
-                  set_source_argCB, XtPointer(false));
-    XtAddCallback(text, XmNmotionVerifyCallback,
-                  set_source_argCB, XtPointer(true));
-    XtAddCallback(text, XmNmotionVerifyCallback, 
-                  CheckScrollCB, XtPointer(0));
+    XtAddCallback(text, XmNgainPrimaryCallback, set_source_argCB, XtPointer(false));
+    // XtAddCallback(text, XmNmotionVerifyCallback,
+    //               set_source_argCB, XtPointer(true));
+    XtAddCallback(text, XmhNviewportChangedCallback, CheckScrollCB, XtPointer(0));
     InstallTextTips(text);
 
     // Fetch scrollbar ID and add callbacks
     Widget scrollbar = 0;
-    XtVaGetValues(XtParent(text), 
+    XtVaGetValues(XmhColorTextViewGetScrolledWindow(text), 
                   XmNverticalScrollBar, &scrollbar,
                   XtPointer(0));
-    if (scrollbar != 0)
-    {
-        XtAddCallback(scrollbar, XmNincrementCallback,     CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNdecrementCallback,     CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNpageIncrementCallback, CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNpageDecrementCallback, CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNtoTopCallback,         CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNtoBottomCallback,      CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNdragCallback,          CheckScrollCB, 0);
-        XtAddCallback(scrollbar, XmNvalueChangedCallback,  CheckScrollCB, 0);
-    }
 }
 
 
@@ -3305,26 +3136,6 @@ void SourceView::show_execution_position (const string& position_,
 
     if (position_.empty())
     {
-        if (!display_glyphs)
-        {
-            // Remove old marker
-            int indent = sourcecode.calculate_indent();
-            if (indent > 0)
-            {
-                static const string no_marker = " ";
-                XmTextReplace (source_text_w,
-                               last_pos + indent - no_marker.length(),
-                               last_pos + indent,
-                               XMST(no_marker.chars()));
-            }
-
-            if (last_start_highlight)
-                XmTextSetHighlight (source_text_w,
-                                    last_start_highlight, last_end_highlight,
-                                    XmHIGHLIGHT_NORMAL);
-
-        }
-        last_pos = last_start_highlight = last_end_highlight = 0;
         last_execution_file = "";
         last_execution_line = 0;
         update_glyphs();
@@ -3360,18 +3171,6 @@ void SourceView::show_execution_position (const string& position_,
 
     if (is_current_file(file_name))
     {
-        int indent = sourcecode.calculate_indent();
-
-        if (!display_glyphs && indent > 0)
-        {
-            // Remove old marker
-            static const string no_marker = " ";
-            XmTextReplace (source_text_w,
-                           last_pos + indent - no_marker.length(),
-                           last_pos + indent,
-                           XMST(no_marker.chars()));
-        }
-
         // Show current position
         _show_execution_position(file_name, line, silent, stopped);
     }
@@ -3404,44 +3203,9 @@ void SourceView::_show_execution_position(const string& file, int line,
 
     add_position_to_history(file, line, stopped);
 
-    XmTextPosition pos = sourcecode.pos_of_line(line);
+    Utf8Pos pos = sourcecode.getBytePosOfLine(line);
     int indent = sourcecode.calculate_indent();
     SetInsertionPosition(source_text_w, pos + indent, false);
-
-    // Mark current line
-    if (!display_glyphs && indent > 0)
-    {
-        // Set new marker
-        static const string marker = ">";
-        XmTextReplace (source_text_w,
-                       pos + indent - marker.length(),
-                       pos + indent,
-                       XMST(marker.chars()));
-    }
-
-    XmTextPosition pos_line_end = 0;
-    if (sourcecode.have_source())
-        pos_line_end = sourcecode.endofline_at_pos(pos) + 1;
-
-
-    if (!display_glyphs && 
-        (pos != last_start_highlight || pos_line_end != last_end_highlight))
-    {
-        if (last_start_highlight)
-        {
-            XmTextSetHighlight (source_text_w,
-                                last_start_highlight, last_end_highlight,
-                                XmHIGHLIGHT_NORMAL);
-        }
-
-        XmTextSetHighlight (source_text_w,
-                            pos, pos_line_end,
-                            XmHIGHLIGHT_SELECTED);
-    }
-
-    last_pos             = pos;
-    last_start_highlight = pos;
-    last_end_highlight   = pos_line_end;
 
     update_glyphs();
 }
@@ -3492,11 +3256,9 @@ void SourceView::show_position(string position, bool silent)
         {
             add_position_to_history(file_name, line, false);
     
-            XmTextPosition pos = sourcecode.pos_of_line(line);
+            Utf8Pos pos = sourcecode.getBytePosOfLine(line);
             int indent = sourcecode.calculate_indent(line);
             SetInsertionPosition(source_text_w, pos + indent, true);
-                
-            last_pos = pos;
         }
     }
 }
@@ -3731,7 +3493,7 @@ void SourceView::process_info_bp (string& info_output,
     }
 
     if (changed)
-        refresh_bp_disp();
+        update_glyphs();
 
     // Set up breakpoint editor contents
     process_breakpoints(last_info_output);
@@ -3849,7 +3611,7 @@ void SourceView::lookup(string s, bool silent)
         {
             // Show cursor position
             SetInsertionPosition(code_text_w,
-                                 XmTextGetInsertionPosition(code_text_w));
+                                 XmhColorTextViewGetInsertionPosition(code_text_w));
         }
 
         if (!last_execution_file.empty())
@@ -3863,7 +3625,7 @@ void SourceView::lookup(string s, bool silent)
         {
             // Show cursor position
             SetInsertionPosition(source_text_w,
-                                 XmTextGetInsertionPosition(source_text_w));
+                                 XmhColorTextViewGetInsertionPosition(source_text_w));
         }
     }
     else if (is_file_pos(s))
@@ -4116,7 +3878,7 @@ void SourceView::goto_entry(const string& file_name, int line,
             }
             else
             {
-                XmTextPosition pos = sourcecode.pos_of_line(line);
+                Utf8Pos pos = sourcecode.getBytePosOfLine(line);
                 int indent = sourcecode.calculate_indent(line);
                 SetInsertionPosition(source_text_w, pos + indent, true);
             }
@@ -4243,8 +4005,8 @@ void SourceView::find(const string& s,
 {
     int matchlen = s.length();
     int pos = -1;
-    XmTextPosition cursor = XmTextGetInsertionPosition(source_text_w);
-    XmTextPosition initial_cursor = cursor;
+    Utf8Pos cursor = XmhColorTextViewGetInsertionPosition(source_text_w);
+    Utf8Pos initial_cursor = cursor;
     int wraps = 0;
 
     if (!have_source())
@@ -4263,17 +4025,17 @@ void SourceView::find(const string& s,
     }
 
     // Make sure we don't re-find the currently found word
-    XmTextPosition startpos;
-    XmTextPosition endpos;
+    Utf8Pos startpos;
+    Utf8Pos endpos;
 
-    if (XmTextGetSelectionPosition(source_text_w, &startpos, &endpos))
+    if (XmhColorTextViewGetSelectionPosition(source_text_w, &startpos, &endpos))
     {
         cursor = sourcecode.charpos_to_bytepos(cursor);
         switch (direction)
         {
         case forward:
             if (cursor == startpos
-                && cursor < XmTextPosition(text.length()))
+                && cursor < Utf8Pos(text.length()))
                 cursor++;
             break;
         case backward:
@@ -4347,7 +4109,7 @@ void SourceView::find(const string& s,
     if (pos < 0)
     {
         // Clear selection
-        XmTextClearSelection(source_text_w, time);
+        XmhColorTextViewClearSelection(source_text_w, time);
 
         msg = quote(s) + " not found";
     }
@@ -4391,8 +4153,7 @@ void SourceView::find(const string& s,
 
 string SourceView::line_of_cursor()
 {
-    XmTextPosition pos = XmTextGetInsertionPosition(source_text_w);
-
+    Utf8Pos pos = XmhColorTextViewGetInsertionPosition(source_text_w);
     string s = sourcecode.current_source_name();
     if (s.empty())
         return "";                // No source
@@ -4423,9 +4184,7 @@ void SourceView::setSelection(XtPointer client_data, XtIntervalId *)
 {
     Widget w = (Widget)client_data;
 
-    assert(XmIsText(w));
-
-    TextSetSelection(w, selection_startpos, selection_endpos, 
+    CTV_TextSetSelection(w, selection_startpos, selection_endpos,
                      selection_time);
     selection_time = 0;
     set_source_argCB(w, XtPointer(false), 0);
@@ -4445,9 +4204,8 @@ void SourceView::startSelectWordAct (Widget text_w, XEvent* e,
 
     XButtonEvent *event = &e->xbutton;
 
-    XmTextPosition pos = XmTextXYToPos (text_w, event->x, event->y);
-
-    XmTextPosition startpos, endpos;
+    Utf8Pos pos = XmhColorTextViewXYToPos(text_w, event->x, event->y);
+    Utf8Pos startpos, endpos;
     find_word_bounds(text_w, pos, startpos, endpos);
 
     selection_click    = true;
@@ -4472,8 +4230,8 @@ void SourceView::endSelectWordAct (Widget text_w, XEvent* e,
     if (e->type != ButtonPress && e->type != ButtonRelease)
         return;
 
-    XmTextPosition startpos, endpos;
-    if (XmTextGetSelectionPosition(text_w, &startpos, &endpos))
+    Utf8Pos startpos, endpos;
+    if (XmhColorTextViewGetSelectionPosition(text_w, &startpos, &endpos))
     {
         selection_startpos = startpos;
         selection_endpos   = endpos;
@@ -4505,7 +4263,7 @@ void SourceView::translate_glyph_pos(Widget glyph, Widget text, int& x, int& y)
     int dest_x, dest_y;
     Window child;
     XTranslateCoordinates(XtDisplay(glyph), 
-                          XtWindow(glyph), XtWindow(text), 
+                          XtWindow(glyph), XtWindow(XtParent(text)), 
                           x, y, &dest_x, &dest_y, &child);
 
     x = dest_x;
@@ -4531,30 +4289,29 @@ void SourceView::srcpopupAct (Widget w, XEvent* e, String *, Cardinal *)
     int x = event->x;
     int y = event->y;
 
-    if (w != source_text_w && w != code_text_w)
+     if (w != source_text_w && w != code_text_w)
     {
         // Called from a glyph: translate glyph position to text position
         translate_glyph_pos(w, text_w, x, y);
     }
 
     // Get the position
-    XmTextPosition pos = XmTextXYToPos(text_w, x, y);
-
+    Utf8Pos pos = XmhColorTextViewXYToPos(text_w, x, y);
     // Move the insertion cursor to this position, but don't disturb the
     // selection
-    XmTextPosition left, right;
-    Boolean have_selection = XmTextGetSelectionPosition(text_w, &left, &right);
+    Utf8Pos left, right;
+    Boolean have_selection = XmhColorTextViewGetSelectionPosition(text_w, &left, &right);
     if (have_selection && pos >= left && pos <= right)
     {
         // Do not scroll here.  Do not use SetInsertionPosition().
-        XmTextSetInsertionPosition(text_w, pos);
-        TextSetSelection(text_w, left, right, time(e));
+        XmhColorTextViewSetInsertionPosition(text_w, pos);
+        CTV_TextSetSelection(text_w, left, right, time(e));
     }
     else
     {
         // Do not scroll here.  Do not use SetInsertionPosition().
-        XmTextClearSelection(text_w, time(e));
-        XmTextSetInsertionPosition(text_w, pos);
+        XmhColorTextViewClearSelection(text_w, time(e));
+        XmhColorTextViewSetInsertionPosition(text_w, pos);
     }
 
     int line_nr;
@@ -4563,7 +4320,7 @@ void SourceView::srcpopupAct (Widget w, XEvent* e, String *, Cardinal *)
     static string address;
     bool pos_found = get_line_of_pos(w, pos, line_nr, address, in_text, bp_nr);
 
-    bool right_of_text = (sourcecode.endofline_at_pos(pos) == pos);
+    bool right_of_text = (sourcecode.getEndoflineAtBytepos(pos) == pos);
 
     if (pos_found && bp_nr != 0)
     {
@@ -4624,8 +4381,8 @@ void SourceView::srcpopupAct (Widget w, XEvent* e, String *, Cardinal *)
         // Determine surrounding token (or selection) and create popup
         static string word;
 
-        XmTextPosition startpos = 0;
-        XmTextPosition endpos   = 0;
+        Utf8Pos startpos = 0;
+        Utf8Pos endpos   = 0;
 
         if (pos_found)
             word = get_word_at_pos(text_w, pos, startpos, endpos);
@@ -4726,8 +4483,7 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
     }
 
     // Get the position
-    XmTextPosition pos = XmTextXYToPos(text_w, x, y);
-
+    Utf8Pos pos = XmhColorTextViewXYToPos(text_w, x, y);
     int line_nr;
     bool in_text;
     static int bp_nr;
@@ -4747,8 +4503,8 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
         return;
     }
 
-    XmTextPosition startpos = 0;
-    XmTextPosition endpos   = 0;
+    Utf8Pos startpos = 0;
+    Utf8Pos endpos   = 0;
 
     string arg  = source_arg->get_string();
     string word = get_word_at_pos(text_w, pos, startpos, endpos);
@@ -4834,8 +4590,10 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
 void SourceView::setArgAct(Widget w, XEvent *, String *, Cardinal *)
 {
     String s = 0;
-    if (XmIsText(w))
-        s = XmTextGetSelection(w);
+    if (XmhIsColorTextView(w))
+        s = XmhColorTextViewGetSelection(w);
+    else if (XmIsTextField(w))
+        s = XmTextFieldGetSelection(w);
     else if (XmIsTextField(w))
         s = XmTextFieldGetSelection(w);
 
@@ -7118,7 +6876,7 @@ string SourceView::get_line(string position)
     if (!is_current_file(file_name))
         return "";
 
-    const string text = sourcecode.get_source_line(line);
+    const string text = sourcecode.getSourceLine(line);
     return itostring(line) + "\t" + text;
 }
 
@@ -7266,26 +7024,7 @@ int SourceView::line_height(Widget text_w)
     else if (text_w == code_text_w && code_height > 0)
         return code_height;
 
-    bool ok;
-
-    XmTextPosition top = XmTextGetTopCharacter(text_w);
-    Position top_x, top_y;
-    ok = XmTextPosToXY(text_w, top, &top_x, &top_y);
-    if (!ok)
-        return 0;
-
-    XmTextPosition second;
-    if (text_w == source_text_w)
-        second = sourcecode.pos_of_line(sourcecode.line_of_pos(top)+1);
-    else
-        second = current_code.index('\n', top) + 1;
-
-    Position second_x, second_y;
-    ok = XmTextPosToXY(text_w, second, &second_x, &second_y);
-    if (!ok)
-        return 0;
-
-    int height = abs(second_y - top_y);
+    int height = XmhColorTextViewGetLineHeight(text_w);
 
     if (text_w == source_text_w)
         source_height = height;
@@ -7370,7 +7109,7 @@ void SourceView::map_glyph(Widget& glyph, Position x, Position y)
         height + border_width + margin_height
         + shadow_thickness + highlight_thickness;
 
-    y -= (line_height(text_w) + glyph_height) / 2 - 2;
+    y += (line_height(text_w) - glyph_height) - 2;
 
     if (x != old_x || y != old_y)
     {
@@ -7424,81 +7163,20 @@ void SourceView::update_glyphs(Widget glyph)
     // with a new call to UpdateGlyphsWorkProc scheduled. This problem
     // was solved by increasing the delay time for the first
     // scheduling to 50ms.
+    // Change 2025: put the glyph update at the end of the Xt event loop (0 ms timeout) 
+
     update_glyph_id = 
-        XtAppAddTimeOut(XtWidgetToApplicationContext(source_text_w), 50,
+        XtAppAddTimeOut(XtWidgetToApplicationContext(source_text_w), 0,
                         UpdateGlyphsWorkProc, XtPointer(&update_glyph_id));
 }
 
 
-// Invoked by scrolling keys
-void SourceView::updateGlyphsAct(Widget w, XEvent*, String *, Cardinal *)
-{
-    CheckScrollCB(w, 0, 0);
-}
-
 // Invoked whenever the text widget may be about to scroll
-void SourceView::CheckScrollCB(Widget, XtPointer, XtPointer)
+void SourceView::CheckScrollCB(Widget w, XtPointer, XtPointer)
 {
-    static XtIntervalId check_scroll_id = 0;
-
-    // store old xy position of insert cursor
-    XmTextPosition pos = XmTextGetInsertionPosition(source_text_w);
-    XmTextPosToXY(source_text_w, pos, &last_x, &last_y);
-
-    if (check_scroll_id != 0)
-    {
-        XtRemoveTimeOut(check_scroll_id);
-        check_scroll_id = 0;
-    }
-
-    check_scroll_id = 
-        XtAppAddTimeOut(XtWidgetToApplicationContext(source_text_w),
-                        app_data.glyph_update_delay,
-                        CheckScrollWorkProc, XtPointer(&check_scroll_id));
-}
-
-void SourceView::CheckScrollWorkProc(XtPointer client_data, XtIntervalId *id)
-{
-    (void) id;                        // Use it
-
-    XtIntervalId *timer = (XtIntervalId *)client_data;
-    if (timer != 0)
-    {
-        assert(*timer == *id);
-        *timer = 0;
-    }
-
-    // place the cursor inside the scrolled area
-    XmTextPosition toppos = XmTextGetTopCharacter(source_text_w);
-    XmTextPosition pos = XmTextGetInsertionPosition(source_text_w);
-    if (toppos>pos)
-    {
-        XmTextPosition newcursorpos = XmTextXYToPos(source_text_w, last_x, 0);
-        XmTextSetInsertionPosition(source_text_w, newcursorpos);
-    }
-
-    Dimension width, height;
-    XtVaGetValues(source_text_w, XmNwidth, &width, XmNheight, &height, XtPointer(0));
-    
-    XmTextPosition bottompos = XmTextXYToPos(source_text_w, width, height-line_height(source_text_w));
-
-    if (bottompos<pos)
-    {
-        XmTextPosition newcursorpos = XmTextXYToPos(source_text_w, last_x, height-line_height(source_text_w));
-        XmTextSetInsertionPosition(source_text_w, newcursorpos);
-    }
-
-    XmTextPosition old_top = last_top;
-    last_top = XmTextGetTopCharacter(source_text_w);
-
-    XmTextPosition old_top_pc = last_top_pc;
-    last_top_pc = XmTextGetTopCharacter(code_text_w);
-
-    if (old_top != last_top && old_top_pc != last_top_pc)
-        update_glyphs();
-    else if (old_top != last_top)
+    if (w==source_text_w)
         update_glyphs(source_text_w);
-    else if (old_top_pc != last_top_pc)
+    else if (w==code_text_w)
         update_glyphs(code_text_w);
 }
 
@@ -7696,12 +7374,12 @@ Boolean SourceView::CreateGlyphsWorkProc(XtPointer)
 }
 
 // Return position POS of glyph GLYPH in X/Y.  Return true iff displayed.
-bool SourceView::glyph_pos_to_xy(Widget glyph, XmTextPosition pos,
+bool SourceView::glyph_pos_to_xy(Widget glyph, Utf8Pos pos,
                                  Position& x, Position& y)
 {
     assert (is_source_widget(glyph) || is_code_widget(glyph));
 
-    if (pos == XmTextPosition(-1))
+    if (pos == Utf8Pos(-1))
         return false;                // Not displayed
 
     Widget text_w;
@@ -7710,8 +7388,7 @@ bool SourceView::glyph_pos_to_xy(Widget glyph, XmTextPosition pos,
     else
         text_w = code_text_w;
 
-    Boolean pos_displayed = XmTextPosToXY(text_w, pos, &x, &y);
-
+    Boolean pos_displayed = XmhColorTextViewPosToXY(text_w, pos, &x, &y);
     Dimension width, height;
     XtVaGetValues(text_w, XmNwidth, &width, XmNheight, &height, XtPointer(0));
     
@@ -7727,9 +7404,9 @@ bool SourceView::glyph_pos_to_xy(Widget glyph, XmTextPosition pos,
 
 // Map stop sign GLYPH at position POS.  Get widget from STOPS[COUNT];
 // store location in POSITIONS.  Return mapped widget (0 if none)
-Widget SourceView::map_stop_at(Widget glyph, XmTextPosition pos,
+Widget SourceView::map_stop_at(Widget glyph, Utf8Pos pos,
                                WidgetArray& stops, int& count,
-                               std::vector<XmTextPosition>& positions)
+                               std::vector<Utf8Pos>& positions)
 {
     Position x, y;
     bool pos_displayed = glyph_pos_to_xy(glyph, pos, x, y);
@@ -7777,7 +7454,7 @@ Widget SourceView::map_stop_at(Widget glyph, XmTextPosition pos,
 }
 
 // Map arrow in GLYPH at POS.  Return mapped arrow widget (0 if none)
-Widget SourceView::map_arrow_at(Widget glyph, XmTextPosition pos)
+Widget SourceView::map_arrow_at(Widget glyph, Utf8Pos pos)
 {
     assert (is_source_widget(glyph) || is_code_widget(glyph));
 
@@ -7869,7 +7546,7 @@ void SourceView::copy_colors(Widget glyph, Widget origin)
 
 // Map temporary stop sign at position POS.  If ORIGIN is given, use
 // colors from ORIGIN.
-Widget SourceView::map_drag_stop_at(Widget glyph, XmTextPosition pos, 
+Widget SourceView::map_drag_stop_at(Widget glyph, Utf8Pos pos, 
                                     Widget origin)
 {
     assert (is_source_widget(glyph) || is_code_widget(glyph));
@@ -7902,7 +7579,7 @@ Widget SourceView::map_drag_stop_at(Widget glyph, XmTextPosition pos,
             static Position last_x = x + stop_x_offset;
 
             Position origin_x = -1;
-             XtVaGetValues(origin, XmNx, &origin_x, XtPointer(0));
+            XtVaGetValues(origin, XmNx, &origin_x, XtPointer(0));
             if (origin_x >= 0)
             {
                 // Origin is mapped
@@ -7950,7 +7627,7 @@ Widget SourceView::map_drag_stop_at(Widget glyph, XmTextPosition pos,
 
 // Map temporary arrow at position POS.  If ORIGIN is given, use
 // colors from ORIGIN.
-Widget SourceView::map_drag_arrow_at(Widget glyph, XmTextPosition pos, 
+Widget SourceView::map_drag_arrow_at(Widget glyph, Utf8Pos pos, 
                                      Widget origin)
 {
 //    assert (is_source_widget(glyph) || is_code_widget(glyph));
@@ -8004,12 +7681,12 @@ void SourceView::UpdateGlyphsWorkProc(XtPointer client_data, XtIntervalId *id)
         if (glyphs.size() > 0)
         {
             // Change is imminent - unmap all glyphs that will change
-            // and try again in 50ms
+            // and try again in 50ms (change 2025: 20ms)
             for (int i = 0; i < int(glyphs.size()); i++)
                 unmap_glyph(glyphs[i]);
 
             XtIntervalId new_id = 
-                XtAppAddTimeOut(app_context, 50,
+                XtAppAddTimeOut(app_context, 20,
                                 UpdateGlyphsWorkProc, client_data);
             if (proc_id != 0)
                 *proc_id = new_id;
@@ -8033,7 +7710,7 @@ void SourceView::update_glyphs_now()
     if (update_source_glyphs)
     {
         // Show current execution position
-        XmTextPosition pos = XmTextPosition(-1);
+        Utf8Pos pos = Utf8Pos(-1);
 
         if (display_glyphs &&
             (is_current_file(last_execution_file) ||
@@ -8042,7 +7719,7 @@ void SourceView::update_glyphs_now()
              last_execution_line > 0 &&
              last_execution_line <= sourcecode.get_num_lines())
         {
-            pos = sourcecode.pos_of_line(last_execution_line);
+            pos = sourcecode.getBytePosOfLine(last_execution_line);
         }
 
         map_arrow_at(source_text_w, pos);
@@ -8051,7 +7728,7 @@ void SourceView::update_glyphs_now()
     if (update_code_glyphs)
     {
         // Show current PC
-        XmTextPosition pos = XmTextPosition(-1);
+        Utf8Pos pos = Utf8Pos(-1);
 
         if (display_glyphs && !last_execution_pc.empty())
             pos = find_pc(last_execution_pc);
@@ -8081,7 +7758,7 @@ void SourceView::update_glyphs_now()
 
         if (display_glyphs)
         {
-            std::vector<XmTextPosition> positions;
+            std::vector<Utf8Pos> positions;
             
             MapRef ref;
             for (BreakPoint *bp = bp_map.first(ref);
@@ -8102,7 +7779,7 @@ void SourceView::update_glyphs_now()
                     Widget text_w    = k ? code_text_w      : source_text_w;
                     bp_glyph = 0;
 
-                    XmTextPosition pos;
+                    Utf8Pos pos;
                     if (k == 0)
                     {
                         // Find source position
@@ -8112,7 +7789,7 @@ void SourceView::update_glyphs_now()
                             || locn.line_nr() > sourcecode.get_num_lines())
                             continue;
 
-                        pos = sourcecode.pos_of_line(locn.line_nr());
+                        pos = sourcecode.getBytePosOfLine(locn.line_nr());
                     }
                     else
                     {
@@ -8216,67 +7893,16 @@ const WidgetArray& SourceView::glyphs_to_be_updated()
     return changed_glyphs;
 }
 
-
-// Change setting of display_glyphs
-void SourceView::set_display_glyphs(bool set)
-{
-    if (display_glyphs != set)
-    {
-        // Save current execution position
-        string file   = last_execution_file;
-        int    line   = last_execution_line;
-        string pc     = last_execution_pc;
-        bool stopped  = at_lowest_frame;
-        bool signaled = signal_received;
-
-        if (XtIsRealized(source_text_w))
-        {
-            display_glyphs = false;        
-            show_execution_position();
-            UpdateGlyphsWorkProc(0, 0);
-
-            display_glyphs = true;
-            refresh_bp_disp(true);
-        }
-
-        display_glyphs = set;
-
-        if (XtIsRealized(source_text_w))
-        {
-            StatusDelay delay(set ? "Enabling glyphs" : "Disabling glyphs");
-
-            refresh_bp_disp(true);
-            if (!file.empty())
-                show_execution_position(file + ":" + itostring(line), 
-                                        stopped, signaled);
-            if (!pc.empty())
-                show_pc(pc, XmHIGHLIGHT_SELECTED);
-        }
-    }
-}
-
-// Change setting of display_line_numbers
-void SourceView::set_display_line_numbers(bool set)
-{
-    bool changed = sourcecode.set_display_line_numbers(set);
-    if (changed && XtIsRealized(source_text_w))
-    {
-        StatusDelay delay(set ? "Enabling line numbers" :
-                            "Disabling line numbers");
-        reload();
-    }
-}
-
 // Return help on a glyph
 MString SourceView::help_on_glyph(Widget glyph, bool detailed)
 {
-    XmTextPosition dummy;
+    Utf8Pos dummy;
     return help_on_pos(glyph, 0, dummy, detailed);
 }
 
 // Return help on a breakpoint position
-MString SourceView::help_on_pos(Widget w, XmTextPosition pos, 
-                                XmTextPosition& ref, bool detailed)
+MString SourceView::help_on_pos(Widget w, Utf8Pos pos, 
+                                Utf8Pos& ref, bool detailed)
 {
     if (w == 0)
         return MString(0, true);
@@ -8290,7 +7916,7 @@ MString SourceView::help_on_pos(Widget w, XmTextPosition pos,
     if (!pos_found || bp_nr == 0)
         return MString(0, true);
 
-    ref = sourcecode.pos_of_line(line_nr) + 2;
+    ref = sourcecode.getBytePosOfLine(line_nr) + 2;
     return help_on_bp(bp_nr, detailed);
 }
 
@@ -8339,7 +7965,7 @@ MString SourceView::help_on_bp(int bp_nr, bool detailed)
 
 // Glyph drag & drop
 
-XmTextPosition SourceView::glyph_position(Widget glyph, XEvent *e, 
+Utf8Pos SourceView::glyph_position(Widget glyph, XEvent *e, 
                                           bool normalize)
 {
     Widget text_w;
@@ -8348,8 +7974,7 @@ XmTextPosition SourceView::glyph_position(Widget glyph, XEvent *e,
     else if (is_code_widget(glyph))
         text_w = code_text_w;
     else
-        return XmTextPosition(-1);
-
+        return Utf8Pos(-1);
     BoxPoint p = point(e);
     if (glyph != source_text_w && glyph != code_text_w)
     {
@@ -8358,28 +7983,23 @@ XmTextPosition SourceView::glyph_position(Widget glyph, XEvent *e,
     }
 
     // Get the position
-    XmTextPosition pos;
+    Utf8Pos pos;
     if (p[Y] <= 0)
         pos = 0;                // We may drag outside the text window
     else
-        pos = XmTextXYToPos(text_w, p[X], p[Y]);
+        pos = XmhColorTextViewXYToPos(text_w, p[X], p[Y]);
 
     // Stay within viewable text +/-1 row, such that we don't scroll too fast
-    short rows = 0;
-    XmTextPosition current_top = 0;
-    XtVaGetValues(text_w,
-                  XmNrows, &rows,
-                  XmNtopCharacter, &current_top,
-                  XtPointer(0));
-
-    XmTextPosition current_bottom;
+    short rows = XmhColorTextViewGetVisibleRows(text_w);
+    Utf8Pos current_top = XmhColorTextViewGetTopCharacter(text_w);
+    Utf8Pos current_bottom;
     int textlength;
     if (text_w == source_text_w)
     {
-        int topline = sourcecode.line_of_pos(current_top);
+        int topline = sourcecode.getLineOfBytepos(current_top);
         int bottomline = std::min(topline + rows, sourcecode.get_num_lines());
-        current_bottom = sourcecode.pos_of_line(bottomline);
-        textlength = sourcecode.get_num_characters();
+        current_bottom = sourcecode.getBytePosOfLine(bottomline);
+        textlength = sourcecode.get_length();
     }
     else
     {
@@ -8825,16 +8445,17 @@ void SourceView::set_code(const string& code,
                           const string& start,
                           const string& end)
 {
-    XmTextSetString(code_text_w, XMST(code.chars()));
-    XmTextSetHighlight (code_text_w, 0, code.length(), XmHIGHLIGHT_NORMAL);
-    
+    XmhColorTextViewSetString(code_text_w, XMST(code.chars()));
+    std::vector<XmhColorToken> toks;
+    TokenizeGdbDisassembly(code.chars(), code.length(), toks);
+
+    XmhColorToken *toksptr = &toks[0];
+    int tok_count = toks.size();
+    XmhColorTextViewSetTokens(code_text_w, toksptr, tok_count);
+
     current_code       = code;
     current_code_start = start;
     current_code_end   = end;
-
-    last_pos_pc             = 0;
-    last_start_highlight_pc = 0;
-    last_end_highlight_pc   = 0;
 }
 
 // Process output of `disassemble' command
@@ -8870,13 +8491,13 @@ void SourceView::process_disassemble(const string& disassemble_output)
 }
 
 // Search PC in the current code; return beginning of line if found
-XmTextPosition SourceView::find_pc(const string& pc)
+Utf8Pos SourceView::find_pc(const string& pc)
 {
     if (compare_address(pc, current_code_start) < 0
         || compare_address(pc, current_code_end) > 0)
-        return XmTextPosition(-1);
+        return Utf8Pos(-1);
 
-    XmTextPosition pos = XmTextPosition(-1);
+    Utf8Pos pos = Utf8Pos(-1);
 
     int i = 0;
     while (i < int(current_code.length()))
@@ -8927,7 +8548,7 @@ void SourceView::refresh_codeOQC(const string& answer, void *client_data)
         process_disassemble(answer);
 
         if (find_pc(info->pc) != XmTextPosition(-1))
-            show_pc(info->pc, info->mode);
+            show_pc(info->pc, info->update);
     }
 
     delete info;
@@ -9031,11 +8652,11 @@ bool SourceView::function_is_larger_than(string pc, int max_size)
 // If MODE is given, highlight PC line.
 // STOPPED indicates that the program just stopped.
 // SIGNALED indicates that the program just received a signal.
-void SourceView::show_pc(const string& pc, XmHighlightMode mode,
+void SourceView::show_pc(const string& pc, bool update,
                          bool stopped, bool signaled)
 {
     last_shown_pc = pc;
-    if (mode == XmHIGHLIGHT_SELECTED)
+    if (update)
         last_execution_pc = pc;
 
     if (stopped)
@@ -9044,7 +8665,7 @@ void SourceView::show_pc(const string& pc, XmHighlightMode mode,
         signal_received = signaled;
     }
 
-    if (mode == XmHIGHLIGHT_SELECTED)
+    if (update)
         undo_buffer.add_address(pc, stopped);
     else
         undo_buffer.remove_address();
@@ -9055,11 +8676,11 @@ void SourceView::show_pc(const string& pc, XmHighlightMode mode,
 
     // std::clog << "Showing PC " << pc << "\n";
 
-    XmTextPosition pos = find_pc(pc);
+    Utf8Pos pos = find_pc(pc);
 
     // While PC not found, look for code in cache
     for (int i = 0; 
-         pos == XmTextPosition(-1) && i < int(code_cache.size()); 
+         pos == Utf8Pos(-1) && i < int(code_cache.size()); 
          i++)
     {
         const CodeCacheEntry& cce = code_cache[i];
@@ -9071,7 +8692,7 @@ void SourceView::show_pc(const string& pc, XmHighlightMode mode,
         }
     }
 
-    if (pos == XmTextPosition(-1))
+    if (pos == Utf8Pos(-1))
     {
         // PC not found in current code: disassemble location
 
@@ -9096,70 +8717,19 @@ void SourceView::show_pc(const string& pc, XmHighlightMode mode,
             msg += " to " + end;
 
         RefreshDisassembleInfo *info = 
-            new RefreshDisassembleInfo(pc, mode, msg);
+            new RefreshDisassembleInfo(pc, update, msg);
 
         gdb_command(gdb->disassemble_command(start, end),
                     refresh_codeOQC, (void *)info);
         return;
     }
 
-    if (pos == XmTextPosition(-1))
+    if (pos == Utf8Pos(-1))
         return;
 
     SetInsertionPosition(code_text_w, pos + indent_amount_code());
 
-    XmTextPosition pos_line_end = 0;
-    if (!current_code.empty())
-        pos_line_end = current_code.index('\n', pos) + 1;
-
-    // Clear old selection
-    if (last_start_highlight_pc)
-    {
-        XmTextSetHighlight (code_text_w,
-                            last_start_highlight_pc, 
-                            last_end_highlight_pc,
-                            XmHIGHLIGHT_NORMAL);
-        last_start_highlight_pc = 0;
-        last_end_highlight_pc   = 0;
-    }
-
-    // Mark current line
-    if (mode == XmHIGHLIGHT_SELECTED)
-    {
-        if (!display_glyphs)
-        {
-            // Set new marker
-            int indent = indent_amount_code();
-            static const string marker = ">";
-            if (last_pos_pc)
-            {
-                static const string no_marker = " ";
-                XmTextReplace (code_text_w,
-                               last_pos_pc + indent - no_marker.length(),
-                               last_pos_pc + indent,
-                               XMST(no_marker.chars()));
-            }
-
-            XmTextReplace (code_text_w,
-                           pos + indent - marker.length(),
-                           pos + indent,
-                           XMST(marker.chars()));
-    
-            if (pos_line_end)
-            {
-                XmTextSetHighlight (code_text_w,
-                                    pos, pos_line_end,
-                                    XmHIGHLIGHT_SELECTED);
-
-                last_start_highlight_pc = pos;
-                last_end_highlight_pc   = pos_line_end;
-            }
-
-            last_pos_pc = pos;
-        }
-    }
-
-    if (mode == XmHIGHLIGHT_SELECTED)
+    if (update)
         update_glyphs(code_text_w);
 }
 
@@ -9200,6 +8770,12 @@ void SourceView::set_all_registers(bool set)
 
         refresh_registers();
     }
+}
+
+void SourceView::set_font_and_size(const char* fname, int fsize)
+{
+    fontname = fname;
+    fontsize = fsize;
 }
 
 

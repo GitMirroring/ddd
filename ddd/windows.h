@@ -94,7 +94,7 @@ extern void manage_paned_child(Widget w);
 extern void unmanage_paned_child(Widget w);
 
 // Promote size of ScrolledWindow child CHILD to TARGET (default: parent)
-extern void set_scrolled_window_size(Widget child, Widget target = 0);
+extern void set_scrolled_window_size(Widget child, Widget scroll=nullptr, Widget target = nullptr);
 
 // Set the width of PANED to the maximum width of its children
 extern void get_paned_window_width(Widget paned, Dimension& max_width);

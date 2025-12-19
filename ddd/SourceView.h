@@ -1,6 +1,5 @@
 // $Id$
 // View the Source.
-
 // Copyright (C) 1995-1997 Technische Universitaet Braunschweig, Germany.
 // Copyright (C) 2004 Free Software Foundation, Inc.
 // Written by Dorothea Luetkehaus <luetke@ips.cs.tu-bs.de>
@@ -132,7 +131,6 @@ class SourceView {
     static void UpdateBreakpointButtonsCB (Widget, XtPointer, XtPointer);
 
     static void CheckScrollCB(Widget, XtPointer, XtPointer);
-    static void CheckScrollWorkProc(XtPointer, XtIntervalId *);
 
     static void StackDialogPoppedDownCB    (Widget, XtPointer, XtPointer);
     static void CodeDialogPoppedDownCB     (Widget, XtPointer, XtPointer);
@@ -156,11 +154,6 @@ class SourceView {
     // Create text or code widget
     static void create_text(Widget parent, const char *base,
                             Widget& form, Widget& text);
-
-    // Refresh displays
-    static void refresh_bp_disp(bool reset = false);
-    static void refresh_source_bp_disp(bool reset = false);
-    static void refresh_code_bp_disp(bool reset = false);
 
     // Clear breakpoint helpers
     static void clearBP(void *client_data, XtIntervalId *timer);
@@ -216,7 +209,7 @@ class SourceView {
     // BP_NR is the number of the breakpoint at POS (none: 0).  Return
     // false iff failure.
     static bool get_line_of_pos (Widget w,
-                                 XmTextPosition pos,
+                                 Utf8Pos pos,
                                  int& line_nr,
                                  string& address,
                                  bool& in_text,
@@ -225,9 +218,9 @@ class SourceView {
     // Find word around POS.  STARTPOS is the first character, ENDPOS
     // is the last character in the word.
     static void find_word_bounds (Widget w,
-                                  const XmTextPosition pos,
-                                  XmTextPosition& startpos,
-                                  XmTextPosition& endpos);
+                                  const Utf8Pos pos,
+                                  Utf8Pos& startpos,
+                                  Utf8Pos& endpos);
 
     //-----------------------------------------------------------------------
     // Action procedures
@@ -235,7 +228,6 @@ class SourceView {
     static void srcpopupAct       (Widget, XEvent*, String*, Cardinal*);
     static void startSelectWordAct(Widget, XEvent*, String*, Cardinal*);
     static void endSelectWordAct  (Widget, XEvent*, String*, Cardinal*);
-    static void updateGlyphsAct   (Widget, XEvent*, String*, Cardinal*);
     static void dragGlyphAct      (Widget, XEvent*, String*, Cardinal*);
     static void followGlyphAct    (Widget, XEvent*, String*, Cardinal*);
     static void dropGlyphAct      (Widget, XEvent*, String*, Cardinal*);
@@ -355,20 +347,7 @@ class SourceView {
     // The current JDB threadgroup.
     static string current_threadgroup;
 
-    // Some positions in source text.
-    static XmTextPosition last_top;
-    static XmTextPosition last_pos;
-    static XmTextPosition last_start_highlight;
-    static XmTextPosition last_end_highlight;
-    static Position last_x;
-    static Position last_y;
-
     // Some positions in assembler code.
-    static XmTextPosition last_top_pc;
-    static XmTextPosition last_pos_pc;
-    static XmTextPosition last_start_highlight_pc;
-    static XmTextPosition last_end_highlight_pc;
-
     static string last_execution_file;
     static int    last_execution_line;
     static string last_execution_pc;
@@ -381,11 +360,11 @@ class SourceView {
     static bool frame_pos_locked;
 
     // Set insertion position to POS.
-    static void SetInsertionPosition(Widget w, XmTextPosition pos, 
+    static void SetInsertionPosition(Widget w, Utf8Pos pos,
                                      bool fromTop = false);
 
     // Make position POS visible.
-    static void ShowPosition(Widget w, XmTextPosition pos, 
+    static void ShowPosition(Widget w, Utf8Pos pos,
                              bool fromTop = false);
 
     static bool is_source_widget(Widget w);
@@ -400,7 +379,7 @@ class SourceView {
     static void setup_where_line(string& line);
 
     // Assembler code display routines.
-    static XmTextPosition find_pc(const string& pc);
+    static Utf8Pos find_pc(const string& pc);
     static void refresh_codeOQC(const string& answer, void *data);
     static void set_code(const string& code,
                          const string& start,
@@ -445,7 +424,7 @@ class SourceView {
     static void log_glyphs();
 
     // Return position during glyph drag and drop
-    static XmTextPosition glyph_position(Widget w, XEvent *e, 
+    static Utf8Pos glyph_position(Widget w, XEvent *e,
                                          bool normalize = true);
 
     // Get relative coordinates of GLYPH in TEXT
@@ -491,29 +470,29 @@ private:
     static Widget drag_temps[2];
 
     // Return position POS of glyph GLYPH in X/Y.  Return true iff displayed.
-    static bool glyph_pos_to_xy(Widget glyph, XmTextPosition pos,
+    static bool glyph_pos_to_xy(Widget glyph, Utf8Pos pos,
                                 Position& x, Position& y);
 
     // Map stop sign in W at position POS.  Get widget from STOPS[COUNT];
     // store location in POSITIONS.  Return mapped widget (0 if none)
-    static Widget map_stop_at(Widget w, XmTextPosition pos,
+    static Widget map_stop_at(Widget w, Utf8Pos pos,
                               WidgetArray& stops, int& count,
-                              std::vector<XmTextPosition>& positions);
+                              std::vector<Utf8Pos>& positions);
 
     // Map arrow/drag arrow/drag stop in W at POS.  If ORIGIN is
     // given, use colors from ORIGIN.
-    static Widget map_arrow_at     (Widget w, XmTextPosition pos);
-    static Widget map_drag_arrow_at(Widget w, XmTextPosition pos,
+    static Widget map_arrow_at     (Widget w, Utf8Pos pos);
+    static Widget map_drag_arrow_at(Widget w, Utf8Pos pos,
                                     Widget origin = 0);
     static inline void unmap_drag_arrow(Widget w)
     {
-        map_drag_arrow_at(w, XmTextPosition(-1));
+        map_drag_arrow_at(w, Utf8Pos(-1));
     }
-    static Widget map_drag_stop_at (Widget w, XmTextPosition pos,
+    static Widget map_drag_stop_at (Widget w, Utf8Pos pos,
                                     Widget origin = 0);
     static inline void unmap_drag_stop(Widget w)
     {
-        map_drag_stop_at(w, XmTextPosition(-1));
+        map_drag_stop_at(w, Utf8Pos(-1));
     }
     static void copy_colors(Widget w, Widget origin);
 
@@ -571,11 +550,11 @@ public:
     static void show_position (string position, bool silent = false);
 
     // Set pc position to PC.
-    // If MODE is given, highlight PC line.
+    // If update is given, update glyphs and internal stogage.
     // STOPPED indicates that the program just stopped.
     // SIGNALED indicates that the program just received a signal.
     static void show_pc (const string& pc, 
-                         XmHighlightMode mode = XmHIGHLIGHT_NORMAL,
+                         bool update = false,
                          bool stopped  = false,
                          bool signaled = false);
 
@@ -684,12 +663,6 @@ public:
 
     static void set_cache_source(bool set) { sourcecode.set_caches(set); }
 
-    // Set whether glyphs are to be displayed
-    static void set_display_glyphs(bool value);
-
-    // Set whether line numbers are to be displayed
-    static void set_display_line_numbers(bool value);
-
     // Set whether machine code is to be displayed
     static void set_disassemble(bool value);
 
@@ -704,6 +677,11 @@ public:
 
     // Set the max number of glyphs
     static void set_max_glyphs(int max_glyphs);
+
+    static void set_font_and_size(const char* fname, int fsize);
+
+    static string fontname;
+    static int fontsize;
 
     // Maximum length of expr in source popup
     static int max_popup_expr_length;
@@ -824,8 +802,8 @@ public:
 
     // Get a help string for GLYPH; return 0 if none
     static MString help_on_glyph(Widget glyph, bool detailed);
-    static MString help_on_pos(Widget w, XmTextPosition pos, 
-                               XmTextPosition& ref, bool detailed);
+    static MString help_on_pos(Widget w, Utf8Pos pos,
+                               Utf8Pos& ref, bool detailed);
 
     // Get the position of breakpoint NUM
     static string bp_pos(int num);
@@ -839,14 +817,14 @@ public:
     // Get the word at position of EVENT
     static string get_word_at_event(Widget w,
                                     XEvent *event,
-                                    XmTextPosition& first_pos,
-                                    XmTextPosition& last_pos);
+                                    Utf8Pos& first_pos,
+                                    Utf8Pos& last_pos);
 
     // Get the word at position POS
     static string get_word_at_pos(Widget w,
-                                  XmTextPosition pos,
-                                  XmTextPosition& startpos,
-                                  XmTextPosition& endpos);
+                                  Utf8Pos pos,
+                                  Utf8Pos& startpos,
+                                  Utf8Pos& endpos);
 
     // Examine DDD state
 

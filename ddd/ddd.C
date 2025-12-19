@@ -2820,6 +2820,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                                         app_data.source_buttons);
     }
 
+    SourceView::set_font_and_size(app_data.fixed_width_font, app_data.fixed_width_font_size);
     source_view = new SourceView(source_view_parent);
     source_view->set_max_glyphs(app_data.max_glyphs);
 
@@ -4083,8 +4084,6 @@ void update_options()
 
     source_view->set_cache_source(app_data.cache_source_files);
     source_view->set_cache_machine_code(app_data.cache_machine_code);
-    source_view->set_display_line_numbers(app_data.display_line_numbers);
-    source_view->set_display_glyphs(app_data.display_glyphs);
     source_view->set_disassemble(gdb->type() == GDB || (gdb->type() == PYDB && app_data.disassemble));
     source_view->set_all_registers(app_data.all_registers);
     source_view->set_tab_width(app_data.tab_width);
@@ -6098,11 +6097,11 @@ static void gdbCopySelectionCB(Widget w, XtPointer client_data,
 
     // Try source
     if (!success && (win == SourceWindow || win == CommonWindow))
-        success = XmTextCopy(source_view->source(), tm);
+        success = XmhColorTextViewCopy(source_view->source(), tm);
 
     // Try code
     if (!success && (win == SourceWindow || win == CommonWindow))
-        success = XmTextCopy(source_view->code(), tm);
+        success = XmhColorTextViewCopy(source_view->code(), tm);
 }
 
 static void gdbPasteClipboardCB(Widget w, XtPointer client_data, XtPointer)
@@ -6499,14 +6498,13 @@ static void gdbUpdateEditCB(Widget w, XtPointer client_data,
     bool can_copy = can_cut;
 
     // Try source
+    Utf8Pos s, e;
     if (!can_copy && (win == SourceWindow || win == CommonWindow))
-        can_copy = XmTextGetSelectionPosition(source_view->source(),
-                                              &start, &end);
+        can_copy = XmhColorTextViewGetSelectionPosition(source_view->source(), &s, &e);
 
     // Try code
     if (!can_copy && (win == SourceWindow || win == CommonWindow))
-        can_copy = XmTextGetSelectionPosition(source_view->code(),
-                                              &start, &end);
+        can_copy = XmhColorTextViewGetSelectionPosition(source_view->code(), &s, &e);
 
     // There is always something to paste
     bool can_paste = true;

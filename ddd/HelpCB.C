@@ -91,6 +91,7 @@ char HelpCB_rcsid[] =
 #include "ArgField.h"
 #include "logo.h"
 #include "AppData.h"
+#include "SourceWidget.h"
 
 #include <vector>
 
@@ -263,7 +264,7 @@ static MString get_help_on_version_string(Widget widget)
 
 static MString _get_tip_string(Widget widget, XEvent *event)
 {
-    if (XmIsText(widget))
+    if (XmIsText(widget)||XmhIsColorTextView(widget))
     {
 	if (DefaultTipText != 0)
 	    return DefaultTipText(widget, event);
@@ -324,7 +325,7 @@ inline MString get_tip_string(Widget widget, XEvent *event)
 
 static MString _get_documentation_string(Widget widget, XEvent *event)
 {
-    if (XmIsText(widget))
+    if (XmIsText(widget)||XmhIsColorTextView(widget))
     {
 	if (DefaultDocumentationText != 0)
 	    return DefaultDocumentationText(widget, event);
@@ -1846,8 +1847,34 @@ static void PopupTip(XtPointer client_data, XtIntervalId *timer)
     static Widget last_parent = 0;
 
     Widget parent = XtParent(w);
-    if (parent != last_parent || XmIsText(w))
+    if (parent != last_parent || XmIsText(w)||XmhIsColorTextView(w))
 	last_placement = BottomRight;
+
+    if (XmhIsColorTextView(w))
+    {
+        XWindowAttributes w_attributes;
+        XGetWindowAttributes(XtDisplay(w), XtWindow(w), &w_attributes);
+
+        BoxPoint pos = point(&ti->event);
+        Window w_child;
+        int x, y;
+        XTranslateCoordinates(XtDisplay(w), XtWindow(parent), w_attributes.root,
+                              pos[X], pos[Y], &x, &y, &w_child);
+
+        // // Move tip to X, Y...
+        XtVaSetValues(tip_shell,
+                      XmNx, x-10,
+                      XmNy, y-30,
+                      XtPointer(0));
+
+        // and pop it up.
+        XtPopup(tip_shell, XtGrabNone);
+        tip_popped_up = true;
+        last_placement = LeftTop;
+        last_parent    = parent;
+        return;
+    }
+
 
     // Use 18 runs to find out the best position:
     // Run 0: try last placement in same alignment
@@ -1996,7 +2023,7 @@ static void PopupTip(XtPointer client_data, XtIntervalId *timer)
 	XWindowAttributes w_attributes;
 	XGetWindowAttributes(XtDisplay(w), XtWindow(w), &w_attributes);
 
-	if (XmIsText(w))
+	if (XmIsText(w)||XmhIsColorTextView(w))
 	{
 	    w_attributes.width  = 0;
 	    w_attributes.height = 0;
@@ -2051,7 +2078,7 @@ static void PopupTip(XtPointer client_data, XtIntervalId *timer)
 	    break;
 	}
 
-	if (XmIsText(w))
+	if (XmIsText(w)||XmhIsColorTextView(w))
 	{
 	    BoxPoint pos = point(&ti->event);
 	    dx += pos[X];
@@ -2099,7 +2126,7 @@ static void ShowDocumentation(XtPointer client_data, XtIntervalId *timer)
     XtRemoveCallback(ti->widget, XmNdestroyCallback, CancelRaiseDoc, 0);
 
     if (DisplayDocumentation != 0 
-	&& (XmIsText(ti->widget) ? text_docs_enabled : button_docs_enabled))
+	&& ((XmIsText(ti->widget)||XmhIsColorTextView(ti->widget)) ? text_docs_enabled : button_docs_enabled))
     {
 	// Display documentation
 	MString doc = get_documentation_string(ti->widget, &ti->event);
@@ -2123,7 +2150,7 @@ static void CancelClearDocumentation(Widget w, XtPointer, XtPointer)
 static void ClearDocumentationNow(Widget w)
 {
     if (DisplayDocumentation != 0 
-	&& (XmIsText(w) ? text_docs_enabled : button_docs_enabled))
+	&& ((XmIsText(w)||XmhIsColorTextView(w)) ? text_docs_enabled : button_docs_enabled))
     {
 	// Clear documentation
 	static MString empty(0, true);
@@ -2163,7 +2190,7 @@ static void ClearTip(Widget w, XEvent *event)
     }
 
     if (DisplayDocumentation != 0 
-	&& (XmIsText(w) ? text_docs_enabled : button_docs_enabled))
+	&& ((XmIsText(w)||XmhIsColorTextView(w)) ? text_docs_enabled : button_docs_enabled))
     {
 	// We don't clear the documentation immediately, since the
 	// user might be moving over to another button, and we don't
@@ -2188,7 +2215,7 @@ static void ClearTip(Widget w, XEvent *event)
 static void RaiseTip(Widget w, XEvent *event)
 {
     if (DisplayDocumentation != 0
-	&& (XmIsText(w) ? text_docs_enabled : button_docs_enabled))
+	&& ((XmIsText(w)||XmhIsColorTextView(w)) ? text_docs_enabled : button_docs_enabled))
     {
 	// No need to clear the documentation
 	if (clear_doc_timer)
@@ -2202,7 +2229,7 @@ static void RaiseTip(Widget w, XEvent *event)
 	ti.widget = w;
 
 	int doc_delay = 
-	    XmIsText(w) ? help_value_doc_delay : help_button_doc_delay;
+	    (XmIsText(w)||XmhIsColorTextView(w)) ? help_value_doc_delay : help_button_doc_delay;
 
 	CancelRaiseDoc();
 
@@ -2215,14 +2242,14 @@ static void RaiseTip(Widget w, XEvent *event)
 	XtAddCallback(w, XmNdestroyCallback, CancelRaiseDoc, 0);
     }
 
-    if (XmIsText(w) ? text_tips_enabled : button_tips_enabled)
+    if ((XmIsText(w)||XmhIsColorTextView(w)) ? text_tips_enabled : button_tips_enabled)
     {
 	static TipInfo ti;
 	ti.event  = *event;
 	ti.widget = w;
 
 	int tip_delay = 
-	    XmIsText(w) ? help_value_tip_delay : help_button_tip_delay;
+	    (XmIsText(w)||XmhIsColorTextView(w)) ? help_value_tip_delay : help_button_tip_delay;
 
 	CancelRaiseTip();
 
@@ -2278,7 +2305,7 @@ static void HandleTipEvent(Widget w,
 	    }
 	}
 
-	if (!XmIsText(w))
+	if (!XmIsText(w)&&!XmhIsColorTextView(w))
 	{
 	    // Clear and re-raise tip
 	    ClearTip(w, event);
@@ -2318,7 +2345,7 @@ static void HandleTipEvent(Widget w,
 	break;
 
     case MotionNotify:
-	if (XmIsText(w))
+	if (XmIsText(w)||XmhIsColorTextView(w))
 	{
 	    static Widget last_motion_widget           = 0;
 	    static XmTextPosition last_motion_position = XmTextPosition(-1);
@@ -2357,8 +2384,9 @@ static void InstallButtonTipEvents(Widget w, bool install)
     if (tip_values.tipString != 0 || doc_values.documentationString != 0)
     {
 	EventMask event_mask = 
-	    EnterWindowMask | LeaveWindowMask | ButtonPress | ButtonRelease 
-	    | KeyPress | KeyRelease;
+	    EnterWindowMask | LeaveWindowMask | ButtonPressMask | ButtonReleaseMask 
+	    | KeyPressMask | KeyReleaseMask;
+
 	if (install)
 	{
 	    XtAddEventHandler(w, event_mask, False, 
@@ -2489,8 +2517,8 @@ void EnableButtonDocs(bool enable)
 void InstallTextTips(Widget w, bool install)
 {
     EventMask event_mask = EnterWindowMask | LeaveWindowMask 
-	| ButtonPress | ButtonRelease | PointerMotionMask
-	| KeyPress | KeyRelease;
+	| ButtonPressMask | ButtonReleaseMask | PointerMotionMask
+	| KeyPressMask | KeyReleaseMask;
 
     if (install)
     {

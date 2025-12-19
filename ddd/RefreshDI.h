@@ -37,7 +37,7 @@
 
 struct RefreshDisassembleInfo {
     string pc;
-    XmHighlightMode mode;
+    bool update;
     StatusDelay delay;
 
 private:
@@ -46,9 +46,9 @@ private:
     RefreshDisassembleInfo& operator = (const RefreshDisassembleInfo&);
 
 public:
-    RefreshDisassembleInfo(const string& p, XmHighlightMode m,
+    RefreshDisassembleInfo(const string& p, bool u,
 			   const string& msg)
-        : pc(p), mode(m), delay(msg)
+        : pc(p), update(u), delay(msg)
     {}
 
     ~RefreshDisassembleInfo()

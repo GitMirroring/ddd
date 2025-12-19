@@ -551,6 +551,10 @@ DDD_SRC = \
 	SourceCode.h \
 	SourceView.C \
 	SourceView.h \
+	SourceWidget.C \
+	SourceWidget.h \
+	SourceTokenizer.h \
+	SourceTokenizer.C \
 	StringTPA.h  \
 	ThemeM.C     \
 	ThemeM.h     \
@@ -714,6 +718,7 @@ vsl_SOURCES       = vsl.C \
 	string-fun.C \
 	regexps.C \
 	darkmode.C \
+	SourceWidget.C \
 	$(BASE_SRC) \
 	$(TEMPLATE_SRC) \
 	$(AGENT_SRC) \

@@ -42,6 +42,7 @@
 // DDD includes
 #include "GDBAgent.h"
 
+#include "SourceWidget.h" 
 
 //-----------------------------------------------------------------------------
 extern GDBAgent* gdb;
@@ -69,7 +70,7 @@ private:
     int line_count = 0;
     int char_count = 0;
     std::vector<XmTextPosition> textpos_of_line;
-    std::vector<unsigned int> bytepos_of_line;
+    std::vector<Utf8Pos> bytepos_of_line;
 
     // The origin of the current source text.
     SourceOrigin current_origin = ORIGIN_NONE;
@@ -86,8 +87,6 @@ private:
     };
     std::map<string, FileCacheEntry> filecache;
     std::map<string, string> source_name_cache;
-
-    bool display_line_numbers = false;              // Display line numbers?
 
     Widget source_text_w = 0;
 
@@ -119,23 +118,27 @@ public:
     unsigned int get_length() { return current_source.length(); }
     const subString get_source_at(int pos, int length);
 
-
     // access functions for file attributes
     const string& get_filename()  { return current_file_name; }
     void reset_filename() { current_file_name = ""; }
     int get_num_lines() {return line_count+1; }
     int get_num_characters() {return char_count; }
     SourceOrigin get_origin() { return current_origin; }
-    XmTextPosition pos_of_line(int line);
+    // XmTextPosition getPosOfLine(int line);
     int line_of_pos(XmTextPosition pos);
-    int line_of_bytepos(int pos);
     XmTextPosition startofline_at_pos(XmTextPosition pos);
-    XmTextPosition endofline_at_pos(XmTextPosition pos);
-    const subString get_source_line(int line);
-    string get_source_lineASCII(int line);
+    Utf8Pos getEndoflineAtBytepos(Utf8Pos pos);
+    const subString getSourceLine(int line);
+    string getSourceLineASCII(int line);
+    // string get_source_line(int line);
 
-    int charpos_to_bytepos(XmTextPosition pos);
-    XmTextPosition bytepos_to_charpos(int pos);
+    Utf8Pos getBytePosOfLine(int line);
+    int getLineOfBytepos(Utf8Pos pos);
+    Utf8Pos getStartOfLineAtBytepos(Utf8Pos pos);
+
+    Utf8Pos charpos_to_bytepos(XmTextPosition pos);
+    XmTextPosition bytepos_to_charpos(Utf8Pos pos);
+
 
 
     // Read source text
@@ -143,7 +146,6 @@ public:
 
     bool set_tab_width(int width);
     bool set_indent(int source_indent, int script_indent);
-    bool set_display_line_numbers(bool set);
 
     // Return current breakpoint indent amount.  If POS is given, add
     // the whitespace from POS.

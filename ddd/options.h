@@ -70,14 +70,10 @@ extern void sourceToggleFindWordsOnlyCB     (Widget, XtPointer, XtPointer);
 extern void sourceToggleFindCaseSensitiveCB (Widget, XtPointer, XtPointer);
 extern void sourceToggleCacheSourceFilesCB  (Widget, XtPointer, XtPointer);
 extern void sourceToggleCacheMachineCodeCB  (Widget, XtPointer, XtPointer);
-extern void sourceToggleDisplayLineNumbersCB(Widget, XtPointer, XtPointer);
 extern void sourceSetIntRegistersCB         (Widget, XtPointer, XtPointer);
 extern void sourceSetAllRegistersCB         (Widget, XtPointer, XtPointer);
-extern void sourceSetDisplayGlyphsCB        (Widget, XtPointer, XtPointer);
 extern void sourceSetUseSourcePathCB        (Widget, XtPointer, XtPointer);
 extern void sourceSetTabWidthCB             (Widget, XtPointer, XtPointer);
-extern void sourceSetSourceIndentCB 	    (Widget, XtPointer, XtPointer);
-extern void sourceSetCodeIndentCB 	    (Widget, XtPointer, XtPointer);
 
 extern void graphToggleDetectAliasesCB      (Widget, XtPointer, XtPointer);
 extern void graphToggleAlign2dArraysCB      (Widget, XtPointer, XtPointer);

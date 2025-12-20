@@ -708,16 +708,6 @@ we prevent its use in jdb.
 { XRMOPTSTR("-no-disassemble"),        XRMOPTSTR(XtNdisassemble),          
                                         XrmoptionNoArg, XPointer(OFF) },
 
-{ XRMOPTSTR("--glyphs"),               XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-glyphs"),                XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--no-glyphs"),            XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-no-glyphs"),             XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(OFF) },
-
 { XRMOPTSTR("--host"),                 XRMOPTSTR(XtNdebuggerHost),         
                                         XrmoptionSepArg, XPointer(0) },
 { XRMOPTSTR("-host"),                  XRMOPTSTR(XtNdebuggerHost),         
@@ -1162,7 +1152,6 @@ static Widget find_case_sensitive_w;
 static Widget disassemble_w;
 static Widget edit_source_w;
 static Widget reload_source_w;
-static Widget line_numbers1_w;
 
 static MMDesc source_menu[] =
 {
@@ -1180,8 +1169,6 @@ static MMDesc source_menu[] =
     { "findCaseSensitive",   MMToggle, { sourceToggleFindCaseSensitiveCB, 0 }, 
       0, &find_case_sensitive_w, 0, 0 },
     MMSep,
-    { "lineNumbers",         MMToggle, { sourceToggleDisplayLineNumbersCB, 0 },
-      0, &line_numbers1_w, 0, 0 },
     { "disassemble",         MMToggle,  { gdbToggleCodeWindowCB, 0 },
       0, &disassemble_w, 0, 0 },
     MMSep,
@@ -1264,17 +1251,6 @@ static MMDesc general_preferences_menu[] =
 
 
 // Source preferences
-static Widget set_display_glyphs_w;
-static Widget set_display_text_w;
-static MMDesc glyph_menu[] =
-{
-    { "asGlyphs", MMToggle, { sourceSetDisplayGlyphsCB, XtPointer(True) },
-      0, &set_display_glyphs_w, 0, 0 },
-    { "asText", MMToggle, { sourceSetDisplayGlyphsCB, XtPointer(False) },
-      0, &set_display_text_w, 0, 0 },
-    MMEnd
-};
-
 static Widget set_tool_buttons_in_toolbar_w;
 static Widget set_tool_buttons_in_command_tool_w;
 static MMDesc tool_buttons_menu [] = 
@@ -1320,34 +1296,21 @@ static MMDesc cache_menu[] =
 };
 
 static Widget tab_width_w;
-static Widget source_indent_w;
-static Widget code_indent_w;
-static MMDesc scales_menu[] = 
+static MMDesc scales_menu[] =
 {
-    { "tabWidth", MMScale, 
-      { sourceSetTabWidthCB, 0 }, 0, &tab_width_w, 0, 0 },
-    { "sourceIndent", MMScale, 
-      { sourceSetSourceIndentCB, 0 }, 0, &source_indent_w, 0, 0 },
-    { "codeIndent", MMScale, 
-      { sourceSetCodeIndentCB, 0 }, 0, &code_indent_w, 0, 0 },
+    { "tabWidth", MMScale, { sourceSetTabWidthCB, 0 }, 0, &tab_width_w, 0, 0 },
     MMEnd
 };
 
 
-static Widget line_numbers2_w;
 static Widget refer_sources_w;
 static MMDesc source_preferences_menu[] = 
 {
-    { "showExecPos",  MMRadioPanel, MMNoCB, glyph_menu, 0, 0, 0 },
     { "toolButtons",  MMRadioPanel,  MMNoCB, tool_buttons_menu, 0, 0, 0 },
     { "referSources", MMRadioPanel, MMNoCB, refer_menu, &refer_sources_w, 0,0},
     { "find",         MMButtonPanel, MMNoCB, find_preferences_menu, 0, 0, 0 },
     { "cache",        MMButtonPanel, MMNoCB, cache_menu, 0, 0, 0 },
-    { "lineNumbers",  MMToggle,
-      { sourceToggleDisplayLineNumbersCB, 0 }, 0, 
-      &line_numbers2_w, 0, 0 },
-    { "scales",       MMPanel | MMUnmanagedLabel, 
-                              MMNoCB, scales_menu, 0, 0, 0 },
+    { "scales",       MMPanel | MMUnmanagedLabel, MMNoCB, scales_menu, 0, 0, 0 },
     MMEnd
 };
 
@@ -3934,22 +3897,11 @@ void update_options()
 
     set_toggle(cache_source_files_w,     app_data.cache_source_files);
     set_toggle(cache_machine_code_w,     app_data.cache_machine_code);
-    set_toggle(set_display_glyphs_w,     app_data.display_glyphs);
-    set_toggle(set_display_text_w,       !app_data.display_glyphs);
     set_toggle(set_refer_path_w,         app_data.use_source_path);
     set_toggle(set_refer_base_w,         !app_data.use_source_path);
-    set_toggle(line_numbers1_w,          app_data.display_line_numbers);
-    set_toggle(line_numbers2_w,          app_data.display_line_numbers);
 
     if (tab_width_w != 0)
-    {
-        XtVaSetValues(tab_width_w,     XmNvalue, app_data.tab_width,     
-                      XtPointer(0));
-        XtVaSetValues(source_indent_w, XmNvalue, app_data.indent_source, 
-                      XtPointer(0));
-        XtVaSetValues(code_indent_w,   XmNvalue, app_data.indent_code,   
-                      XtPointer(0));
-    }
+        XtVaSetValues(tab_width_w,     XmNvalue, app_data.tab_width, XtPointer(0));
 
     set_toggle(led_w, app_data.blink_while_busy);
 
@@ -4387,9 +4339,6 @@ static bool general_preferences_changed()
 
 static void ResetSourcePreferencesCB(Widget, XtPointer, XtPointer)
 {
-    notify_set_toggle(set_display_glyphs_w, initial_app_data.display_glyphs);
-    notify_set_toggle(set_display_glyphs_w, !initial_app_data.display_glyphs);
-
     notify_set_toggle(set_tool_buttons_in_toolbar_w, 
                       initial_app_data.command_toolbar);
     notify_set_toggle(set_tool_buttons_in_command_tool_w, 
@@ -4405,34 +4354,15 @@ static void ResetSourcePreferencesCB(Widget, XtPointer, XtPointer)
                       initial_app_data.cache_source_files);
     notify_set_toggle(cache_machine_code_w, 
                       initial_app_data.cache_machine_code);
-
-    notify_set_toggle(line_numbers1_w, 
-                      initial_app_data.display_line_numbers);
-    notify_set_toggle(line_numbers2_w, 
-                      initial_app_data.display_line_numbers);
-
     if (app_data.tab_width != initial_app_data.tab_width)
     {
         app_data.tab_width = initial_app_data.tab_width;
-        update_options();
-    }
-    if (app_data.indent_source != initial_app_data.indent_source)
-    {
-        app_data.indent_source = initial_app_data.indent_source;
-        update_options();
-    }
-    if (app_data.indent_code != initial_app_data.indent_code)
-    {
-        app_data.indent_code = initial_app_data.indent_code;
         update_options();
     }
 }
 
 static bool source_preferences_changed()
 {
-    if (app_data.display_glyphs != initial_app_data.display_glyphs)
-        return true;
-
     if (app_data.command_toolbar != initial_app_data.command_toolbar)
         return true;
 
@@ -4452,15 +4382,6 @@ static bool source_preferences_changed()
         return true;
 
     if (app_data.tab_width != initial_app_data.tab_width)
-        return true;
-
-    if (app_data.indent_source != initial_app_data.indent_source)
-        return true;
-
-    if (app_data.indent_code != initial_app_data.indent_code)
-        return true;
-
-    if (app_data.display_line_numbers != initial_app_data.display_line_numbers)
         return true;
 
     return false;
@@ -7526,7 +7447,6 @@ static void setup_auto_command_prefix()
 static void setup_options()
 {
     set_sensitive(disassemble_w, gdb->has_disassembly());
-    set_sensitive(code_indent_w, gdb->type() == GDB);
     set_sensitive(examine_w,            gdb->has_examine_command());
     set_sensitive(print_examine_w,      gdb->has_examine_command());
     set_sensitive(cache_machine_code_w, gdb->type() == GDB);

@@ -2985,7 +2985,8 @@ void SourceView::create_text(Widget parent, const char *base,
     XmhColorTextViewSetFont(text, fontname.chars(), fontsize);
     //XmhColorTextViewSetSelectionColorName(text, "#94caef", 0.55);
 
-
+    // if (strcmp(base, "code")==0)
+    //     XmhColorTextViewEnableGutter(text, False);
 
     XtAddEventHandler(text, ButtonPressMask, False, AppSelectOnClickEH, NULL);
 

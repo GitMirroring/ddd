@@ -228,6 +228,7 @@ typedef struct CtvCtx
     int viewport_width  = 0;   // actual widget width (px)
     int viewport_height = 0;   // actual widget height (px)
     int gutter_px = 0;
+    bool gutter_enabled = true;
 
     // Xft
     XftDraw *xft = nullptr;
@@ -938,6 +939,9 @@ static int cell_width(CtvCtx *ctx)
 // Compute gutter width (pixels) based on number of digits and a padding
 static int gutter_width(CtvCtx *ctx)
 {
+    if (ctx->gutter_enabled==false)
+        return 0;
+
     // digits = floor(log10(line_count)) + 1; minimal 2 digits
     int lines = std::max(1, ctx->line_count);
     int digits = 1;
@@ -2268,6 +2272,15 @@ void XmhColorTextViewSetString(Widget w, const char *s)
     queue_redraw(ctx);
 }
 
+void XmhColorTextViewEnableGutter(Widget w, Boolean enable)
+{
+    CtvCtx *ctx = get_ctx(w);
+    if (!ctx)
+        return;
+
+    ctx->gutter_enabled = enable;
+}
+
 /*!
  * \brief Retrieve a heap-allocated copy of the current text.
  * \param w XmhColorTextView widget.
@@ -2933,11 +2946,30 @@ int XmhColorTextViewGetVisibleRows(Widget w)
     return get_visible_lines(ctx);
 }
 
+int XmhColorTextViewGetVisibleColumns(Widget w)
+{
+    CtvCtx *ctx = get_ctx(w);
+    if (!ctx)
+        return 0;
+
+    // Get visible width: prefer the clip window of the scrolled window
+    Dimension width = 0;
+    if (ctx->scrolledWindow)
+        XtVaGetValues(ctx->scrolledWindow, XmNwidth, &width, NULL);
+
+    // Ensure font metrics / cell width
+    ensure_font(ctx);
+    int cw = std::max(1, cell_width(ctx));
+
+    return width / cw;
+}
+
 int XmhColorTextViewGetLineHeight(Widget w)
 {
     CtvCtx *ctx = get_ctx(w);
     if (!ctx)
         return 0;
+
     return ctx->line_height;
 }
 

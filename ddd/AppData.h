@@ -95,10 +95,6 @@
 #define XtCLinesAboveCursor      "LinesAboveCursor"
 #define XtNlinesBelowCursor      "linesBelowCursor"
 #define XtCLinesBelowCursor      "LinesBelowCursor"
-#define XtNindentScript          "indentScript"
-#define XtNindentSource          "indentSource"
-#define XtNindentCode            "indentCode"
-#define XtCIndent                "Indent"
 #define XtNlineBufferedConsole   "lineBufferredConsole"
 #define XtCLineBuffered          "LineBuffered"
 #define XtNconsoleHasFocus       "consoleHasFocus"
@@ -256,14 +252,10 @@
 #define XtCBlockTTYInput         "BlockTTYInput"
 #define XtNbufferGDBOutput       "bufferGDBOutput"
 #define XtCBufferGDBOutput       "BufferGDBOutput"
-#define XtNdisplayGlyphs         "displayGlyphs"
-#define XtCDisplayGlyphs         "DisplayGlyphs"
 #define XtNmaxGlyphs             "maxGlyphs"
 #define XtCMaxGlyphs             "MaxGlyphs"
 #define XtNglyphUpdateDelay      "glyphUpdateDelay"
 #define XtCGlyphUpdateDelay      "GlyphUpdateDelay"
-#define XtNdisplayLineNumbers    "displayLineNumbers"
-#define XtCDisplayLineNumbers    "DisplayLineNumbers"
 #define XtNdisassemble           "disassemble"
 #define XtCDisassemble           "Disassemble"
 #define XtNmaxDisassemble        "maxDisassemble"
@@ -430,9 +422,6 @@ struct AppData {
     Cardinal  tab_width;
     Cardinal  lines_above_cursor;
     Cardinal  lines_below_cursor;
-    Cardinal  indent_source;
-    Cardinal  indent_script;
-    Cardinal  indent_code;
     Boolean   line_buffered_console;
     OnOff     console_has_focus;
     const _XtString    bash_display_shortcuts;
@@ -518,10 +507,7 @@ struct AppData {
     OnOff     block_tty_input;
     OnOff     buffer_gdb_output;
     Cardinal  annotate;
-    Boolean   display_glyphs;
     Cardinal  max_glyphs;
-    Cardinal  glyph_update_delay;
-    Boolean   display_line_numbers;
     Boolean   disassemble;
     Cardinal  max_disassemble;
     Boolean   use_source_path;

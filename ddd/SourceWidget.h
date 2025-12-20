@@ -39,13 +39,14 @@ struct XmhColorToken
 bool XmhIsColorTextView(Widget w);
 
 // Create a scrolled, colored text viewer as a real widget (XmPrimitive subclass).
-// Returns the XmhColorTextView widget. out_ctx receives the context pointer.
+// Returns the XmhColorTextView widget.
 Widget CreateXmhColorTextView(Widget parent, const char *name, Arg *args, Cardinal n);
 
 // Content
 void   XmhColorTextViewSetString(Widget w, const char *utf8);
 char*  XmhColorTextViewGetString(Widget w);               // caller frees with free()
 Utf8Pos XmhColorTextViewGetLastPosition(Widget w);
+void XmhColorTextViewEnableGutter(Widget w, Boolean enable);
 
 // Coloring (syntax highlighting)
 void   XmhColorTextViewSetTokens(Widget w, const XmhColorToken *tokens, int count);
@@ -79,10 +80,11 @@ void XmhColorTextViewSetFontPattern(Widget w, const char *xft_pattern); // e.g.,
 void XmhColorTextViewSetBackgroundPixel(Widget w, Pixel bg);
 int  XmhColorTextViewSetBackgroundName(Widget w, const char *name);// returns 1 on success
 
-// Caret/selection color control
 int XmhColorTextViewGetVisibleRows(Widget w);
+int XmhColorTextViewGetVisibleColumns(Widget w);
 int XmhColorTextViewGetLineHeight(Widget w);
 
+// Caret/selection color control
 void XmhColorTextViewSelectRange(Widget w, Utf8Pos start, Utf8Pos end);
 void XmhColorTextViewWordBoundsAt(Widget w, Utf8Pos pos, Utf8Pos *start, Utf8Pos *end);
 

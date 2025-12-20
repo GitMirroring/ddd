@@ -1360,7 +1360,6 @@ static void draw_expose(CtvCtx *ctx, XExposeEvent *ex)
                   0, 0, ctx->back_w, ctx->back_h,
                   0, 0);
     }
-
 }
 
 static void update_selection(CtvCtx *ctx, Utf8Pos newpos, bool extend)
@@ -3026,7 +3025,7 @@ static void ExtendEndAction(Widget w, XEvent *event, String *params, Cardinal *n
     // is finalized and PRIMARY should be owned.
     CtvTextRec *tw = (CtvTextRec*)w;
     if (tw->ctvtext.gain_primary_callback)
-        XtCallCallbackList(ctx->textWidget, tw->ctvtext.gain_primary_callback, /*call_data*/NULL);
+        XtCallCallbackList(ctx->textWidget, tw->ctvtext.gain_primary_callback, nullptr);
 
     queue_redraw(ctx);
 }
@@ -3037,9 +3036,12 @@ static void SelectAllAction(Widget w, XEvent*, String*, Cardinal*)
     CtvCtx *ctx = get_ctx(w);
     if (!ctx)
         return;
-    update_selection(ctx, 0, true);
-    update_selection(ctx, ctx->text_len, true);
-    XmhColorTextViewShowPosition(w, ctx->caret);
+
+    ctx->sel_start = 0;
+    ctx->sel_end = ctx->text_len;
+    ctx->has_sel = true;
+    ctx->caret = ctx->text_len;
+
     queue_redraw(ctx);
 }
 

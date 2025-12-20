@@ -4087,7 +4087,6 @@ void update_options()
     source_view->set_disassemble(gdb->type() == GDB || (gdb->type() == PYDB && app_data.disassemble));
     source_view->set_all_registers(app_data.all_registers);
     source_view->set_tab_width(app_data.tab_width);
-    source_view->set_indent(app_data.indent_source, app_data.indent_code, app_data.indent_script);
 
     source_view->lines_above_cursor   = app_data.lines_above_cursor;
     source_view->lines_below_cursor   = app_data.lines_below_cursor;
@@ -6158,8 +6157,8 @@ static void gdbUnselectAllCB(Widget w, XtPointer client_data,
 
     XmTextClearSelection(gdb_w, tm);
     XmTextFieldClearSelection(source_arg->text(), tm);
-    XmTextClearSelection(source_view->source(), tm);
-    XmTextClearSelection(source_view->code(), tm);
+    XmhColorTextViewClearSelection(source_view->source(), tm);
+    XmhColorTextViewClearSelection(source_view->code(), tm);
 
     if (data_disp->graph_arg != 0)
         XmTextFieldClearSelection(data_disp->graph_arg->text(), tm);

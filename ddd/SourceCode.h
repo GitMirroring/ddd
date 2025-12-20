@@ -64,7 +64,6 @@ private:
     string current_file_name = "";
     int line_count = 0;
     int char_count = 0;
-    std::vector<XmTextPosition> textpos_of_line;
     std::vector<Utf8Pos> bytepos_of_line;
 
     // The origin of the current source text.
@@ -101,7 +100,7 @@ private:
     String read_class(const string& class_name, string& file_name, SourceOrigin& origin,
                              long& length, bool silent);
     String read_from_gdb(const string& source_name, long& length, bool silent);
-    String read_indented(string& file_name, long& length, SourceOrigin& origin, bool silent);
+    String read_file(string& file_name, long& length, SourceOrigin& origin, bool silent);
 
 public:
 
@@ -111,7 +110,7 @@ public:
     // access functions for source
     const string& get_source() { return current_source; }
     unsigned int get_length() { return current_source.length(); }
-    const subString get_source_at(int pos, int length);
+    const subString get_source_at(Utf8Pos pos, int length);
 
     // access functions for file attributes
     const string& get_filename()  { return current_file_name; }
@@ -119,13 +118,8 @@ public:
     int get_num_lines() {return line_count+1; }
     int get_num_characters() {return char_count; }
     SourceOrigin get_origin() { return current_origin; }
-    // XmTextPosition getPosOfLine(int line);
-    int line_of_pos(XmTextPosition pos);
-    XmTextPosition startofline_at_pos(XmTextPosition pos);
     Utf8Pos getEndoflineAtBytepos(Utf8Pos pos);
     const subString getSourceLine(int line);
-    string getSourceLineASCII(int line);
-    // string get_source_line(int line);
 
     Utf8Pos getBytePosOfLine(int line);
     int getLineOfBytepos(Utf8Pos pos);
@@ -138,7 +132,7 @@ public:
 
     // Return current breakpoint indent amount.  If POS is given, add
     // the whitespace from POS.
-    int calculate_indent(int pos = -1);
+    int calculate_indent(Utf8Pos pos = -1);
 
     // True iff we have some source text
     bool have_source() { return current_source.length() != 0; }

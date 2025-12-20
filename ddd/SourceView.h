@@ -670,11 +670,6 @@ public:
     // Set the max number of glyphs
     static void set_max_glyphs(int max_glyphs);
 
-    static void set_font_and_size(const char* fname, int fsize);
-
-    static string fontname;
-    static int fontsize;
-
     // Maximum length of expr in source popup
     static int max_popup_expr_length;
 

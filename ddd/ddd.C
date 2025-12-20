@@ -2783,7 +2783,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                                         app_data.source_buttons);
     }
 
-    SourceView::set_font_and_size(app_data.fixed_width_font, app_data.fixed_width_font_size);
     source_view = new SourceView(source_view_parent);
     source_view->set_max_glyphs(app_data.max_glyphs);
 

@@ -46,7 +46,9 @@ Widget CreateXmhColorTextView(Widget parent, const char *name, Arg *args, Cardin
 void   XmhColorTextViewSetString(Widget w, const char *utf8);
 char*  XmhColorTextViewGetString(Widget w);               // caller frees with free()
 Utf8Pos XmhColorTextViewGetLastPosition(Widget w);
+
 void XmhColorTextViewEnableGutter(Widget w, Boolean enable);
+void XmhColorTextViewDarkMode(Widget w, Boolean enable);
 
 // Coloring (syntax highlighting)
 void   XmhColorTextViewSetTokens(Widget w, const XmhColorToken *tokens, int count);

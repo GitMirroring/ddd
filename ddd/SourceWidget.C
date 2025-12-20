@@ -247,7 +247,6 @@ typedef struct CtvCtx
     double font_pt = 0.0;
     Visual  *visual = nullptr;
     Colormap cmap;
-    std::vector<XftColor> palette;
     Pixel bg = 0;
     int ascent = 0;
     int descent = 0;
@@ -274,9 +273,11 @@ typedef struct CtvCtx
     Utf8Pos sel_anchor = 0;
 
     // Colors
+    std::vector<XftColor> palette;
     XftColor selc = {};
     XftColor caretc = {};
     XftColor gutterc = {};
+    bool dark_mode = false;
 
     // Viewport tracking (last known scrollbar positions)
     int prev_v = -1;
@@ -305,6 +306,30 @@ const char *defaultnames[] =
     "#bf0303",  // CPU registers
     "#00a000",  // Assembly instructions
     "#b08000"   // Function labels
+};
+
+const char *darkdefaultnames[] =
+{
+    "#cfcfc2", // Default
+    "#cfcfc2", // Keyword
+    "#27aeae", // Type normal types and *_type, *_t
+    "#f67400", // Number
+    "#f44f4f", // String
+    "#3daee9", // Char
+    "#7a7c7d", // Comment
+    "#27ad60", // Preprocessor
+    "#27ad60", // Includes
+    "#3f8058", // Operator
+    "#644a9b", // Standard Classes
+    "#0095ff", // Boost Stuff
+    "#27aeae", // Data Members m_*, Globals g_*, Statics s_*
+    "#3f8058", // Annotation in comment (Doyxgen commands)
+    "#3f8058", // Delimiter , and ;
+    "#3f8058", // Bracket  ( ) { } [ ]
+    "#27aeae",  // Hex addresses
+    "#f44f4f",  // CPU registers
+    "#00c000",  // Assembly instructions
+    "#c0a000"   // Function labels
 };
 
 
@@ -437,8 +462,12 @@ static void alloc_default_palette(Display *dpy, Visual *vis, Colormap cmap, CtvC
         return;
 
     ctx->palette.resize((sizeof(defaultnames)/sizeof(defaultnames[0])));
-    for (size_t i=0; i<ctx->palette.size(); i++)
-        XftColorAllocName(dpy, vis, cmap, defaultnames[i], &ctx->palette[i]);
+    if (ctx->dark_mode)
+        for (size_t i=0; i<ctx->palette.size(); i++)
+            XftColorAllocName(dpy, vis, cmap, darkdefaultnames[i], &ctx->palette[i]);
+    else
+        for (size_t i=0; i<ctx->palette.size(); i++)
+            XftColorAllocName(dpy, vis, cmap, defaultnames[i], &ctx->palette[i]);
 
     // selection
     XRenderColor rc;
@@ -449,10 +478,17 @@ static void alloc_default_palette(Display *dpy, Visual *vis, Colormap cmap, CtvC
     XftColorAllocValue(dpy, ctx->visual, ctx->cmap, &rc, &ctx->selc);
 
     // caret
-    XftColorAllocName(dpy, vis, cmap, "#000000", &ctx->caretc);
+    if (ctx->dark_mode)
+        XftColorAllocName(dpy, vis, cmap, "#cfcfc2", &ctx->caretc);
+    else
+        XftColorAllocName(dpy, vis, cmap, "#1f1c1b", &ctx->caretc);
 
     // gutter
-    XftColorAllocName(dpy, vis, cmap, "#bebebe", &ctx->gutterc);
+    if (ctx->dark_mode)
+        XftColorAllocName(dpy, vis, cmap, "#414141", &ctx->gutterc);
+    else
+        XftColorAllocName(dpy, vis, cmap, "#bebebe", &ctx->gutterc);
+
 }
 
 static void free_palette(Display *dpy, CtvCtx *ctx)
@@ -2279,6 +2315,15 @@ void XmhColorTextViewEnableGutter(Widget w, Boolean enable)
         return;
 
     ctx->gutter_enabled = enable;
+}
+
+void XmhColorTextViewDarkMode(Widget w, Boolean enable)
+{
+    CtvCtx *ctx = get_ctx(w);
+    if (!ctx)
+        return;
+
+    ctx->dark_mode = enable;
 }
 
 /*!

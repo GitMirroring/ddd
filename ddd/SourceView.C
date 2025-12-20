@@ -344,10 +344,6 @@ bool SourceView::all_registers          = false;
 int  SourceView::lines_above_cursor   = 2;
 int  SourceView::lines_below_cursor   = 3;
 
-string SourceView::fontname = "monospace";
-int SourceView::fontsize = 11;
-
-
 Map<int, BreakPoint> SourceView::bp_map;
 
 IntIntArrayAssoc SourceView::bps_in_line;
@@ -2159,7 +2155,6 @@ bool SourceView::get_line_of_pos (Widget   w,
     if (w != text_w)
     {
         // Glyph selected
-
         MapRef ref;
         for (BreakPoint *bp = bp_map.first(ref);
              bp != 0;
@@ -2195,7 +2190,7 @@ bool SourceView::get_line_of_pos (Widget   w,
 
         int offset = pos - sourcecode.getBytePosOfLine(line_nr);
 
-        if (offset > sourcecode.calculate_indent(line_nr) - 1)
+        if (offset > sourcecode.calculate_indent(line_nr) - 1 && offset!=0)
         {
             // Position is in text
             in_text = true;
@@ -2242,13 +2237,15 @@ bool SourceView::get_line_of_pos (Widget   w,
         if (pos >= int(current_code.length()) || pos < 0)
             return false;
 
-        Utf8Pos line_pos = pos;
+        Utf8Pos line_start = pos;
+        while (line_start >= 0 && current_code[line_start] != '\n')
+            line_start--;
+        line_start++;
 
-        while (line_pos >= 0 && current_code[line_pos] != '\n')
-            line_pos--;
-        line_pos++;
+        while (line_start < int(current_code.length()) && current_code[line_start] == ' ')
+            line_start++;
 
-        if (pos == line_pos || pos - line_pos < 0)
+        if (pos < line_start)
         {
             // Breakpoint area
             in_text = false;
@@ -2280,7 +2277,7 @@ bool SourceView::get_line_of_pos (Widget   w,
                 {
                     // Find which breakpoint was selected
                     int i;
-                    Utf8Pos bp_disp_pos = line_pos;
+                    Utf8Pos bp_disp_pos = line_start;
                     for (i = 0; i < int(bps.size()); i++)
                     {
                         BreakPoint* bp = bp_map.get(bps[i]);
@@ -2981,12 +2978,12 @@ void SourceView::create_text(Widget parent, const char *base,
                     XmNbottomAttachment, XmATTACH_FORM,
                     NULL);
 
+    XmhColorTextViewDarkMode(text, app_data.dark_mode);
     XmhColorTextViewSetBackgroundName(text, "#f5f5f5");
-    XmhColorTextViewSetFont(text, fontname.chars(), fontsize);
-    //XmhColorTextViewSetSelectionColorName(text, "#94caef", 0.55);
+    XmhColorTextViewSetFont(text, app_data.fixed_width_font, app_data.fixed_width_font_size);
 
-    // if (strcmp(base, "code")==0)
-    //     XmhColorTextViewEnableGutter(text, False);
+    if (strcmp(base, "code")==0)
+        XmhColorTextViewEnableGutter(text, False);
 
     XtAddEventHandler(text, ButtonPressMask, False, AppSelectOnClickEH, NULL);
 
@@ -7007,6 +7004,9 @@ void SourceView::map_glyph(Widget& glyph, Position x, Position y)
 
     y += (line_height(text_w) - glyph_height) - 2;
 
+    if (text_w == code_text_w)
+        x += 16;
+
     if (x != old_x || y != old_y)
     {
         if (change_glyphs)
@@ -8665,13 +8665,6 @@ void SourceView::set_all_registers(bool set)
         refresh_registers();
     }
 }
-
-void SourceView::set_font_and_size(const char* fname, int fsize)
-{
-    fontname = fname;
-    fontsize = fsize;
-}
-
 
 // Some DBXes require `{ COMMAND; }', others `{ COMMAND }'.
 string SourceView::command_list(const string& cmd)

@@ -62,159 +62,8 @@ char fonts_rcsid[] =
 #include <algorithm>
 
 //-----------------------------------------------------------------------------
-// Return X font attributes
+// Create an Xft font name
 //-----------------------------------------------------------------------------
-
-//  1     2    3    4     5     6  7     8    9    10   11  12   13     14
-// -fndry-fmly-wght-slant-sWdth-ad-pxlsz-ptSz-resx-resy-spc-avgW-rgstry-encdng
-
-const int Foundry       = 1;
-const int Family        = 2;
-const int Weight        = 3;
-const int Slant         = 4;
-// const int sWidth     = 5;
-// const int Ad         = 6;
-// const int PixelSize  = 7;
-const int PointSize     = 8;
-// const int ResX       = 9;
-// const int ResY       = 10;
-// const int Spacing    = 11;
-// const int AvgWidth   = 12;
-// const int Registry   = 13;
-// const int Encoding   = 14;
-
-const int AllComponents = 14;
-
-typedef int FontComponent;
-
-// Return the Nth component from NAME, or DEFAULT_VALUE if none
-static string component(string name, FontComponent n)
-{
-    // If name does not begin with `-', assume it's a font family
-    if (!name.contains('-', 0))
-	name.prepend("-*-");
-
-    // Let I point to the Nth occurrence of `-'
-    int i = -1;
-    while (n >= Foundry && (i = name.index('-', i + 1)) >= 0)
-	n--;
-
-    string w;
-    if (i >= 0)
-    {
-	w = name.after(i);
-	if (w.contains('-'))
-	    w = w.before('-');
-    }
-
-    return w;
-}
-
-
-//-----------------------------------------------------------------------------
-// Access X font resources
-//-----------------------------------------------------------------------------
-
-// User-specified values
-static string userfont(const AppData& ad, DDDFont font)
-{
-    switch (font) 
-    {
-    case DefaultDDDFont:
-	return ad.default_font;
-    case VariableWidthDDDFont:
-	return ad.variable_width_font;
-    case FixedWidthDDDFont:
-	return ad.fixed_width_font;
-    case DataDDDFont:
-	return ad.data_font;
-    }
-
-    assert(0);
-    ::abort();
-    return "";			// Never reached
-}
-
-// defaults to use if nothing is specified
-static string fallbackfont(DDDFont font)
-{
-    switch (font) 
-    {
-    case DefaultDDDFont:
-	return "-misc-liberation sans-bold-r-normal--0-0-0-0-p-0-iso8859-1";
-    case VariableWidthDDDFont:
-	return "-misc-liberation sans-medium-r-normal--0-0-0-0-p-0-iso8859-1";
-    case FixedWidthDDDFont:
-    case DataDDDFont:
-	return "-misc-liberation mono-bold-r-normal--0-0-0-0-m-0-iso8859-1";
-    }
-
-    assert(0);
-    ::abort();
-    return "";			// Never reached
-}
-
-// Fetch a component
-static string component(const AppData& ad, DDDFont font, FontComponent n)
-{
-    if (n == PointSize)
-    {
-	int sz = 0;
-	switch(font)
-	{
-	case DefaultDDDFont:
-	    sz = ad.default_font_size;
-	    break;
-
-	case VariableWidthDDDFont:
-	    sz = ad.variable_width_font_size;
-	    break;
-
-	case FixedWidthDDDFont:
-	    sz = ad.fixed_width_font_size;
-	    break;
-
-	case DataDDDFont:
-	    sz = ad.data_font_size;
-	    break;
-	}
-
-	if (sz<80)
-            sz = 100;
-
-	return itostring(sz);
-    }
-
-    string w = component(userfont(ad, font), n);
-    if (w.empty())		// nothing specified
-	w = component(fallbackfont(font), n);
-    return w;
-}
-
-
-
-//-----------------------------------------------------------------------------
-// Create an X font name
-//-----------------------------------------------------------------------------
-string make_font(const AppData& ad, DDDFont base, const string& override)
-{
-    string font;
-    for (FontComponent n = Foundry; n <= AllComponents; n++)
-    {
-	font += '-';
-	string w = component(override, n);
-	if (w.empty() || w == " ")
-	    w = component(ad, base, n);
-	font += w;
-    }
-
-#if 0
-    std::clog << "make_font(" << font_type(base) << ", " << quote(override) 
-	      << ") = " << quote(font) << "\n";
-#endif
-
-    return font;
-}
 
 static void title(const AppData& ad, const string& s)
 {
@@ -345,15 +194,6 @@ void replace_vsl_xftfont(string& defs, const string& func,
 			     const string& font, const Dimension size, const string& override = "")
 {
     string fontname = quote(font+string(":size=")+itostring(size)+override);
-    defs += "#pragma replace " + func + "\n" + 
-	func + "(box) = font(box, " + fontname + ");\n";
-}
-
-void replace_vsl_font(string& defs, const string& func,
-			     const AppData& ad, const string& override = "",
-			     DDDFont font = DataDDDFont)
-{
-    string fontname = quote(make_font(ad, font, override));
     defs += "#pragma replace " + func + "\n" + 
 	func + "(box) = font(box, " + fontname + ");\n";
 }
@@ -522,7 +362,7 @@ std::vector<string> GetFixedWithFonts()
             FcPatternGetString(font, FC_STYLE, 0, &style) == FcResultMatch &&
             FcPatternGetInteger(font, FC_SPACING, 0, &spacing) == FcResultMatch &&
             FcPatternGetCharSet(font, FC_CHARSET, 0, &charset) == FcResultMatch &&
-            spacing == FC_MONO &&
+            (spacing == FC_MONO || spacing == FC_DUAL) &&
             (strcmp((char*)style, "Medium") == 0 || strcmp((char*)style, "Regular") == 0) &&
             (FcCharSetIsSubset(englishCharset, charset)))
         {

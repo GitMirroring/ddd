@@ -467,6 +467,16 @@ fi
 if test "x${ddd_valgrind_include_found}" != "xno"; then
   AC_DEFINE([WITH_VALGRIND],1,[Define if you want valgrind leak check of DDD.])
 fi
+dnl ----------------------------------------------------------------------
+dnl Optional base directory for .desktop and icon installation
+dnl ----------------------------------------------------------------------
+AC_ARG_WITH([xdg-datadir],
+  [AS_HELP_STRING([--with-xdg-datadir=DIR],
+                  [base DIR for .desktop and icon
+                   (default: datarootdir)])],
+  [DDD_XDG_DATADIR="$withval"],
+  [DDD_XDG_DATADIR='${datarootdir}'])
+AC_SUBST([DDD_XDG_DATADIR])
 dnl
 dnl
 dnl `streampos' and `iostate' types

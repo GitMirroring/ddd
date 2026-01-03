@@ -51,8 +51,8 @@ SUFFIXES = .C .c .Y .L .txt .xbm .xbmxx .xpm .xpmxx \
 # Shared data installation
 dddrootdir    = $(pkgdatadir)-@VERSION@
 dddappdir     = $(pkgdatadir)-@VERSION@/@ddd@
-desktopdir    = /usr/share/applications
-iconsdir      = /usr/share/pixmaps
+desktopdir    = @DDD_XDG_DATADIR@/applications
+iconsdir      = @DDD_XDG_DATADIR@/pixmap
 ddddocdir     = $(dddrootdir)/doc
 infodir       = $(dddrootdir)/info
 

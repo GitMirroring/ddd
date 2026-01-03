@@ -639,6 +639,9 @@ AC_CHECK_HEADERS(X11/Xmu/Editres.h,[],[],
 [[#include <X11/Intrinsic.h>
 ]])
 fi
+AC_CHECK_HEADERS(X11/extensions/shape.h,[],[],
+[[#include <X11/Intrinsic.h>
+]])
 AC_SUBST(XAW_LIBS)
 dnl
 dnl

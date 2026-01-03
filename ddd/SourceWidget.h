@@ -78,6 +78,7 @@ void    XmhColorTextViewSetFillParent(Widget w);// attach SW to all sides (if pa
 // Font control
 void XmhColorTextViewSetFont(Widget w, const char *family, double pt); // e.g., "monospace", 12.0
 void XmhColorTextViewSetFontPattern(Widget w, const char *xft_pattern); // e.g., "monospace:size=12"
+int  XmhColorTextViewGetFontSize(Widget w);
 
 void XmhColorTextViewSetBackgroundPixel(Widget w, Pixel bg);
 int  XmhColorTextViewSetBackgroundName(Widget w, const char *name);// returns 1 on success

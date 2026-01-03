@@ -2032,6 +2032,12 @@ static string paned_widget_size(Widget w, bool height_only = false, bool width_o
     {
         // Store rows and columns
         short columns = XmhColorTextViewGetVisibleColumns(w);
+
+        // correct for temporary fontsize changes
+        Cardinal fontsize = XmhColorTextViewGetFontSize(w);
+        if (fontsize>0 && app_data.fixed_width_font_size != fontsize)
+            columns = columns * fontsize / app_data.fixed_width_font_size;
+
         if (!height_only && columns > 0)
         {
             if (!s.empty())
@@ -2042,7 +2048,13 @@ static string paned_widget_size(Widget w, bool height_only = false, bool width_o
 
         if (!width_only)
         {
-            short rows =XmhColorTextViewGetVisibleRows(w);
+            short rows = XmhColorTextViewGetVisibleRows(w);
+
+            // correct for temporary fontsize changes
+            Cardinal fontsize = XmhColorTextViewGetFontSize(w);
+            if (fontsize>0 && app_data.fixed_width_font_size != fontsize)
+                rows = rows * fontsize / app_data.fixed_width_font_size;
+
             if (rows > 0)
             {
                 if (!s.empty())

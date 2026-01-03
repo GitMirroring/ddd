@@ -142,8 +142,9 @@ char SourceView_rcsid[] =
 #include <Xm/ScrolledW.h>
 #include <X11/StringDefs.h>
 #include <X11/cursorfont.h>
-#include <X11/extensions/shapeconst.h>
+#ifdef HAVE_X11_EXTENSIONS_SHAPE_H
 #include <X11/extensions/shape.h>
+#endif
 
 #if XmVersion >= 2000
 #include <Xm/SpinB.h>
@@ -3005,11 +3006,6 @@ void SourceView::create_text(Widget parent, const char *base,
     XtAddCallback(text, XmhNviewportChangedCallback, CheckScrollCB, XtPointer(0));
     InstallTextTips(text);
 
-    // Fetch scrollbar ID and add callbacks
-    Widget scrollbar = 0;
-    XtVaGetValues(XmhColorTextViewGetScrolledWindow(text), 
-                  XmNverticalScrollBar, &scrollbar,
-                  XtPointer(0));
 }
 
 
@@ -6897,10 +6893,11 @@ Widget SourceView::create_glyph(Widget form_w, const _XtString name)
 
     XtManageChild(w);
 
+#ifdef HAVE_X11_EXTENSIONS_SHAPE_H
     Pixmap mask = XmGetPixmapByDepth(XtScreen(w), XMST((string(name)+"-mask").chars()), 1L, 0L, 1);
     if (mask!=XmUNSPECIFIED_PIXMAP)
         XShapeCombineMask(XtDisplay(w), XtWindow(w), ShapeBounding, 0, 0, mask, ShapeSet);
-
+#endif
     XtAddCallback(w, XmNactivateCallback, ActivateGlyphCB, 0);
 
     InstallButtonTips(w);
@@ -6910,20 +6907,7 @@ Widget SourceView::create_glyph(Widget form_w, const _XtString name)
 // Return height of a single line
 int SourceView::line_height(Widget text_w)
 {
-    static int source_height = 0;
-    static int code_height   = 0;
-    if (text_w == source_text_w && source_height > 0)
-        return source_height;
-    else if (text_w == code_text_w && code_height > 0)
-        return code_height;
-
     int height = XmhColorTextViewGetLineHeight(text_w);
-
-    if (text_w == source_text_w)
-        source_height = height;
-    else if (text_w == code_text_w)
-        code_height = height;
-
     return height;
 }
 

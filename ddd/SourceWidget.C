@@ -38,6 +38,7 @@
 #include <ctype.h>
 #include <cstdint>
 #include <algorithm>
+#include <cmath>
 
 // Forward decls of handlers used by the widget class
 static void buttonEH(Widget, XtPointer client, XEvent* ev, Boolean* cont);
@@ -243,7 +244,7 @@ typedef struct CtvCtx
     int      back_w   = 0;
     int      back_h   = 0;
 
-    char *font_family = nullptr; // not owned; points to a static string
+    char *font_family = nullptr;
     double font_pt = 0.0;
     Visual  *visual = nullptr;
     Colormap cmap;
@@ -251,6 +252,7 @@ typedef struct CtvCtx
     int ascent = 0;
     int descent = 0;
     int line_height = 0;
+    int cellwidth = 0;
 
     // View/selection/caret
     Utf8Pos sel_start = 0;
@@ -956,22 +958,6 @@ static int line_index_from_pos(CtvCtx *ctx, Utf8Pos p)
     return static_cast<int>(std::distance(ls.begin(), it - 1));
 }
 
-static int cell_width(CtvCtx *ctx)
-{
-    ensure_font(ctx);
-    Display *dpy = XtDisplayOfObject(ctx->textWidget);
-    if (!dpy || !ctx->font)
-        return 8; // fallback
-
-    // Use a representative glyph. For monospaced, any ASCII is fine.
-    const FcChar8 M = (FcChar8)'M';
-    XGlyphInfo gi;
-    XftTextExtentsUtf8(dpy, ctx->font, &M, 1, &gi);
-    if (gi.xOff <= 0)
-        return 8;
-    return gi.xOff;
-}
-
 // Compute gutter width (pixels) based on number of digits and a padding
 static int gutter_width(CtvCtx *ctx)
 {
@@ -988,7 +974,7 @@ static int gutter_width(CtvCtx *ctx)
     }
     digits = std::max(digits, 2);
 
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
     // padding: one cell before and after
     return (digits * cw) + (2 * cw);
 }
@@ -1011,7 +997,7 @@ static void compute_lines(CtvCtx *ctx)
     ctx->line_count = ctx->line_starts.size();
     ctx->max_line_px = 0;
 
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
 
     for (int li = 0; li < ctx->line_count; ++li)
     {
@@ -1114,7 +1100,7 @@ static Utf8Pos xy_to_pos(CtvCtx *ctx, int x, int y, CtvCoordMode mode)
     Utf8Pos ls = ctx->line_starts[li];
     Utf8Pos le = line_end_no_nl(ctx, li);
 
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
 
     int colTarget = 0;
     int xContent = x - ctx->gutter_px;
@@ -1151,7 +1137,7 @@ static int pos_to_xy(CtvCtx *ctx, Utf8Pos p, int *x, int *y, CtvCoordMode mode)
     }
 
     ensure_font(ctx);
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
 
     p = std::max(0, std::min(ctx->text_len, p));
     p = align_cp_backward(ctx->text, 0, p);
@@ -1246,7 +1232,7 @@ static void draw_expose(CtvCtx *ctx, XExposeEvent *ex)
     int last  = std::min(ctx->line_count - 1, topLine + (ex->y + ex->height) / lh);
 
     Display *dpy = XtDisplay(ctx->textWidget);
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
     XftColor *textNumColor = &ctx->palette[0];
     int gutter = ctx->gutter_px;
     int content_offset = -curH;           // entire content (gutter + text) offset
@@ -1354,10 +1340,8 @@ static void draw_expose(CtvCtx *ctx, XExposeEvent *ex)
 
             // Optionally skip drawing if completely left of clip
             if (x + wpx >= ex->x && x <= ex->x + ex->width)
-            {
                 XftDrawStringUtf8(ctx->xft, col, font, x, baseline,
                                 (const FcChar8*)(ctx->text + pos), glyphLen);
-            }
 
             x += wpx;
             pos = next;
@@ -1706,6 +1690,26 @@ static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
     }
 }
 
+static void adjust_font_size(CtvCtx *ctx, double delta)
+{
+    if (!ctx || !ctx->textWidget)
+        return;
+
+    ensure_font(ctx);
+
+    double current = ctx->font_pt > 0.0 ? ctx->font_pt : 11.0;
+    double target = std::clamp(current + delta, 6.0, 72.0);
+
+    target = std::round(target * 10.0) / 10.0;
+
+    if (std::fabs(target - current) < 0.05)
+        return;
+
+    const char *family = (ctx->font_family && *ctx->font_family) ? ctx->font_family : "monospace";
+    XmhColorTextViewSetFont(ctx->textWidget, family, target);
+}
+
+
 static void keyEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
 {
     if (ev->type != KeyPress)
@@ -1751,6 +1755,29 @@ static void keyEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
             break;
         case XK_Next:
             move_v(ctx, +get_visible_lines(ctx), shift);
+            break;
+        case XK_period:
+        case XK_KP_Add:
+            if (!ctrl)
+                return;
+            if ((ks==XK_period && shift) || ks==XK_KP_Add)
+                adjust_font_size(ctx, +1.0);
+            break;
+        case XK_comma:
+        case XK_KP_Subtract:
+            if (!ctrl)
+                return;
+            if ((ks==XK_comma && shift) || ks==XK_KP_Subtract)
+                adjust_font_size(ctx, -1.0);
+            break;
+        case XK_greater:
+        case XK_less:
+            if (!ctrl)
+                return;
+            if (shift)
+                adjust_font_size(ctx, -1.0);
+            else
+                adjust_font_size(ctx, +1.0);
             break;
         default:
             return; // let others handle
@@ -1897,7 +1924,7 @@ static void Initialize(Widget req, Widget w, ArgList args, Cardinal *num)
     // Set initial geometry from columns/rows
     ensure_font(ctx);                    // ensure font metrics
     int lh = (ctx->line_height > 0) ? ctx->line_height : 16;
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
     Dimension wpref = (tw->ctvtext.columns > 0) ? (Dimension)(tw->ctvtext.columns * cw) : 0;
     Dimension hpref = (tw->ctvtext.rows    > 0) ? (Dimension)(tw->ctvtext.rows    * lh) : 0;
     if (wpref && hpref)
@@ -1971,7 +1998,7 @@ static Boolean SetValues(Widget old, Widget req, Widget nw, ArgList args, Cardin
     {
         // Optionally update current widget size to the new preference
         int lh = (ctx->line_height > 0 ? ctx->line_height : 16);
-        int cw = cell_width(ctx);
+        int cw = ctx->cellwidth;
         Dimension wpref = (nw_->ctvtext.columns > 0) ? (Dimension)(nw_->ctvtext.columns * cw) : 0;
         Dimension hpref = (nw_->ctvtext.rows    > 0) ? (Dimension)(nw_->ctvtext.rows    * lh) : 0;
         if (wpref && hpref)
@@ -2024,7 +2051,7 @@ static XtGeometryResult QueryGeometry(Widget w, XtWidgetGeometry *in, XtWidgetGe
     compute_lines(ctx);
 
     int lh = (ctx->line_height > 0 ? ctx->line_height : 16);
-    int cw = cell_width(ctx);
+    int cw = ctx->cellwidth;
 
     Dimension prefW = (tw->ctvtext.columns > 0)
     ? (Dimension)(tw->ctvtext.columns * cw)
@@ -2324,6 +2351,19 @@ void XmhColorTextViewDarkMode(Widget w, Boolean enable)
         return;
 
     ctx->dark_mode = enable;
+
+    if (!XtIsRealized(ctx->textWidget))
+        return;
+
+    Display *dpy = XtDisplay(ctx->textWidget);
+    if (!dpy)
+        return;
+
+    free_palette(dpy, ctx);
+    if (!ctx->visual || !ctx->cmap)
+        ensure_backbuffer(ctx);
+    alloc_default_palette(dpy, ctx->visual, ctx->cmap, ctx);
+    queue_redraw(ctx);
 }
 
 /*!
@@ -2807,6 +2847,18 @@ static void update_metrics_from_font(CtvCtx *ctx)
     ctx->ascent = ctx->font->ascent;
     ctx->descent = ctx->font->descent;
     ctx->line_height = ctx->ascent + ctx->descent;
+
+    Display *dpy = XtDisplayOfObject(ctx->textWidget);
+    if (!dpy || !ctx->font)
+        ctx->cellwidth =  8; // fallback
+
+    // Use a representative glyph. For monospaced, any ASCII is fine.
+    const FcChar8 M = (FcChar8)'M';
+    XGlyphInfo gi;
+    XftTextExtentsUtf8(dpy, ctx->font, &M, 1, &gi);
+    if (gi.xOff <= 0)
+        ctx->cellwidth =  8;
+    ctx->cellwidth = gi.xOff;
 }
 
 void XmhColorTextViewSetFontPattern(Widget w, const char *xft_pattern)
@@ -2862,14 +2914,18 @@ void XmhColorTextViewSetFont(Widget w, const char *family, double pt)
     if (pt <= 0)
         pt = 11.0;
 
-    // Store desired family/size
-    free(ctx->font_family);
-    ctx->font_family = strdup(family);
-    ctx->font_pt     = pt;
-
     char pat[128];
     snprintf(pat, sizeof(pat), "%s:size=%.1f", family, pt);
     XmhColorTextViewSetFontPattern(w, pat);
+}
+
+int  XmhColorTextViewGetFontSize(Widget w)
+{
+    CtvCtx *ctx = get_ctx(w);
+    if (!ctx)
+        return -1;
+
+    return ctx->font_pt;
 }
 
 static Pixel alloc_named_color(Widget w, const char *name)
@@ -3004,7 +3060,7 @@ int XmhColorTextViewGetVisibleColumns(Widget w)
 
     // Ensure font metrics / cell width
     ensure_font(ctx);
-    int cw = std::max(1, cell_width(ctx));
+    int cw = std::max(1, ctx->cellwidth);
 
     return width / cw;
 }

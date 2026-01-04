@@ -831,21 +831,6 @@ void dddSetGlyphScalingCB(Widget w, XtPointer, XtPointer call_data)
     post_startup_warning(w);
 }
 
-void dddSetStatusAtBottomCB (Widget w, XtPointer client_data, XtPointer)
-{
-    Boolean state = (int)(long)client_data;
-
-    app_data.status_at_bottom = state;
-
-    if (state)
-        set_status(next_ddd_will_start_with + "status line at bottom.");
-    else
-        set_status(next_ddd_will_start_with + "status line at top.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 void dddSetToolBarCB (Widget w, XtPointer client_data, XtPointer)
 {
     Boolean state = (int)(long)client_data;
@@ -1172,23 +1157,6 @@ void dddToggleColorButtonsCB(Widget w, XtPointer, XtPointer call_data)
     update_options();
     post_startup_warning(w);
 }
-
-void dddToggleToolbarsAtBottomCB(Widget w, XtPointer, XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-    app_data.toolbars_at_bottom = info->set;
-
-    if (info->set)
-        set_status(next_ddd_will_start_with + "toolbars at bottom.");
-    else
-        set_status(next_ddd_will_start_with + "toolbars at top.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -2480,8 +2448,6 @@ static bool save_options_init(unsigned long flags)
         break;
     }
 
-    os << bool_app_value(XtNstatusAtBottom,
-                         app_data.status_at_bottom) << '\n';
     os << bool_app_value(XtNsuppressWarnings,
                          app_data.suppress_warnings) << '\n';
     os << bool_app_value(XtNwarnIfLocked,
@@ -2600,8 +2566,6 @@ static bool save_options_init(unsigned long flags)
                          app_data.common_toolbar)  << '\n';
 #endif
 
-    os << bool_app_value(XtNtoolbarsAtBottom, 
-                         app_data.toolbars_at_bottom) << '\n';
     os << bool_app_value(XtNbuttonImages,
                          app_data.button_images)   << '\n';
     os << bool_app_value(XtNbuttonCaptions,

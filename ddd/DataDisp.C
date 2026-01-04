@@ -6893,7 +6893,7 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
 	label_type = XmPIXMAP;
 
     Widget arg_label = 0;
-    if (graph_cmd_w == 0 && !app_data.toolbars_at_bottom)
+    if (graph_cmd_w == 0)
     {
 	graph_cmd_w = create_toolbar(parent, "graph", 
 				     graph_cmd_area, 0, arg_label, graph_arg,
@@ -6901,7 +6901,7 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     }
 
     // Add buttons
-    if (data_buttons_w == 0 && !app_data.toolbars_at_bottom)
+    if (data_buttons_w == 0)
 	data_buttons_w = 
 	    make_buttons(parent, "data_buttons", app_data.data_buttons);
 
@@ -6929,13 +6929,6 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
 
     // Create buttons
     registerOwnConverters();
-
-    if (graph_cmd_w == 0)
-    {
-	graph_cmd_w = create_toolbar(parent, "graph", 
-				     graph_cmd_area, 0, arg_label, graph_arg,
-				     label_type);
-    }
 
     if (arg_label != 0)
     {

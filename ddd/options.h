@@ -107,7 +107,6 @@ extern void dddToggleButtonCaptionsCB       (Widget, XtPointer, XtPointer);
 extern void dddToggleButtonImagesCB         (Widget, XtPointer, XtPointer);
 extern void dddToggleFlatButtonsCB          (Widget, XtPointer, XtPointer);
 extern void dddToggleColorButtonsCB         (Widget, XtPointer, XtPointer);
-extern void dddToggleToolbarsAtBottomCB     (Widget, XtPointer, XtPointer);
 
 extern void dddSetCrashCB                   (Widget, XtPointer, XtPointer);
 extern void dddClearMaintenanceCB           (Widget, XtPointer, XtPointer);
@@ -117,7 +116,6 @@ extern void dddSetSeparateWindowsCB         (Widget, XtPointer, XtPointer);
 extern void dddColorModeCB                  (Widget, XtPointer, XtPointer);
 extern void dddSetToolbarScalingCB          (Widget, XtPointer, XtPointer);
 extern void dddSetGlyphScalingCB            (Widget, XtPointer, XtPointer);
-extern void dddSetStatusAtBottomCB          (Widget, XtPointer, XtPointer);
 extern void dddSetToolBarCB                 (Widget, XtPointer, XtPointer);
 extern void dddSetKeyboardFocusPolicyCB     (Widget, XtPointer, XtPointer);
 extern void dddSetPannerCB                  (Widget, XtPointer, XtPointer);

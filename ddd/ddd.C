@@ -663,26 +663,6 @@ we prevent its use in jdb.
 { XRMOPTSTR("-no-value-tips"),         XRMOPTSTR(XtNvalueTips),            
                                         XrmoptionNoArg, XPointer(OFF) },
 
-{ XRMOPTSTR("--status-at-bottom"),     XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-status-at-bottom"),      XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--status-at-top"),        XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-status-at-top"),         XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(OFF) },
-
-{ XRMOPTSTR("--toolbars-at-bottom"),   XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-toolbars-at-bottom"),    XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--toolbars-at-top"),      XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-toolbars-at-top"),       XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(OFF) },
-
 { XRMOPTSTR("--panned-graph-editor"),  XRMOPTSTR(XtNpannedGraphEditor),    
                                         XrmoptionNoArg, XPointer(ON) },
 { XRMOPTSTR("-panned-graph-editor"),   XRMOPTSTR(XtNpannedGraphEditor),    
@@ -1574,7 +1554,6 @@ static Widget set_button_images_w;
 static Widget set_button_captions_w;
 static Widget set_flat_buttons_w;
 static Widget set_color_buttons_w;
-static Widget set_toolbars_at_bottom_w;
 static MMDesc button_appearance_menu [] =
 {
     { "images",   MMToggle, { dddToggleButtonImagesCB, 0 },
@@ -1585,8 +1564,6 @@ static MMDesc button_appearance_menu [] =
       0, &set_flat_buttons_w, 0, 0 },
     { "color", MMToggle, { dddToggleColorButtonsCB, 0 },
       0, &set_color_buttons_w, 0, 0 },
-    { "bottom", MMToggle, { dddToggleToolbarsAtBottomCB, 0 },
-      0, &set_toolbars_at_bottom_w, 0, 0 },
     MMEnd
 };
 
@@ -2620,10 +2597,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtManageChild(right_paned_work_w);
     }
 
-    // Status line
-    if (!app_data.separate_source_window && !app_data.status_at_bottom)
-        create_status(left_paned_work_w);
-
     // Toolbar label type
     unsigned char label_type = XmSTRING;
     if (app_data.button_captions || app_data.button_images)
@@ -2757,26 +2730,25 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtManageChild(source_view_parent);
 
         // Status line
-        if (!app_data.status_at_bottom)
-            create_status(source_view_parent);
+        create_status(source_view_parent);
     }
 
     // Add toolbar
-    if (arg_cmd_w == 0 && !app_data.toolbars_at_bottom)
+    if (arg_cmd_w == 0)
     {
         arg_cmd_w = create_toolbar(source_view_parent, "source",
                                    arg_cmd_area, 0, arg_label, source_arg,
                                    label_type);
     }
 
-    if (command_toolbar_w == 0 && !app_data.toolbars_at_bottom)
+    if (command_toolbar_w == 0)
     {
         command_toolbar_w = make_buttons(source_view_parent, 
                                          "command_toolbar", 
                                          app_data.tool_buttons);
     }
 
-    if (source_buttons_w == 0 && !app_data.toolbars_at_bottom)
+    if (source_buttons_w == 0)
     {
         source_buttons_w = make_buttons(source_view_parent, 
                                         "source_buttons", 
@@ -2795,11 +2767,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                        XtPointer(0));
     }
 
-    // Source toolbar
-    if (arg_cmd_w == 0)
-        arg_cmd_w = create_toolbar(source_view_parent, "source",
-                                   arg_cmd_area, 0, arg_label, source_arg,
-                                   label_type);
     XtAddCallback(arg_label, XmNactivateCallback, 
                   ClearTextFieldCB, source_arg->text());
 
@@ -2820,25 +2787,15 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                       ActivateCB, 
                       XtPointer(data_disp->graph_cmd_area[0].widget));
 
-    if (command_toolbar_w == 0)
-    {
-        command_toolbar_w = make_buttons(source_view_parent, 
-                                         "command_toolbar", 
-                                         app_data.tool_buttons);
-    }
     if (command_toolbar_w != 0)
         XtUnmanageChild(command_toolbar_w);
 
-    if (source_buttons_w == 0)
-        source_buttons_w = make_buttons(source_view_parent, "source_buttons", 
-                                        app_data.source_buttons);
-
     // Status line
-    if (app_data.separate_source_window && app_data.status_at_bottom)
+    if (app_data.separate_source_window)
         create_status(source_view_parent);
 
     // Debugger console
-    if (console_buttons_w == 0 && !app_data.toolbars_at_bottom)
+    if (console_buttons_w == 0)
         console_buttons_w = make_buttons(left_paned_work_w, "console_buttons",
                                          app_data.console_buttons);
 
@@ -2883,12 +2840,8 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     XmTextSetEditable(gdb_w, false);
 #endif
 
-    if (console_buttons_w == 0)
-        console_buttons_w = make_buttons(left_paned_work_w, "console_buttons",
-                                         app_data.console_buttons);
-
     // Status line
-    if (app_data.status_at_bottom && !app_data.separate_source_window)
+    if (!app_data.separate_source_window)
         create_status(source_view_parent);
 
     // Paned Window is done
@@ -3028,13 +2981,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
 
     // Remove unnecessary sashes
     untraverse_sashes(source_view_parent);
-
-    // The sash in the source view is kept, as it separates source and
-    // assembler code windows.
-#if 0
-    if (source_view_shell)
-       unmanage_sashes(source_view_parent);
-#endif
 
     untraverse_sashes(data_disp_parent);
     if (data_disp_shell)
@@ -3496,9 +3442,6 @@ static void set_shortcut_menu(DataDisp *data_disp)
 
 static void fix_status_size()
 {
-    if (!app_data.status_at_bottom)
-        return;
-
     Widget status_form = XtParent(status_w);
     if (!XtIsRealized(status_form))
         return;
@@ -3999,10 +3942,6 @@ void update_options()
 
     Boolean separate = 
         app_data.separate_data_window || app_data.separate_source_window;
-
-    set_toggle(set_toolbars_at_bottom_w, app_data.toolbars_at_bottom);
-    set_sensitive(set_toolbars_at_bottom_w, separate ||
-                  (!app_data.button_images && !app_data.button_captions));
 
     set_toggle(set_tool_buttons_in_toolbar_w,      app_data.command_toolbar);
     set_toggle(set_tool_buttons_in_command_tool_w, !app_data.command_toolbar);
@@ -4531,18 +4470,12 @@ static void ResetStartupPreferencesCB(Widget, XtPointer, XtPointer)
 
     string button_color_key        = initial_app_data.button_color_key;
     string active_button_color_key = initial_app_data.active_button_color_key;
-#if XmVersion < 2000
-    notify_set_toggle(set_color_buttons_w, button_color_key == 'c');
-#else
     if (button_color_key == 'c' && active_button_color_key == 'c')
         notify_set_toggle(set_color_buttons_w, XmSET);
     else if (button_color_key == active_button_color_key)
         notify_set_toggle(set_color_buttons_w, XmUNSET);
     else
         notify_set_toggle(set_color_buttons_w, XmINDETERMINATE);
-#endif
-    notify_set_toggle(set_toolbars_at_bottom_w, 
-                      initial_app_data.toolbars_at_bottom);
 
     notify_set_toggle(set_focus_pointer_w, 
                       initial_focus_policy == XmPOINTER);
@@ -4633,9 +4566,6 @@ static bool startup_preferences_changed()
         return true;
 
     if (app_data.flat_toolbar_buttons != initial_app_data.flat_toolbar_buttons)
-        return true;
-
-    if (app_data.toolbars_at_bottom != initial_app_data.toolbars_at_bottom)
         return true;
 
     if (string(app_data.button_color_key) !=
@@ -5056,8 +4986,7 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNresizable,        False); arg++;
     XtSetArg(args[arg], XmNshadowThickness,  0); arg++;
     XtSetArg(args[arg], XmNforeground,       arrow_foreground); arg++;
-    XtSetArg(args[arg], XmNarrowDirection, 
-             (app_data.status_at_bottom ? XmARROW_UP : XmARROW_DOWN)); arg++;
+    XtSetArg(args[arg], XmNarrowDirection, XmARROW_UP); arg++;
     Widget arrow_w = verify(XmCreateArrowButton(status_form, XMST("arrow"), args, arg));
     XtManageChild(arrow_w);
 
@@ -5239,20 +5168,10 @@ static void PopupStatusHistoryCB(Widget w, XtPointer client_data,
     XtWidgetGeometry size;
     size.request_mode = CWHeight;
     Position x, y;
-    if (app_data.status_at_bottom)
-    {
-        XtQueryGeometry(history_shell, (XtWidgetGeometry *)0, &size);
+    XtQueryGeometry(history_shell, (XtWidgetGeometry *)0, &size);
 
-        x = shell_x;
-        y = status_y - size.height - y_popup_offset;
-    }
-    else
-    {
-        XtQueryGeometry(status_w, (XtWidgetGeometry *)0, &size);
-
-        x = shell_x;
-        y = status_y + size.height + y_popup_offset;
-    }
+    x = shell_x;
+    y = status_y - size.height - y_popup_offset;
 
     XtVaSetValues(history_shell, XmNx, x, XmNy, y, XtPointer(0));
     XtPopup(history_shell, XtGrabNone);

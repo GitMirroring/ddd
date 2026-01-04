@@ -167,6 +167,36 @@ to run the last step as root:
   $ sudo make install
 
 
+Desktop file and icon installation directory
+============================================
+
+By default, DDD installs its .desktop file and application icon
+under the standard data directory:
+
+  $datadir/applications/ddd.desktop
+  $datadir/pixmaps/ddd.png
+
+where $datadir normally defaults to $prefix/share (for example,
+/usr/local/share for the default prefix /usr/local).
+
+On many desktop systems, only /usr/share is scanned for .desktop files
+and icons, so entries installed under /usr/local/share may not be
+picked up automatically.
+
+To install only the .desktop file and icon under a different base
+directory (typically /usr/share) while keeping the rest of DDD under
+the usual prefix, use:
+
+  $ ../ddd/configure --with-xdg-datadir=/usr/share
+
+With this option, the following paths are used:
+
+  /usr/share/applications/ddd.desktop
+  /usr/share/pixmaps/ddd.png
+
+regardless of the prefix used for the rest of the installation.
+
+
 Cleanup
 =======
 

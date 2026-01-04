@@ -52,7 +52,7 @@ SUFFIXES = .C .c .Y .L .txt .xbm .xbmxx .xpm .xpmxx \
 dddrootdir    = $(pkgdatadir)-@VERSION@
 dddappdir     = $(pkgdatadir)-@VERSION@/@ddd@
 desktopdir    = @DDD_XDG_DATADIR@/applications
-iconsdir      = @DDD_XDG_DATADIR@/pixmap
+iconsdir      = @DDD_XDG_DATADIR@/pixmaps
 ddddocdir     = $(dddrootdir)/doc
 infodir       = $(dddrootdir)/info
 

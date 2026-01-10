@@ -2009,7 +2009,8 @@ void SourceView::read_file(string file_name,
     XmhColorTextViewSetString(source_text_w, XMST(sourcecode.get_source().chars()));
 
     std::vector<XmhColorToken> toks;
-    TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
+    if (gdb->program_language() == LANGUAGE_C)
+        TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
 
     XmhColorToken *toksptr = &toks[0];
     int tok_count = toks.size();

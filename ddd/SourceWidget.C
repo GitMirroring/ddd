@@ -1796,7 +1796,6 @@ static void keyEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
  * \param name   Name for the scrolled window.
  * \param args   Optional args for the XmhColorTextView widget.
  * \param n      Number of args.
- * \param out_ctx Receives the opaque rendering context (may be NULL).
  * \return The XmhColorTextView widget used for rendering.
  */
 Widget CreateXmhColorTextView(Widget parent, const char *name,

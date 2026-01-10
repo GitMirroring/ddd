@@ -314,36 +314,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNindentSource),
-        XTRESSTR(XtCIndent),
-        XtRCardinal,
-        sizeof(Cardinal),
-        XtOffsetOf(AppData, indent_source),
-        XmRImmediate,
-        XtPointer(4)
-    },
-
-    {
-        XTRESSTR(XtNindentScript),
-        XTRESSTR(XtCIndent),
-        XtRCardinal,
-        sizeof(Cardinal),
-        XtOffsetOf(AppData, indent_script),
-        XmRImmediate,
-        XtPointer(4)
-    },
-
-    {
-        XTRESSTR(XtNindentCode),
-        XTRESSTR(XtCIndent),
-        XtRCardinal,
-        sizeof(Cardinal),
-        XtOffsetOf(AppData, indent_code),
-        XmRImmediate,
-        XtPointer(4)
-    },
-
-    {
         XTRESSTR(XtNlineBufferedConsole),
         XTRESSTR(XtCLineBuffered),
         XtRBoolean,
@@ -1191,16 +1161,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNdisplayGlyphs),
-        XTRESSTR(XtCDisplayGlyphs),
-        XtRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, display_glyphs),
-        XtRImmediate,
-        XtPointer(True)
-    },
-
-    {
         XTRESSTR(XtNmaxGlyphs),
         XTRESSTR(XtCMaxGlyphs),
         XtRCardinal,
@@ -1208,26 +1168,6 @@ XtResource ddd_resources[] = {
         XtOffsetOf(AppData, max_glyphs),
         XtRImmediate,
         XtPointer(10)
-    },
-
-    {
-        XTRESSTR(XtNglyphUpdateDelay),
-        XTRESSTR(XtCGlyphUpdateDelay),
-        XtRCardinal,
-        sizeof(Cardinal),
-        XtOffsetOf(AppData, glyph_update_delay),
-        XtRImmediate,
-        XtPointer(10)
-    },
-
-    {
-        XTRESSTR(XtNdisplayLineNumbers),
-        XTRESSTR(XtCDisplayLineNumbers),
-        XtRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, display_line_numbers),
-        XtRImmediate,
-        XtPointer(False)
     },
 
     {
@@ -1328,26 +1268,6 @@ XtResource ddd_resources[] = {
         XtOffsetOf(AppData, startup_tip_count),
         XtRImmediate,
         XtPointer(1)
-    },
-
-    {
-        XTRESSTR(XtNstatusAtBottom),
-        XTRESSTR(XtCStatusAtBottom),
-        XtRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, status_at_bottom),
-        XtRImmediate,
-        XtPointer(True)
-    },
-
-    {
-        XTRESSTR(XtNtoolbarsAtBottom),
-        XTRESSTR(XtCToolbarsAtBottom),
-        XtRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, toolbars_at_bottom),
-        XtRImmediate,
-        XtPointer(True)
     },
 
     {

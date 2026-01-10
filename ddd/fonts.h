@@ -45,11 +45,6 @@ enum DDDFont { DefaultDDDFont       = 0,
 // Setup font specs.  DB is the resource database in use.
 extern void setup_fonts(AppData& app_data, XrmDatabase db = 0);
 
-// Return font name from BASE, overriding with parts from OVERRIDE.
-// Override contains "-SPEC-SPEC-..."; each non-empty SPEC overrides
-// the default in BASE.
-extern string make_font(const AppData& ad, DDDFont base, 
-			const string& override = "");
 
 extern string make_xftfont(const AppData& ad, DDDFont base);
 

@@ -226,7 +226,6 @@ void TipOfTheDayCB(Widget w, XtPointer, XtPointer)
         }
 #endif
 
-#if XmVersion >= 1002
 	arg = 0;
 	XtSetArg(args[arg], XmNset, app_data.startup_tips); arg++;
 	set_startup_tips_w = 
@@ -237,7 +236,6 @@ void TipOfTheDayCB(Widget w, XtPointer, XtPointer)
 		      SetStartupTipsCB, 0);
 
 	XtManageChild(set_startup_tips_w);
-#endif
 
 	XtAddCallback(tip_dialog, XmNokCallback, UnmanageThisCB, 
 		      XtPointer(tip_dialog));

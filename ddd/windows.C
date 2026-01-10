@@ -1844,11 +1844,13 @@ void set_main_window_size(Widget main)
 //-----------------------------------------------------------------------------
 
 // Promote child size to scrolled window
-void set_scrolled_window_size(Widget child, Widget target)
+void set_scrolled_window_size(Widget child, Widget scroll, Widget target)
 {
-    Widget scroll = XtParent(child);
+    if (scroll == nullptr)
+        scroll = XtParent(child);
 
-    assert(XmIsScrolledWindow(scroll));
+    if (!XmIsScrolledWindow(scroll))
+        return;
 
     Dimension scrollbar_width = 15;   // Additional space for scrollbar
 

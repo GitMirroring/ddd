@@ -1,10 +1,10 @@
 // $Id$ 
 // Test program
 
-// Copyright (C) 1995 Technische Universitaet Braunschweig, Germany.
-// Copyright (C) 2001 Universitaet Passau, Germany.
+// Copyright (C) 1995 Technische Universität Braunschweig, Germany.
+// Copyright (C) 2001 Universität Passau, Germany.
 // Copyright (C) 2001 Free Software Foundation, Inc.
-// Written by Dorothea Luetkehaus <luetke@ips.cs.tu-bs.de>
+// Written by Dorothea Lütkehaus <luetke@ips.cs.tu-bs.de>
 // and Andreas Zeller <zeller@gnu.org>.
 // 
 // This file is part of DDD.
@@ -901,6 +901,8 @@ static void utf8test()
             {"Tiếng Việt", "Xin chào"},  // Vietnamese
             {"हिन्दी", "नमस्ते"},  // Hindi
             // Add more languages as needed
+            {"Emoji simple", "😀 😁 😂 😅"}, // Simple emoji
+            {"Pictographs", "✈️ ⚽ ♻️ ⭐"}, // Misc pictographs / symbols
         };
 
     // Print the 2D array

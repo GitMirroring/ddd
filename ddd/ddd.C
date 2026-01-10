@@ -663,26 +663,6 @@ we prevent its use in jdb.
 { XRMOPTSTR("-no-value-tips"),         XRMOPTSTR(XtNvalueTips),            
                                         XrmoptionNoArg, XPointer(OFF) },
 
-{ XRMOPTSTR("--status-at-bottom"),     XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-status-at-bottom"),      XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--status-at-top"),        XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-status-at-top"),         XRMOPTSTR(XtNstatusAtBottom),       
-                                        XrmoptionNoArg, XPointer(OFF) },
-
-{ XRMOPTSTR("--toolbars-at-bottom"),   XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-toolbars-at-bottom"),    XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--toolbars-at-top"),      XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-toolbars-at-top"),       XRMOPTSTR(XtNtoolbarsAtBottom),     
-                                        XrmoptionNoArg, XPointer(OFF) },
-
 { XRMOPTSTR("--panned-graph-editor"),  XRMOPTSTR(XtNpannedGraphEditor),    
                                         XrmoptionNoArg, XPointer(ON) },
 { XRMOPTSTR("-panned-graph-editor"),   XRMOPTSTR(XtNpannedGraphEditor),    
@@ -706,16 +686,6 @@ we prevent its use in jdb.
 { XRMOPTSTR("--no-disassemble"),       XRMOPTSTR(XtNdisassemble),          
                                         XrmoptionNoArg, XPointer(OFF) },
 { XRMOPTSTR("-no-disassemble"),        XRMOPTSTR(XtNdisassemble),          
-                                        XrmoptionNoArg, XPointer(OFF) },
-
-{ XRMOPTSTR("--glyphs"),               XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-glyphs"),                XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--no-glyphs"),            XRMOPTSTR(XtNdisplayGlyphs),        
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-no-glyphs"),             XRMOPTSTR(XtNdisplayGlyphs),        
                                         XrmoptionNoArg, XPointer(OFF) },
 
 { XRMOPTSTR("--host"),                 XRMOPTSTR(XtNdebuggerHost),         
@@ -1162,7 +1132,6 @@ static Widget find_case_sensitive_w;
 static Widget disassemble_w;
 static Widget edit_source_w;
 static Widget reload_source_w;
-static Widget line_numbers1_w;
 
 static MMDesc source_menu[] =
 {
@@ -1180,8 +1149,6 @@ static MMDesc source_menu[] =
     { "findCaseSensitive",   MMToggle, { sourceToggleFindCaseSensitiveCB, 0 }, 
       0, &find_case_sensitive_w, 0, 0 },
     MMSep,
-    { "lineNumbers",         MMToggle, { sourceToggleDisplayLineNumbersCB, 0 },
-      0, &line_numbers1_w, 0, 0 },
     { "disassemble",         MMToggle,  { gdbToggleCodeWindowCB, 0 },
       0, &disassemble_w, 0, 0 },
     MMSep,
@@ -1264,17 +1231,6 @@ static MMDesc general_preferences_menu[] =
 
 
 // Source preferences
-static Widget set_display_glyphs_w;
-static Widget set_display_text_w;
-static MMDesc glyph_menu[] =
-{
-    { "asGlyphs", MMToggle, { sourceSetDisplayGlyphsCB, XtPointer(True) },
-      0, &set_display_glyphs_w, 0, 0 },
-    { "asText", MMToggle, { sourceSetDisplayGlyphsCB, XtPointer(False) },
-      0, &set_display_text_w, 0, 0 },
-    MMEnd
-};
-
 static Widget set_tool_buttons_in_toolbar_w;
 static Widget set_tool_buttons_in_command_tool_w;
 static MMDesc tool_buttons_menu [] = 
@@ -1320,34 +1276,21 @@ static MMDesc cache_menu[] =
 };
 
 static Widget tab_width_w;
-static Widget source_indent_w;
-static Widget code_indent_w;
-static MMDesc scales_menu[] = 
+static MMDesc scales_menu[] =
 {
-    { "tabWidth", MMScale, 
-      { sourceSetTabWidthCB, 0 }, 0, &tab_width_w, 0, 0 },
-    { "sourceIndent", MMScale, 
-      { sourceSetSourceIndentCB, 0 }, 0, &source_indent_w, 0, 0 },
-    { "codeIndent", MMScale, 
-      { sourceSetCodeIndentCB, 0 }, 0, &code_indent_w, 0, 0 },
+    { "tabWidth", MMScale, { sourceSetTabWidthCB, 0 }, 0, &tab_width_w, 0, 0 },
     MMEnd
 };
 
 
-static Widget line_numbers2_w;
 static Widget refer_sources_w;
 static MMDesc source_preferences_menu[] = 
 {
-    { "showExecPos",  MMRadioPanel, MMNoCB, glyph_menu, 0, 0, 0 },
     { "toolButtons",  MMRadioPanel,  MMNoCB, tool_buttons_menu, 0, 0, 0 },
     { "referSources", MMRadioPanel, MMNoCB, refer_menu, &refer_sources_w, 0,0},
     { "find",         MMButtonPanel, MMNoCB, find_preferences_menu, 0, 0, 0 },
     { "cache",        MMButtonPanel, MMNoCB, cache_menu, 0, 0, 0 },
-    { "lineNumbers",  MMToggle,
-      { sourceToggleDisplayLineNumbersCB, 0 }, 0, 
-      &line_numbers2_w, 0, 0 },
-    { "scales",       MMPanel | MMUnmanagedLabel, 
-                              MMNoCB, scales_menu, 0, 0, 0 },
+    { "scales",       MMPanel | MMUnmanagedLabel, MMNoCB, scales_menu, 0, 0, 0 },
     MMEnd
 };
 
@@ -1611,7 +1554,6 @@ static Widget set_button_images_w;
 static Widget set_button_captions_w;
 static Widget set_flat_buttons_w;
 static Widget set_color_buttons_w;
-static Widget set_toolbars_at_bottom_w;
 static MMDesc button_appearance_menu [] =
 {
     { "images",   MMToggle, { dddToggleButtonImagesCB, 0 },
@@ -1622,8 +1564,6 @@ static MMDesc button_appearance_menu [] =
       0, &set_flat_buttons_w, 0, 0 },
     { "color", MMToggle, { dddToggleColorButtonsCB, 0 },
       0, &set_color_buttons_w, 0, 0 },
-    { "bottom", MMToggle, { dddToggleToolbarsAtBottomCB, 0 },
-      0, &set_toolbars_at_bottom_w, 0, 0 },
     MMEnd
 };
 
@@ -2657,10 +2597,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtManageChild(right_paned_work_w);
     }
 
-    // Status line
-    if (!app_data.separate_source_window && !app_data.status_at_bottom)
-        create_status(left_paned_work_w);
-
     // Toolbar label type
     unsigned char label_type = XmSTRING;
     if (app_data.button_captions || app_data.button_images)
@@ -2794,26 +2730,25 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtManageChild(source_view_parent);
 
         // Status line
-        if (!app_data.status_at_bottom)
-            create_status(source_view_parent);
+        create_status(source_view_parent);
     }
 
     // Add toolbar
-    if (arg_cmd_w == 0 && !app_data.toolbars_at_bottom)
+    if (arg_cmd_w == 0)
     {
         arg_cmd_w = create_toolbar(source_view_parent, "source",
                                    arg_cmd_area, 0, arg_label, source_arg,
                                    label_type);
     }
 
-    if (command_toolbar_w == 0 && !app_data.toolbars_at_bottom)
+    if (command_toolbar_w == 0)
     {
         command_toolbar_w = make_buttons(source_view_parent, 
                                          "command_toolbar", 
                                          app_data.tool_buttons);
     }
 
-    if (source_buttons_w == 0 && !app_data.toolbars_at_bottom)
+    if (source_buttons_w == 0)
     {
         source_buttons_w = make_buttons(source_view_parent, 
                                         "source_buttons", 
@@ -2832,11 +2767,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                        XtPointer(0));
     }
 
-    // Source toolbar
-    if (arg_cmd_w == 0)
-        arg_cmd_w = create_toolbar(source_view_parent, "source",
-                                   arg_cmd_area, 0, arg_label, source_arg,
-                                   label_type);
     XtAddCallback(arg_label, XmNactivateCallback, 
                   ClearTextFieldCB, source_arg->text());
 
@@ -2857,25 +2787,15 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                       ActivateCB, 
                       XtPointer(data_disp->graph_cmd_area[0].widget));
 
-    if (command_toolbar_w == 0)
-    {
-        command_toolbar_w = make_buttons(source_view_parent, 
-                                         "command_toolbar", 
-                                         app_data.tool_buttons);
-    }
     if (command_toolbar_w != 0)
         XtUnmanageChild(command_toolbar_w);
 
-    if (source_buttons_w == 0)
-        source_buttons_w = make_buttons(source_view_parent, "source_buttons", 
-                                        app_data.source_buttons);
-
     // Status line
-    if (app_data.separate_source_window && app_data.status_at_bottom)
+    if (app_data.separate_source_window)
         create_status(source_view_parent);
 
     // Debugger console
-    if (console_buttons_w == 0 && !app_data.toolbars_at_bottom)
+    if (console_buttons_w == 0)
         console_buttons_w = make_buttons(left_paned_work_w, "console_buttons",
                                          app_data.console_buttons);
 
@@ -2920,12 +2840,8 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     XmTextSetEditable(gdb_w, false);
 #endif
 
-    if (console_buttons_w == 0)
-        console_buttons_w = make_buttons(left_paned_work_w, "console_buttons",
-                                         app_data.console_buttons);
-
     // Status line
-    if (app_data.status_at_bottom && !app_data.separate_source_window)
+    if (!app_data.separate_source_window)
         create_status(source_view_parent);
 
     // Paned Window is done
@@ -3065,13 +2981,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
 
     // Remove unnecessary sashes
     untraverse_sashes(source_view_parent);
-
-    // The sash in the source view is kept, as it separates source and
-    // assembler code windows.
-#if 0
-    if (source_view_shell)
-       unmanage_sashes(source_view_parent);
-#endif
 
     untraverse_sashes(data_disp_parent);
     if (data_disp_shell)
@@ -3533,9 +3442,6 @@ static void set_shortcut_menu(DataDisp *data_disp)
 
 static void fix_status_size()
 {
-    if (!app_data.status_at_bottom)
-        return;
-
     Widget status_form = XtParent(status_w);
     if (!XtIsRealized(status_form))
         return;
@@ -3933,22 +3839,11 @@ void update_options()
 
     set_toggle(cache_source_files_w,     app_data.cache_source_files);
     set_toggle(cache_machine_code_w,     app_data.cache_machine_code);
-    set_toggle(set_display_glyphs_w,     app_data.display_glyphs);
-    set_toggle(set_display_text_w,       !app_data.display_glyphs);
     set_toggle(set_refer_path_w,         app_data.use_source_path);
     set_toggle(set_refer_base_w,         !app_data.use_source_path);
-    set_toggle(line_numbers1_w,          app_data.display_line_numbers);
-    set_toggle(line_numbers2_w,          app_data.display_line_numbers);
 
     if (tab_width_w != 0)
-    {
-        XtVaSetValues(tab_width_w,     XmNvalue, app_data.tab_width,     
-                      XtPointer(0));
-        XtVaSetValues(source_indent_w, XmNvalue, app_data.indent_source, 
-                      XtPointer(0));
-        XtVaSetValues(code_indent_w,   XmNvalue, app_data.indent_code,   
-                      XtPointer(0));
-    }
+        XtVaSetValues(tab_width_w,     XmNvalue, app_data.tab_width, XtPointer(0));
 
     set_toggle(led_w, app_data.blink_while_busy);
 
@@ -4048,10 +3943,6 @@ void update_options()
     Boolean separate = 
         app_data.separate_data_window || app_data.separate_source_window;
 
-    set_toggle(set_toolbars_at_bottom_w, app_data.toolbars_at_bottom);
-    set_sensitive(set_toolbars_at_bottom_w, separate ||
-                  (!app_data.button_images && !app_data.button_captions));
-
     set_toggle(set_tool_buttons_in_toolbar_w,      app_data.command_toolbar);
     set_toggle(set_tool_buttons_in_command_tool_w, !app_data.command_toolbar);
 
@@ -4083,12 +3974,9 @@ void update_options()
 
     source_view->set_cache_source(app_data.cache_source_files);
     source_view->set_cache_machine_code(app_data.cache_machine_code);
-    source_view->set_display_line_numbers(app_data.display_line_numbers);
-    source_view->set_display_glyphs(app_data.display_glyphs);
     source_view->set_disassemble(gdb->type() == GDB || (gdb->type() == PYDB && app_data.disassemble));
     source_view->set_all_registers(app_data.all_registers);
     source_view->set_tab_width(app_data.tab_width);
-    source_view->set_indent(app_data.indent_source, app_data.indent_code, app_data.indent_script);
 
     source_view->lines_above_cursor   = app_data.lines_above_cursor;
     source_view->lines_below_cursor   = app_data.lines_below_cursor;
@@ -4389,9 +4277,6 @@ static bool general_preferences_changed()
 
 static void ResetSourcePreferencesCB(Widget, XtPointer, XtPointer)
 {
-    notify_set_toggle(set_display_glyphs_w, initial_app_data.display_glyphs);
-    notify_set_toggle(set_display_glyphs_w, !initial_app_data.display_glyphs);
-
     notify_set_toggle(set_tool_buttons_in_toolbar_w, 
                       initial_app_data.command_toolbar);
     notify_set_toggle(set_tool_buttons_in_command_tool_w, 
@@ -4407,34 +4292,15 @@ static void ResetSourcePreferencesCB(Widget, XtPointer, XtPointer)
                       initial_app_data.cache_source_files);
     notify_set_toggle(cache_machine_code_w, 
                       initial_app_data.cache_machine_code);
-
-    notify_set_toggle(line_numbers1_w, 
-                      initial_app_data.display_line_numbers);
-    notify_set_toggle(line_numbers2_w, 
-                      initial_app_data.display_line_numbers);
-
     if (app_data.tab_width != initial_app_data.tab_width)
     {
         app_data.tab_width = initial_app_data.tab_width;
-        update_options();
-    }
-    if (app_data.indent_source != initial_app_data.indent_source)
-    {
-        app_data.indent_source = initial_app_data.indent_source;
-        update_options();
-    }
-    if (app_data.indent_code != initial_app_data.indent_code)
-    {
-        app_data.indent_code = initial_app_data.indent_code;
         update_options();
     }
 }
 
 static bool source_preferences_changed()
 {
-    if (app_data.display_glyphs != initial_app_data.display_glyphs)
-        return true;
-
     if (app_data.command_toolbar != initial_app_data.command_toolbar)
         return true;
 
@@ -4454,15 +4320,6 @@ static bool source_preferences_changed()
         return true;
 
     if (app_data.tab_width != initial_app_data.tab_width)
-        return true;
-
-    if (app_data.indent_source != initial_app_data.indent_source)
-        return true;
-
-    if (app_data.indent_code != initial_app_data.indent_code)
-        return true;
-
-    if (app_data.display_line_numbers != initial_app_data.display_line_numbers)
         return true;
 
     return false;
@@ -4613,18 +4470,12 @@ static void ResetStartupPreferencesCB(Widget, XtPointer, XtPointer)
 
     string button_color_key        = initial_app_data.button_color_key;
     string active_button_color_key = initial_app_data.active_button_color_key;
-#if XmVersion < 2000
-    notify_set_toggle(set_color_buttons_w, button_color_key == 'c');
-#else
     if (button_color_key == 'c' && active_button_color_key == 'c')
         notify_set_toggle(set_color_buttons_w, XmSET);
     else if (button_color_key == active_button_color_key)
         notify_set_toggle(set_color_buttons_w, XmUNSET);
     else
         notify_set_toggle(set_color_buttons_w, XmINDETERMINATE);
-#endif
-    notify_set_toggle(set_toolbars_at_bottom_w, 
-                      initial_app_data.toolbars_at_bottom);
 
     notify_set_toggle(set_focus_pointer_w, 
                       initial_focus_policy == XmPOINTER);
@@ -4715,9 +4566,6 @@ static bool startup_preferences_changed()
         return true;
 
     if (app_data.flat_toolbar_buttons != initial_app_data.flat_toolbar_buttons)
-        return true;
-
-    if (app_data.toolbars_at_bottom != initial_app_data.toolbars_at_bottom)
         return true;
 
     if (string(app_data.button_color_key) !=
@@ -5138,8 +4986,7 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNresizable,        False); arg++;
     XtSetArg(args[arg], XmNshadowThickness,  0); arg++;
     XtSetArg(args[arg], XmNforeground,       arrow_foreground); arg++;
-    XtSetArg(args[arg], XmNarrowDirection, 
-             (app_data.status_at_bottom ? XmARROW_UP : XmARROW_DOWN)); arg++;
+    XtSetArg(args[arg], XmNarrowDirection, XmARROW_UP); arg++;
     Widget arrow_w = verify(XmCreateArrowButton(status_form, XMST("arrow"), args, arg));
     XtManageChild(arrow_w);
 
@@ -5321,20 +5168,10 @@ static void PopupStatusHistoryCB(Widget w, XtPointer client_data,
     XtWidgetGeometry size;
     size.request_mode = CWHeight;
     Position x, y;
-    if (app_data.status_at_bottom)
-    {
-        XtQueryGeometry(history_shell, (XtWidgetGeometry *)0, &size);
+    XtQueryGeometry(history_shell, (XtWidgetGeometry *)0, &size);
 
-        x = shell_x;
-        y = status_y - size.height - y_popup_offset;
-    }
-    else
-    {
-        XtQueryGeometry(status_w, (XtWidgetGeometry *)0, &size);
-
-        x = shell_x;
-        y = status_y + size.height + y_popup_offset;
-    }
+    x = shell_x;
+    y = status_y - size.height - y_popup_offset;
 
     XtVaSetValues(history_shell, XmNx, x, XmNy, y, XtPointer(0));
     XtPopup(history_shell, XtGrabNone);
@@ -6098,11 +5935,11 @@ static void gdbCopySelectionCB(Widget w, XtPointer client_data,
 
     // Try source
     if (!success && (win == SourceWindow || win == CommonWindow))
-        success = XmTextCopy(source_view->source(), tm);
+        success = XmhColorTextViewCopy(source_view->source(), tm);
 
     // Try code
     if (!success && (win == SourceWindow || win == CommonWindow))
-        success = XmTextCopy(source_view->code(), tm);
+        success = XmhColorTextViewCopy(source_view->code(), tm);
 }
 
 static void gdbPasteClipboardCB(Widget w, XtPointer client_data, XtPointer)
@@ -6159,8 +5996,8 @@ static void gdbUnselectAllCB(Widget w, XtPointer client_data,
 
     XmTextClearSelection(gdb_w, tm);
     XmTextFieldClearSelection(source_arg->text(), tm);
-    XmTextClearSelection(source_view->source(), tm);
-    XmTextClearSelection(source_view->code(), tm);
+    XmhColorTextViewClearSelection(source_view->source(), tm);
+    XmhColorTextViewClearSelection(source_view->code(), tm);
 
     if (data_disp->graph_arg != 0)
         XmTextFieldClearSelection(data_disp->graph_arg->text(), tm);
@@ -6499,14 +6336,13 @@ static void gdbUpdateEditCB(Widget w, XtPointer client_data,
     bool can_copy = can_cut;
 
     // Try source
+    Utf8Pos s, e;
     if (!can_copy && (win == SourceWindow || win == CommonWindow))
-        can_copy = XmTextGetSelectionPosition(source_view->source(),
-                                              &start, &end);
+        can_copy = XmhColorTextViewGetSelectionPosition(source_view->source(), &s, &e);
 
     // Try code
     if (!can_copy && (win == SourceWindow || win == CommonWindow))
-        can_copy = XmTextGetSelectionPosition(source_view->code(),
-                                              &start, &end);
+        can_copy = XmhColorTextViewGetSelectionPosition(source_view->code(), &s, &e);
 
     // There is always something to paste
     bool can_paste = true;
@@ -7529,7 +7365,6 @@ static void setup_auto_command_prefix()
 static void setup_options()
 {
     set_sensitive(disassemble_w, gdb->has_disassembly());
-    set_sensitive(code_indent_w, gdb->type() == GDB);
     set_sensitive(examine_w,            gdb->has_examine_command());
     set_sensitive(print_examine_w,      gdb->has_examine_command());
     set_sensitive(cache_machine_code_w, gdb->type() == GDB);

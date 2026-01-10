@@ -200,22 +200,6 @@ void sourceToggleCacheMachineCodeCB (Widget, XtPointer, XtPointer call_data)
                    "Machine code cache has been cleared.");
 }
 
-void sourceToggleDisplayLineNumbersCB (Widget, XtPointer, XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-    app_data.display_line_numbers = info->set;
-    update_options();
-
-#if 0
-    if (info->set)
-        set_status("Displaying line numbers.");
-    else
-        set_status("Not displaying line numbers.");
-#endif
-}
-
 void sourceSetUseSourcePathCB (Widget, XtPointer client_data, XtPointer)
 {
     Boolean state = (int)(long)client_data;
@@ -231,21 +215,6 @@ void sourceSetUseSourcePathCB (Widget, XtPointer client_data, XtPointer)
 
     source_arg->set_string(source_view->line_of_cursor());
     update_options();
-}
-
-void sourceSetDisplayGlyphsCB (Widget, XtPointer client_data, XtPointer)
-{
-    Boolean state = (int)(long)client_data;
-
-    app_data.display_glyphs = state;
-
-    update_options();
-
-    string displaying =        "Displaying breakpoints and positions ";
-    if (state)
-        set_status(displaying + "as glyphs.");
-    else
-        set_status(displaying + "as text characters.");
 }
 
 void sourceSetAllRegistersCB (Widget, XtPointer, XtPointer call_data)
@@ -284,28 +253,6 @@ void sourceSetTabWidthCB (Widget, XtPointer, XtPointer call_data)
     update_options();
 
     set_status("Tab width set to " + itostring(app_data.tab_width) + ".");
-}
-
-void sourceSetSourceIndentCB (Widget, XtPointer, XtPointer call_data)
-{
-    XmScaleCallbackStruct *info = (XmScaleCallbackStruct *)call_data;
-
-    app_data.indent_source = info->value;
-    update_options();
-
-    set_status("Source indentation set to " + 
-               itostring(app_data.indent_source) + ".");
-}
-
-void sourceSetCodeIndentCB (Widget, XtPointer, XtPointer call_data)
-{
-    XmScaleCallbackStruct *info = (XmScaleCallbackStruct *)call_data;
-
-    app_data.indent_code = info->value;
-    update_options();
-
-    set_status("Code indentation set to " + 
-               itostring(app_data.indent_code) + ".");
 }
 
 //-----------------------------------------------------------------------------
@@ -884,21 +831,6 @@ void dddSetGlyphScalingCB(Widget w, XtPointer, XtPointer call_data)
     post_startup_warning(w);
 }
 
-void dddSetStatusAtBottomCB (Widget w, XtPointer client_data, XtPointer)
-{
-    Boolean state = (int)(long)client_data;
-
-    app_data.status_at_bottom = state;
-
-    if (state)
-        set_status(next_ddd_will_start_with + "status line at bottom.");
-    else
-        set_status(next_ddd_will_start_with + "status line at top.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 void dddSetToolBarCB (Widget w, XtPointer client_data, XtPointer)
 {
     Boolean state = (int)(long)client_data;
@@ -1225,23 +1157,6 @@ void dddToggleColorButtonsCB(Widget w, XtPointer, XtPointer call_data)
     update_options();
     post_startup_warning(w);
 }
-
-void dddToggleToolbarsAtBottomCB(Widget w, XtPointer, XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-    app_data.toolbars_at_bottom = info->set;
-
-    if (info->set)
-        set_status(next_ddd_will_start_with + "toolbars at bottom.");
-    else
-        set_status(next_ddd_will_start_with + "toolbars at top.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -2081,6 +1996,42 @@ static string paned_widget_size(Widget w, bool height_only = false, bool width_o
             }
         }
     }
+    else if (XmhIsColorTextView(w))
+    {
+        // Store rows and columns
+        short columns = XmhColorTextViewGetVisibleColumns(w);
+
+        // correct for temporary fontsize changes
+        Cardinal fontsize = XmhColorTextViewGetFontSize(w);
+        if (fontsize>0 && app_data.fixed_width_font_size != fontsize)
+            columns = columns * fontsize / app_data.fixed_width_font_size;
+
+        if (!height_only && columns > 0)
+        {
+            if (!s.empty())
+                s += '\n';
+            s += int_app_value(string(XtName(w)) + "." + XmNcolumns, columns,
+                               check_default);
+        }
+
+        if (!width_only)
+        {
+            short rows = XmhColorTextViewGetVisibleRows(w);
+
+            // correct for temporary fontsize changes
+            Cardinal fontsize = XmhColorTextViewGetFontSize(w);
+            if (fontsize>0 && app_data.fixed_width_font_size != fontsize)
+                rows = rows * fontsize / app_data.fixed_width_font_size;
+
+            if (rows > 0)
+            {
+                if (!s.empty())
+                    s += '\n';
+                s += int_app_value(string(XtName(w)) + "." + XmNrows, rows,
+                                   check_default);
+            }
+        }
+    }
     else
     {
         // We store the size of the paned child, in order to account
@@ -2464,18 +2415,10 @@ static bool save_options_init(unsigned long flags)
                          app_data.find_case_sensitive) << '\n';
     os << int_app_value(XtNtabWidth,
                          app_data.tab_width, True) << '\n';
-    os << int_app_value(XtNindentSource,
-                         app_data.indent_source, True) << '\n';
-    os << int_app_value(XtNindentCode,
-                         app_data.indent_code, True) << '\n';
     os << bool_app_value(XtNcacheSourceFiles,
                          app_data.cache_source_files) << '\n';
     os << bool_app_value(XtNcacheMachineCode,
                          app_data.cache_machine_code) << '\n';
-    os << bool_app_value(XtNdisplayGlyphs,
-                         app_data.display_glyphs) << '\n';
-    os << bool_app_value(XtNdisplayLineNumbers,
-                         app_data.display_line_numbers) << '\n';
     os << bool_app_value(XtNdisassemble,
                          app_data.disassemble) << '\n';
     os << bool_app_value(XtNallRegisters,
@@ -2505,8 +2448,6 @@ static bool save_options_init(unsigned long flags)
         break;
     }
 
-    os << bool_app_value(XtNstatusAtBottom,
-                         app_data.status_at_bottom) << '\n';
     os << bool_app_value(XtNsuppressWarnings,
                          app_data.suppress_warnings) << '\n';
     os << bool_app_value(XtNwarnIfLocked,
@@ -2625,8 +2566,6 @@ static bool save_options_init(unsigned long flags)
                          app_data.common_toolbar)  << '\n';
 #endif
 
-    os << bool_app_value(XtNtoolbarsAtBottom, 
-                         app_data.toolbars_at_bottom) << '\n';
     os << bool_app_value(XtNbuttonImages,
                          app_data.button_images)   << '\n';
     os << bool_app_value(XtNbuttonCaptions,

@@ -517,7 +517,7 @@ static void strip_through(string& s, const string& key)
 
 static XmTextPosition textPosOfEvent(Widget widget, XEvent *event)
 {
-    XmTextPosition startpos, endpos;
+    Utf8Pos startpos, endpos;
     string expr = 
 	source_view->get_word_at_event(widget, event, startpos, endpos);
 
@@ -533,9 +533,9 @@ static XmTextPosition textPosOfEvent(Widget widget, XEvent *event)
 static MString gdbDefaultValueText(Widget widget, XEvent *event, 
 				   bool for_documentation)
 {
-    assert (XmIsText(widget));
+    assert (XmIsText(widget)||XmhIsColorTextView(widget));
 
-    XmTextPosition startpos, endpos;
+    Utf8Pos startpos, endpos;
     string expr = 
 	source_view->get_word_at_event(widget, event, startpos, endpos);
 
@@ -565,7 +565,13 @@ static MString gdbDefaultValueText(Widget widget, XEvent *event,
     // Change EVENT such that the popup tip will remain at the same
     // position
     Position x, y;
-    if (XmTextPosToXY(widget, endpos, &x, &y))
+    Boolean res = False;
+    if (XmhIsColorTextView(widget))
+	res = XmhColorTextViewPosToXY(widget, startpos, &x, &y);
+    else
+	res = XmTextPosToXY(widget, startpos, &x, &y);	
+	
+    if (res)
     {
 	switch (event->type)
 	{
@@ -828,10 +834,10 @@ static MString gdbDefaultButtonText(Widget widget, XEvent *,
 static MString gdbDefaultText(Widget widget, XEvent *event, 
 			      bool for_documentation)
 {
-    if (XmIsText(widget))
-	return gdbDefaultValueText(widget, event, for_documentation);
+    if (XmIsText(widget)||XmhIsColorTextView(widget))
+		return gdbDefaultValueText(widget, event, for_documentation);
     else
-	return gdbDefaultButtonText(widget, event, for_documentation);
+		return gdbDefaultButtonText(widget, event, for_documentation);
 }
 
 static MString gdbDefaultTipText(Widget widget, XEvent *event)

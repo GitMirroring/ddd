@@ -1463,10 +1463,8 @@ Ctrl<Key>N:		gdb-next-history()	    \n\
 Ctrl<Key>P:		gdb-previous-history()      \n\
 Ctrl<Key>R:		gdb-isearch-prev()          \n\
 Ctrl<Key>S:		gdb-isearch-next()  	    \n\
-Ctrl<Key>V:		next-page()		    \
-			source-update-glyphs()	    \n\
-Meta<Key>V:		previous-page()		    \
-			source-update-glyphs()	    \n\
+Ctrl<Key>V:		next-page()                 \n\
+Meta<Key>V:		previous-page()    	    \n\
 ~Ctrl Shift<Key>Delete:  cut-clipboard()            \n\
 ~Shift Ctrl<Key>Insert:  copy-clipboard()           \n\
 ~Ctrl Shift<Key>Insert:  paste-clipboard()          \n\
@@ -1474,22 +1472,14 @@ Meta<Key>V:		previous-page()		    \
 ~Shift <Key>R7:		beginning-of-line()	    \n\
 ~Shift <Key>R13:	end-of-line()		    \n\
 ~Shift <Key>Tab:	PrimitiveNextTabGroup()	    \n\
-~Shift <Key>osfPageUp:	previous-page()		    \
-			source-update-glyphs()	    \n\
-~Shift <Key>osfPageDown: next-page()		    \
-			source-update-glyphs()	    \n\
-Shift<Key>osfPageUp:	previous-page(extend)	    \
-			source-update-glyphs()	    \n\
-Shift<Key>osfPageDown:	next-page(extend)	    \
-			source-update-glyphs()	    \n\
-~Shift <Key>Prior:	previous-page()		    \
-			source-update-glyphs()	    \n\
-~Shift <Key>Next:	next-page()		    \
-			source-update-glyphs()	    \n\
-Shift<Key>Prior:	previous-page(extend)	    \
-			source-update-glyphs()	    \n\
-Shift<Key>Next:		next-page(extend)	    \
-			source-update-glyphs()	    \n\
+~Shift <Key>osfPageUp:	previous-page()  	    \n\
+~Shift <Key>osfPageDown: next-page()    	    \n\
+Shift<Key>osfPageUp:	previous-page(extend)	    \n\
+Shift<Key>osfPageDown:	next-page(extend)	    \n\
+~Shift <Key>Prior:	previous-page()		    \n\
+~Shift <Key>Next:	next-page()		    \n\
+Shift<Key>Prior:	previous-page(extend)	    \n\
+Shift<Key>Next:		next-page(extend)	    \n\
 ~Shift <Key>Home:	beginning-of-line()	    \n\
 ~Shift <Key>End:	end-of-line()		    \n])dnl
 

@@ -52,7 +52,28 @@ void TextSetSelection(Widget w,
     }
 }
 
-void TextFieldSetSelection(Widget w, 
+void CTV_TextSetSelection(Widget w,
+                        Utf8Pos first,
+                        Utf8Pos last,
+                        Time time)
+{
+    Utf8Pos old_first, old_last;
+    if (XmhColorTextViewGetSelectionPosition(w, &old_first, &old_last))
+    {
+        if (old_first != first || old_last != last)
+        {
+            // Selection has changed
+            XmhColorTextViewSetSelection(w, first, last, time);
+        }
+    }
+    else
+    {
+        // Nothing selected yet
+        XmhColorTextViewSetSelection(w, first, last, time);
+    }
+}
+
+void TextFieldSetSelection(Widget w,
 			   XmTextPosition first, 
 			   XmTextPosition last, 
 			   Time time)

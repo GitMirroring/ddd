@@ -42,6 +42,7 @@
 // DDD includes
 #include "GDBAgent.h"
 
+#include "SourceWidget.h" 
 
 //-----------------------------------------------------------------------------
 extern GDBAgent* gdb;
@@ -59,17 +60,11 @@ private:
     // Tab width
     int tab_width = DEFAULT_TAB_WIDTH;
 
-    // The indenting amounts
-    int source_indent_amount = 4;         // Source
-    int line_indent_amount = 4;           // Extra columns for line numbers
-    int script_indent_amount = 4;         // Minimum for scripts
-
     // File attributes
     string current_file_name = "";
     int line_count = 0;
     int char_count = 0;
-    std::vector<XmTextPosition> textpos_of_line;
-    std::vector<unsigned int> bytepos_of_line;
+    std::vector<Utf8Pos> bytepos_of_line;
 
     // The origin of the current source text.
     SourceOrigin current_origin = ORIGIN_NONE;
@@ -86,8 +81,6 @@ private:
     };
     std::map<string, FileCacheEntry> filecache;
     std::map<string, string> source_name_cache;
-
-    bool display_line_numbers = false;              // Display line numbers?
 
     Widget source_text_w = 0;
 
@@ -107,7 +100,7 @@ private:
     String read_class(const string& class_name, string& file_name, SourceOrigin& origin,
                              long& length, bool silent);
     String read_from_gdb(const string& source_name, long& length, bool silent);
-    String read_indented(string& file_name, long& length, SourceOrigin& origin, bool silent);
+    String read_file(string& file_name, long& length, SourceOrigin& origin, bool silent);
 
 public:
 
@@ -117,8 +110,7 @@ public:
     // access functions for source
     const string& get_source() { return current_source; }
     unsigned int get_length() { return current_source.length(); }
-    const subString get_source_at(int pos, int length);
-
+    const subString get_source_at(Utf8Pos pos, int length);
 
     // access functions for file attributes
     const string& get_filename()  { return current_file_name; }
@@ -126,28 +118,21 @@ public:
     int get_num_lines() {return line_count+1; }
     int get_num_characters() {return char_count; }
     SourceOrigin get_origin() { return current_origin; }
-    XmTextPosition pos_of_line(int line);
-    int line_of_pos(XmTextPosition pos);
-    int line_of_bytepos(int pos);
-    XmTextPosition startofline_at_pos(XmTextPosition pos);
-    XmTextPosition endofline_at_pos(XmTextPosition pos);
-    const subString get_source_line(int line);
-    string get_source_lineASCII(int line);
+    Utf8Pos getEndoflineAtBytepos(Utf8Pos pos);
+    const subString getSourceLine(int line);
 
-    int charpos_to_bytepos(XmTextPosition pos);
-    XmTextPosition bytepos_to_charpos(int pos);
-
+    Utf8Pos getBytePosOfLine(int line);
+    int getLineOfBytepos(Utf8Pos pos);
+    Utf8Pos getStartOfLineAtBytepos(Utf8Pos pos);
 
     // Read source text
     int read_current(string& file_name, bool force_reload, bool silent, Widget w);
 
     bool set_tab_width(int width);
-    bool set_indent(int source_indent, int script_indent);
-    bool set_display_line_numbers(bool set);
 
     // Return current breakpoint indent amount.  If POS is given, add
     // the whitespace from POS.
-    int calculate_indent(int pos = -1);
+    int calculate_indent(Utf8Pos pos = -1);
 
     // True iff we have some source text
     bool have_source() { return current_source.length() != 0; }

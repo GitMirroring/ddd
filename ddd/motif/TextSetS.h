@@ -32,14 +32,20 @@
 #include <Xm/Text.h>
 #include <Xm/TextF.h>
 
+#include "../SourceWidget.h"
+
 // Some LessTif versions have trouble with multiple selections.
 // Use these wrappers instead.
 
-void TextSetSelection(Widget widget, 
-		      XmTextPosition first, 
-		      XmTextPosition last,
-		      Time time);
-void TextFieldSetSelection(Widget widget, 
+void TextSetSelection(Widget widget,
+                      XmTextPosition first,
+                      XmTextPosition last,
+                      Time time);
+void CTV_TextSetSelection(Widget widget,
+                      Utf8Pos first,
+                      Utf8Pos last,
+                      Time time);
+void TextFieldSetSelection(Widget widget,
 			   XmTextPosition first, 
 			   XmTextPosition last, 
 			   Time time);

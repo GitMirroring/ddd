@@ -278,54 +278,6 @@ void install_sash_handlers(Widget paned)
     }
 }
 
-#include <stdio.h>
-
-// void hide_bottom_sash(Widget paned)
-// {
-//     if (paned == 0 || !XtIsSubclass(paned, xmPanedWindowWidgetClass))
-//         return;
-//
-//     WidgetList children   = 0;
-//     Cardinal   num_children = 0;
-//     unsigned char orientation;
-//
-//     XtVaGetValues(paned,
-//                   XmNchildren,    &children,
-//                   XmNnumChildren, &num_children,
-//                   XmNorientation, &orientation,
-//                   NULL);
-//
-//     Widget bottom_sash = 0;
-//     Position best_coord = -32768;  // “smallest possible”
-//
-//     for (Cardinal i = 0; i < num_children; ++i)
-//     {
-//         Widget w = children[i];
-//         WidgetClass wc = XtClass(w);
-//
-//         printf("%2d: %p  class: %-20s  managed=%d  realized=%d\n", i, w, wc->core_class.class_name, XtIsManaged(w), XtIsRealized(w));
-//         if (!XmIsSash(w))
-//             continue;
-//
-//         Position x, y;
-//         XtVaGetValues(w, XmNx, &x, XmNy, &y, NULL);
-//         printf("x %d   y %d\n", x, y);
-//
-//         Position coord = (orientation == XmVERTICAL) ? y : x;
-//         if (coord >= best_coord)
-//         {
-//             best_coord = coord;
-//             bottom_sash = w;
-//         }
-//     }
-//
-//     printf("bottom sasf %p\n", bottom_sash);
-//     if (bottom_sash != 0)
-//     {
-//         XtUnmanageChild(bottom_sash);
-//         XtUnmapWidget(bottom_sash);   // mostly redundant, but harmless
-//     }
-// }
 
 static bool find_paned_and_direct_child(Widget w,
                                         Widget& paned_out,

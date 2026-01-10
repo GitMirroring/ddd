@@ -2668,8 +2668,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
 
         // Add menu bar
         data_menubar_w = 
-            MMcreateMenuBar (data_main_window_w, 
-                             "menubar", data_menubar);
+            MMcreateMenuBar (data_main_window_w, "menubar", data_menubar);
         MMaddCallbacks(data_menubar);
         MMaddHelpCallback(menubar, ImmediateHelpCB);
         verify_buttons(data_menubar);

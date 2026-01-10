@@ -2723,7 +2723,7 @@ void SourceView::create_shells()
     breakpoint_list_w = 
         XmSelectionBoxGetChild(edit_breakpoints_dialog_w, XmDIALOG_LIST);
 
-    if (app_data.flat_dialog_buttons)
+    if (!app_data.retro_style)
     {
         for (MMDesc *item = bp_area; item != 0 && item->name != 0; item++)
         {

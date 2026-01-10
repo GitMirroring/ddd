@@ -34,6 +34,7 @@ char ComboBox_rcsid[] =
 
 #include "ComboBox.h"
 
+#include "AppData.h"
 #include "base/bool.h"
 #include "x11/frame.h"
 #include "x11/charsets.h"
@@ -327,6 +328,8 @@ Widget CreateComboBox(Widget parent, const _XtString name,
     XtSetArg(args[arg], XmNmarginHeight,       0); arg++;
     XtSetArg(args[arg], XmNborderWidth,        0); arg++;
     XtSetArg(args[arg], XmNhighlightThickness, 0); arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
     info->top = verify(XmCreateFrame(parent, XMST("frame"), args, arg));
     XtManageChild(info->top);
 

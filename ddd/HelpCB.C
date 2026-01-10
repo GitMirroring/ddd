@@ -1138,6 +1138,8 @@ void ManualStringHelpCB(Widget widget, const MString& title,
     Cardinal arg = 0;
     Widget menubar;
     XtSetArg(args[arg], XmNdeleteResponse, XmDESTROY); arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness, 0); arg++; }
     Widget text_dialog = create_text_dialog(toplevel, "manual_help", 
 					    args, arg, menubar);
 
@@ -1456,6 +1458,8 @@ void TextHelpCB(Widget widget, XtPointer client_data, XtPointer)
     Cardinal arg = 0;
     Widget menubar;
     XtSetArg(args[arg], XmNdeleteResponse, XmDESTROY); arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness, 0); arg++; }
     Widget text_dialog = create_text_dialog(toplevel, name.chars(), args, arg, 
 					    menubar);
 

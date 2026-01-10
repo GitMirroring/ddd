@@ -2276,6 +2276,19 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     if (app_data.show_fonts)
         return DDD_EXIT_SUCCESS;
 
+    if (!app_data.retro_style)
+    {     
+        XrmDatabase db2 = XtDatabase(XtDisplay(toplevel));
+        XrmPutLineResource(&db2, "Ddd*XmMessageBox*XmPushButton.shadowThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmMessageBox*XmPushButton.highlightThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmMessageBox*XmPushButtonGadget.shadowThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmMessageBox*XmPushButtonGadget.highlightThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButton.shadowThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButton.highlightThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.shadowThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.highlightThickness: 1");
+    }
+
     // Create a new auto_command_prefix if needed
     setup_auto_command_prefix();
 
@@ -2815,7 +2828,9 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
 
     arg = 0;
     XtSetArg(args[arg], ARGSTR(XmNpaneMaximum), 10000); arg++;
-    gdb_w = verify(XmCreateScrolledText(left_paned_work_w, 
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNhighlightThickness, 0); arg++; }
+    gdb_w = verify(XmCreateScrolledText(left_paned_work_w,
                                         XMST("gdb_w"), args, arg));
 
     if (!app_data.retro_style)
@@ -4839,6 +4854,8 @@ static Widget add_panel(Widget parent, Widget buttons,
 
     // Add button
     arg = 0;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
     Widget button = verify(XmCreateToggleButton(buttons, XMST(name), args, arg));
     XtManageChild(button);
 

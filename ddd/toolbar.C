@@ -265,7 +265,7 @@ Widget create_toolbar(Widget parent, const string& /* name */,
 		  app_data.button_color_key,
 		  app_data.active_button_color_key);
 
-    if (label_type == XmPIXMAP && app_data.flat_toolbar_buttons)
+    if (label_type == XmPIXMAP && !app_data.retro_style)
     {
 	// Use flat buttons
 	flatten_buttons(items1);

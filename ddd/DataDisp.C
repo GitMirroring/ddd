@@ -6910,6 +6910,8 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     int arg = 0;
     XtSetArg (args[arg], ARGSTR(XtNgraph), (Graph *)disp_graph); arg++;
     XtSetArg (args[arg], ARGSTR(XtNdataDarkMode), app_data.dark_mode); arg++;
+    if (!app_data.retro_style)
+       { XtSetArg(args[arg], XmNhighlightThickness, 0); arg++; }
 
 
     if (app_data.panned_graph_editor)
@@ -6986,7 +6988,7 @@ void DataDisp::create_shells()
     display_list_w = 
 	XmSelectionBoxGetChild(edit_displays_dialog_w, XmDIALOG_LIST);
 
-    if (app_data.flat_dialog_buttons)
+    if (!app_data.retro_style)
     {
 	for (MMDesc *item = display_area; item != 0 && item->name != 0; item++)
 	{

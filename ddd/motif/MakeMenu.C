@@ -323,12 +323,19 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 		XtSetArg(args[arg], XmNbottomShadowPixmap, empty); arg++;
 		XtSetArg(args[arg], XmNtopShadowPixmap,    empty); arg++;
 		XtSetArg(args[arg], XmNhighlightThickness, 0);     arg++;
-		XtSetArg(args[arg], XmNshadowThickness,    2);     arg++;
+                if (!app_data.retro_style)
+                    { XtSetArg(args[arg], XmNshadowThickness,    1);     arg++; }
+                else
+                    { XtSetArg(args[arg], XmNshadowThickness,    2);     arg++; }
 	    }
 	    else
 	    {
-		XtSetArg(args[arg], 
-			 XmNhighlightPixmap, XmUNSPECIFIED_PIXMAP); arg++;
+                if (!app_data.retro_style)
+                {
+                    XtSetArg(args[arg], XmNhighlightThickness, 1);     arg++;
+                    XtSetArg(args[arg], XmNshadowThickness,    1);     arg++;
+                }
+                XtSetArg(args[arg], XmNhighlightPixmap, XmUNSPECIFIED_PIXMAP); arg++;
 	    }
 
 	    PushMenuInfo *info = 0;
@@ -354,7 +361,9 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	    assert(subitems == 0);
 
 	    arg = 0;
-	    widget = verify(XmCreateToggleButton(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+                { XtSetArg(args[arg], XmNdetailShadowThickness, 1);     arg++; }
+            widget = verify(XmCreateToggleButton(shell, XMST(name), args, arg));
 	    break;
 	}
 
@@ -387,7 +396,12 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 
 	    arg = 0;
 	    XtSetArg(args[arg], XmNsubMenuId, subMenu); arg++;
-	    widget = verify(XmCreateCascadeButton(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+            { 
+                XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+                XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+            }
+            widget = verify(XmCreateCascadeButton(shell, XMST(name), args, arg));
 
 	    break;
 	}
@@ -414,8 +428,24 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 
 	    arg = 0;
 	    XtSetArg(args[arg], XmNsubMenuId, subMenu); arg++;
-	    widget = verify(XmCreateOptionMenu(shell, XMST(name), args, arg));
-	    break;
+            if (!app_data.retro_style)
+            { 
+                XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+                XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+            }
+            widget = verify(XmCreateOptionMenu(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+            {
+                // Flatten the internally created option button
+                Widget opt_button = XmOptionButtonGadget(widget);
+                if (opt_button)
+                    XtVaSetValues(opt_button,
+                              XmNshadowThickness,    1,
+                              XmNhighlightThickness, 1,
+                              NULL);
+            }
+
+            break;
 	}
 
 	case MMPanel:
@@ -493,7 +523,9 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	    assert(subitems == 0);
 
 	    arg = 0;
-	    widget = verify(XmCreateScale(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+                { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
+            widget = verify(XmCreateScale(shell, XMST(name), args, arg));
 	    break;
 	}
 
@@ -526,7 +558,9 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	    {
 	    case MMSpinBox:
 		arg = 0;
-		widget = CreateSpinBox(panel, textName.chars(), args, arg);
+                if (!app_data.retro_style)
+                    { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
+                widget = CreateSpinBox(panel, textName.chars(), args, arg);
 		break;
 
 	    case MMComboBox:
@@ -594,12 +628,26 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 
 // Create pulldown menu from items
 Widget MMcreatePulldownMenu(Widget parent, const _XtString name, MMDesc items[],
-			    ArgList args, Cardinal arg)
+			    ArgList _args, Cardinal _arg)
 {
+    ArgList args = new Arg[_arg + 15];
+    Cardinal arg = 0;
+
+    if (!app_data.retro_style)
+    {
+        XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+        XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+        XtSetArg(args[arg], XmNtearOffModel, XmTEAR_OFF_DISABLED); arg++;
+    }
+
+    for (Cardinal i = 0; i < _arg; i++)
+        args[arg++] = _args[i];
+
     Widget menu = verify(XmCreatePulldownMenu(parent, XMST(name), args, arg));
     MMaddItems(menu, items);
     auto_raise(XtParent(menu));
 
+    delete[] args;
     return menu;
 }
 
@@ -607,7 +655,7 @@ Widget MMcreatePulldownMenu(Widget parent, const _XtString name, MMDesc items[],
 Widget MMcreateRadioPulldownMenu(Widget parent, const _XtString name, MMDesc items[],
 				 ArgList _args, Cardinal _arg)
 {
-    ArgList args = new Arg[_arg + 10];
+    ArgList args = new Arg[_arg + 15];
     Cardinal arg = 0;
 
     XtSetArg(args[arg], XmNisHomogeneous, True); arg++;
@@ -616,6 +664,13 @@ Widget MMcreateRadioPulldownMenu(Widget parent, const _XtString name, MMDesc ite
 
     for (Cardinal i = 0; i < _arg; i++)
 	args[arg++] = _args[i];
+
+    if (!app_data.retro_style)
+    { 
+        XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+        XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+        XtSetArg(args[arg], XmNtearOffModel, XmTEAR_OFF_DISABLED); arg++;
+    }
 
     Widget w = MMcreatePulldownMenu(parent, name, items, args, arg);
 
@@ -637,12 +692,25 @@ Widget MMcreatePopupMenu(Widget parent, const _XtString name, MMDesc items[],
 
 // Create menu bar from items
 Widget MMcreateMenuBar(Widget parent, const _XtString name, MMDesc items[],
-		       ArgList args, Cardinal arg)
+                       ArgList _args, Cardinal _arg)
 {
+    ArgList args = new Arg[_arg + 15];
+    Cardinal arg = 0;
+
+    if (!app_data.retro_style)
+    {
+        XtSetArg(args[arg], XmNshadowThickness, 0); arg++;
+        XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+    }
+
+    for (Cardinal i = 0; i < _arg; i++)
+        args[arg++] = _args[i];
+
     Widget bar = verify(XmCreateMenuBar(parent, XMST(name), args, arg));
     MMaddItems(bar, items);
     XtManageChild(bar);
 
+    delete[] args;
     return bar;
 }
 
@@ -976,6 +1044,8 @@ Widget MMcreatePushMenu(Widget parent, const _XtString name, MMDesc items[],
     for (Cardinal i = 0; i < _arg; i++)
 	args[arg++] = _args[i];
     
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
     Widget menu = verify(XmCreatePopupMenu(parent, XMST(name), args, arg));
     MMaddItems(menu, items);
     auto_raise(XtParent(menu));

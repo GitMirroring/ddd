@@ -1454,7 +1454,9 @@ static Widget create_signal_button(Widget label,
     }
     else
     {
-	string fullname = string(XtName(label)) + "-" + name;
+        if (!app_data.retro_style)
+            { XtSetArg(args[arg], XmNdetailShadowThickness,   1); arg++; }
+        string fullname = string(XtName(label)) + "-" + name;
 	w = verify(XmCreateToggleButton(XtParent(label), XMST(fullname.chars()), args, arg));
 	XtManageChild(w);
 
@@ -1859,7 +1861,9 @@ static void add_button(Widget form, int& row, Dimension& max_width,
     }
     else
     {
-	entry = label = 
+        if (!app_data.retro_style)
+            { XtSetArg(args[arg], XmNdetailShadowThickness,   1); arg++; }
+        entry = label =
 	    verify(XmCreateToggleButton(form, XMST(set_command.chars()), args, arg));
 	XtManageChild(label);
 
@@ -1947,8 +1951,23 @@ static void add_button(Widget form, int& row, Dimension& max_width,
 	XtSetArg(args[arg], XmNmarginHeight,     0);                 arg++;
 	XtSetArg(args[arg], XmNspacing,          0);                 arg++;
 	XtSetArg(args[arg], XmNsubMenuId,        menu);              arg++;
-	entry = verify(XmCreateOptionMenu(form, XMST(set_command.chars()), args, arg));
-	XtManageChild(entry);
+        if (!app_data.retro_style)
+        {
+            XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+            XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+        }
+        entry = verify(XmCreateOptionMenu(form, XMST(set_command.chars()), args, arg));
+        if (!app_data.retro_style)
+        {
+            // Flatten the internally created option button
+            Widget opt_button = XmOptionButtonGadget(entry);
+            if (!app_data.retro_style && opt_button)
+                XtVaSetValues(opt_button,
+                          XmNshadowThickness,    1,
+                          XmNhighlightThickness, 1,
+                          NULL);
+        }
+        XtManageChild(entry);
 
 	Widget option_label = XmOptionLabelGadget(entry);
 	XtUnmanageChild(option_label);
@@ -2132,8 +2151,24 @@ static void add_button(Widget form, int& row, Dimension& max_width,
 	XtSetArg(args[arg], XmNmarginHeight,     0);                 arg++;
 	XtSetArg(args[arg], XmNspacing,          0);                 arg++;
 	XtSetArg(args[arg], XmNsubMenuId,        menu);              arg++;
-	entry = verify(XmCreateOptionMenu(form, XMST(set_command.chars()), args, arg));
-	XtManageChild(entry);
+        if (!app_data.retro_style)
+        {
+            XtSetArg(args[arg], XmNshadowThickness, 1); arg++;
+            XtSetArg(args[arg], XmNhighlightThickness, 1); arg++;
+        }
+        entry = verify(XmCreateOptionMenu(form, XMST(set_command.chars()), args, arg));
+        if (!app_data.retro_style)
+        {
+            // Flatten the internally created option button
+            Widget opt_button = XmOptionButtonGadget(entry);
+            if (!app_data.retro_style && opt_button)
+                XtVaSetValues(opt_button,
+                          XmNshadowThickness,    1,
+                          XmNhighlightThickness, 1,
+                          NULL);
+        }
+
+        XtManageChild(entry);
 
 	Widget option_label = XmOptionLabelGadget(entry);
 	XtUnmanageChild(option_label);
@@ -2741,7 +2776,9 @@ static Widget create_panel(DebuggerType type, SettingsType stype)
     arg = 0;
     XtSetArg(args[arg], XmNvisualPolicy, XmCONSTANT); arg++;
     XtSetArg(args[arg], XmNscrollingPolicy, XmAUTOMATIC); arg++;
-    Widget scroll = 
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNshadowThickness,   1); arg++; }
+    Widget scroll =
 	verify(XmCreateScrolledWindow(column, CONST_CAST(char *,"scroll"), args, arg));
     fix_clip_window_translations(scroll);
 

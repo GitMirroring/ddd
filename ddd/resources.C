@@ -1731,26 +1731,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNflatToolbarButtons),
-        XTRESSTR(XtCFlatButtons),
-        XmRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, flat_toolbar_buttons),
-        XmRImmediate,
-        XtPointer(True)
-    },
-
-    {
-        XTRESSTR(XtNflatDialogButtons),
-        XTRESSTR(XtCFlatButtons),
-        XmRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, flat_dialog_buttons),
-        XmRImmediate,
-        XtPointer(False)
-    },
-
-    {
         XTRESSTR(XtNbuttonColorKey),
         XTRESSTR(XtCColorKey),
         XtRString,

@@ -325,11 +325,6 @@ Ddd*listDirCommand:   \
 	file @MASK@ | grep '.*:.*directory.*' | cut -d: -f1
 
 
-! Command to uncompress the DDD manual.  Reads from standard input and
-! writes to standard output.
-Ddd*uncompressCommand: @UNCOMPRESS@
-
-
 ! Plotting stuff.
 
 ! The Gnuplot command.
@@ -386,14 +381,6 @@ Ddd*buttonCaptions: on
 ! The image and caption areas within button images.
 Ddd*buttonImageGeometry:   21x17+4+0
 Ddd*buttonCaptionGeometry: 29x7+0-0
-
-! Whether to use `flat' buttons that only have a 3d appearance when entered
-Ddd*FlatButtons: on
-
-! This may also be set separately for two categories.
-! Ddd*flatToolbarButtons: on
-! Ddd*flatDialogButtons:  on
-
 
 ! The color key to use for buttons.
 !   Color (`c')  - color
@@ -3515,7 +3502,6 @@ ITEM The LBL(Tool Bar) can appear as follows:\n\
     SUBITEM LBL(Captions) shows the action name below the image.\n\
     If neither LBL(Images) nor LBL(Captions) is set, \
 buttons have ordinary labels.\n\
-    SUBITEM LBL(Flat) enables the button border only when entered.\n\
     SUBITEM LBL(Color) enables colored button images.\n\
     SUBITEM LBL(Bottom) places the tool bar at the bottom of the window.\n\
     This can only be done with separate windows or ordinary labels.\n\
@@ -3566,7 +3552,6 @@ Ddd*selectAllMenu*motif.labelString:		Beginning of Line
 Ddd*preferences*buttons.labelString:		Tool Bar Appearance
 Ddd*buttonsMenu*images.labelString:		Images
 Ddd*buttonsMenu*captions.labelString:		Captions
-Ddd*buttonsMenu*flat.labelString:		Flat
 Ddd*buttonsMenu*color.labelString:		Color
 Ddd*buttonsMenu*color.toggleMode:		XmTOGGLE_INDETERMINATE
 Ddd*buttonsMenu*bottom.labelString:		Bottom

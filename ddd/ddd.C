@@ -372,9 +372,6 @@ static void verify_buttons(const MMDesc *items);
 static void set_shortcut_menu(DataDisp *data_disp, const string& expressions);
 static void set_shortcut_menu(DataDisp *data_disp);
 
-// Fix the size of the status line
-static void fix_status_size();
-
 // Setup new shell
 static void setup_new_shell(Widget w);
 
@@ -1566,7 +1563,6 @@ static MMDesc gui_style_menu [] =
 
 static Widget set_button_images_w;
 static Widget set_button_captions_w;
-static Widget set_flat_buttons_w;
 static Widget set_color_buttons_w;
 static MMDesc button_appearance_menu [] =
 {
@@ -1574,8 +1570,6 @@ static MMDesc button_appearance_menu [] =
       0, &set_button_images_w, 0, 0 },
     { "captions", MMToggle, { dddToggleButtonCaptionsCB, 0 },
       0, &set_button_captions_w, 0, 0 },
-    { "flat", MMToggle, { dddToggleFlatButtonsCB, 0 },
-      0, &set_flat_buttons_w, 0, 0 },
     { "color", MMToggle, { dddToggleColorButtonsCB, 0 },
       0, &set_color_buttons_w, 0, 0 },
     MMEnd
@@ -3478,32 +3472,6 @@ static void set_shortcut_menu(DataDisp *data_disp)
     set_shortcut_menu(data_disp, display_shortcuts);
 }
 
-//-----------------------------------------------------------------------------
-// Fix size of status line
-//-----------------------------------------------------------------------------
-
-static void fix_status_size()
-{
-    Widget status_form = XtParent(status_w);
-    if (!XtIsRealized(status_form))
-        return;
-
-    Dimension pane_maximum, height;
-    XtVaGetValues(status_form,
-                  XmNpaneMaximum, &pane_maximum, 
-                  XmNheight, &height,
-                  XtPointer(0));
-
-    if (height <= pane_maximum)
-        return;
-
-    XtVaSetValues(status_form,
-                  XmNallowResize, True,
-                  XmNheight, pane_maximum,
-                  XmNallowResize, False,
-                  XtPointer(0));
-}
-
 
 //---------------------------------------------------------------------------
 // Locking stuff
@@ -3718,7 +3686,6 @@ Boolean ddd_setup_done(XtPointer)
 
         ddd_check_version();
         install_button_tips();
-        fix_status_size();
 
         if (running_shells() == 0 ||
             (app_data.annotate && running_shells() == 1))
@@ -3967,10 +3934,6 @@ void update_options()
     set_toggle(set_button_images_w,        app_data.button_images);
     set_toggle(set_button_captions_w,      app_data.button_captions);
 
-    set_toggle(set_flat_buttons_w,         app_data.flat_toolbar_buttons);
-    set_sensitive(set_flat_buttons_w,
-                  app_data.button_images || app_data.button_captions);
-
     string button_color_key        = app_data.button_color_key;
     string active_button_color_key = app_data.active_button_color_key;
     if (button_color_key == 'c' && active_button_color_key == 'c')
@@ -4156,7 +4119,6 @@ void update_options()
     set_string_int(max_undo_size_w, app_data.max_undo_size / 1000);
 
     update_reset_preferences();
-    fix_status_size();
 }
 
 
@@ -4509,8 +4471,6 @@ static void ResetStartupPreferencesCB(Widget, XtPointer, XtPointer)
 
     notify_set_toggle(set_button_captions_w, initial_app_data.button_captions);
     notify_set_toggle(set_button_images_w,   initial_app_data.button_images);
-    notify_set_toggle(set_flat_buttons_w,    
-                      initial_app_data.flat_toolbar_buttons);
 
     string button_color_key        = initial_app_data.button_color_key;
     string active_button_color_key = initial_app_data.active_button_color_key;
@@ -4610,9 +4570,6 @@ static bool startup_preferences_changed()
         return true;
 
     if (app_data.button_captions != initial_app_data.button_captions)
-        return true;
-
-    if (app_data.flat_toolbar_buttons != initial_app_data.flat_toolbar_buttons)
         return true;
 
     if (string(app_data.button_color_key) !=
@@ -5460,9 +5417,6 @@ static void gdb_readyHP(Agent *, void *, void *call_data)
             uniconify_shell(command_shell);
         }
     }
-
-    // Some stuff that must be executed every other time
-    fix_status_size();
 }
 
 

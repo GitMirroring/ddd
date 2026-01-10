@@ -272,7 +272,7 @@ bool regex::match_info(int& start, int& length, int nth) const
 }
 #endif
 
-bool regex::OK() const
+bool regex::isOK() const
 {
 #if WITH_RUNTIME_REGEX
     assert(exprs != 0);

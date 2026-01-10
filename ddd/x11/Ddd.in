@@ -381,14 +381,6 @@ gnuplot -e \"set terminal x11 window '@X_ID@' title '@NAME@' font '@FONT@'\" -
 @Ddd@*buttonImageGeometry:   21x17+4+0
 @Ddd@*buttonCaptionGeometry: 29x7+0-0
 
-! Whether to use `flat' buttons that only have a 3d appearance when entered
-@Ddd@*FlatButtons: on
-
-! This may also be set separately for two categories.
-! @Ddd@*flatToolbarButtons: on
-! @Ddd@*flatDialogButtons:  on
-
-
 ! The color key to use for buttons.
 !   Color (`c')  - color
 !   Grey  (`g')  - greyscale
@@ -4649,7 +4641,6 @@ These preferences are effective only after a restart.\n\
     @tt -@rm  @bf Captions@rm  shows the action name below the image.\n\
     If neither @bf Images@rm  nor @bf Captions@rm  is set, \
 buttons have ordinary labels.\n\
-    @tt -@rm  @bf Flat@rm  enables the button border only when entered.\n\
     @tt -@rm  @bf Color@rm  enables colored button images.\n\
     @tt -@rm  @bf Bottom@rm  places the tool bar at the bottom of the window.\n\
     This can only be done with separate windows or ordinary labels.\n\
@@ -4700,7 +4691,6 @@ Click on @bf Reset@rm  to restore the saved preferences.
 @Ddd@*preferences*buttons.labelString:		Tool Bar Appearance
 @Ddd@*buttonsMenu*images.labelString:		Images
 @Ddd@*buttonsMenu*captions.labelString:		Captions
-@Ddd@*buttonsMenu*flat.labelString:		Flat
 @Ddd@*buttonsMenu*color.labelString:		Color
 @Ddd@*buttonsMenu*color.toggleMode:		XmTOGGLE_INDETERMINATE
 @Ddd@*buttonsMenu*bottom.labelString:		Bottom

@@ -109,7 +109,7 @@ public:
     bool match_info(int& start, int& length, int nth = 0) const;
 #endif
 
-    bool OK() const;  // Representation invariant
+    bool isOK() const;  // Representation invariant
 
 private:
     regex(const regex&);

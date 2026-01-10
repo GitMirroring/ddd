@@ -5149,29 +5149,21 @@ void SourceView::edit_bps(std::vector<int>& breakpoint_nrs)
 
     MMDesc enabled_menu[] = 
     {
-        { "lookup",    MMPush,
+        { "lookup",    MMFlatPush,
           { LookupBreakpointCB,    XtPointer(info) }, 0, &info->lookup, 0, 0 },
-        { "print",     MMPush,
+        { "print",     MMFlatPush,
           { PrintWatchpointCB,     XtPointer(info) }, 0, &info->print, 0, 0 },
-        { "enable",    MMPush,
+        { "enable",    MMFlatPush,
           { EnableBreakpointsCB,   XtPointer(info) }, 0, &info->enable, 0, 0 },
-        { "disable",   MMPush,
+        { "disable",   MMFlatPush,
           { DisableBreakpointsCB,  XtPointer(info) }, 0, &info->disable, 0, 0},
-        { "temporary", MMPush,
+        { "temporary", MMFlatPush,
           { MakeBreakpointsTempCB, XtPointer(info) }, 0, &info->temp, 0, 0 },
-        { "delete",    MMPush | MMHelp,
+        { "delete",    MMFlatPush | MMHelp,
           { DeleteBreakpointsCB,   XtPointer(info) }, 0, &info->del, 0, 0 },
         MMEnd
     };
 
-    if (app_data.flat_dialog_buttons)
-    {
-        for (MMDesc *item = enabled_menu; item != 0 && item->name != 0; item++)
-        {
-            if ((item->type & MMTypeMask) == MMPush)
-                item->type = (MMFlatPush | (item->type & ~MMTypeMask));
-        }
-    }
 
     MMDesc panel_menu[] = 
     {

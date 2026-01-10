@@ -1106,23 +1106,6 @@ void dddToggleButtonImagesCB(Widget w, XtPointer, XtPointer call_data)
     toggle_button_appearance(w, app_data.button_images, call_data);
 }
 
-void dddToggleFlatButtonsCB(Widget w, XtPointer, XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-    app_data.flat_toolbar_buttons = info->set;
-    app_data.flat_dialog_buttons  = info->set;
-
-    if (info->set)
-        set_status(next_ddd_will_start_with + "flat buttons.");
-    else
-        set_status(next_ddd_will_start_with + "raised buttons.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 void dddToggleColorButtonsCB(Widget w, XtPointer, XtPointer call_data)
 {
     XmToggleButtonCallbackStruct *info = 
@@ -2580,19 +2563,6 @@ static bool save_options_init(unsigned long flags)
     os << bool_app_value(XtNbuttonCaptions,
                          app_data.button_captions) << '\n';
 
-    if (!save_session &&
-        app_data.flat_toolbar_buttons == app_data.flat_dialog_buttons)
-    {
-        os << bool_app_value(XtCFlatButtons,
-                             app_data.flat_toolbar_buttons) << '\n';
-    }
-    else
-    {
-        os << bool_app_value(XtNflatToolbarButtons,
-                             app_data.flat_toolbar_buttons) << '\n';
-        os << bool_app_value(XtNflatDialogButtons,
-                             app_data.flat_dialog_buttons) << '\n';
-    }
     os << string_app_value(XtNbuttonColorKey,
                            app_data.button_color_key) << '\n';
     os << string_app_value(XtNactiveButtonColorKey,

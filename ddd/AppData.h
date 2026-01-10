@@ -353,9 +353,6 @@
 #define XtCButtonCaptionGeometry "ButtonCaptionGeometry"
 #define XtNbuttonImageGeometry   "buttonImageGeometry"
 #define XtCButtonImageGeometry   "ButtonImageGeometry"
-#define XtNflatToolbarButtons    "flatToolbarButtons"
-#define XtNflatDialogButtons     "flatDialogButtons"
-#define XtCFlatButtons           "FlatButtons"
 #define XtNbuttonColorKey        "buttonColorKey"
 #define XtNactiveButtonColorKey  "activeButtonColorKey"
 #define XtNsplashScreenColorKey  "splashScreenColorKey"
@@ -562,8 +559,6 @@ struct AppData {
     Boolean   scale_glyphs;
     const _XtString    button_caption_geometry;
     const _XtString    button_image_geometry;
-    Boolean   flat_toolbar_buttons;
-    Boolean   flat_dialog_buttons;
     const _XtString    button_color_key;
     const _XtString    active_button_color_key;
     const _XtString    splash_screen_color_key;

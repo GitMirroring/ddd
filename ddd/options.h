@@ -114,6 +114,7 @@ extern void dddClearMaintenanceCB           (Widget, XtPointer, XtPointer);
 extern void dddSetGlobalTabCompletionCB     (Widget, XtPointer, XtPointer);
 extern void dddSetSeparateWindowsCB         (Widget, XtPointer, XtPointer);
 extern void dddColorModeCB                  (Widget, XtPointer, XtPointer);
+extern void dddRetroStyleCB                  (Widget, XtPointer, XtPointer);
 extern void dddSetToolbarScalingCB          (Widget, XtPointer, XtPointer);
 extern void dddSetGlyphScalingCB            (Widget, XtPointer, XtPointer);
 extern void dddSetToolBarCB                 (Widget, XtPointer, XtPointer);

@@ -541,6 +541,16 @@ XtResource ddd_resources[] = {
     },
 
     {
+        XTRESSTR(XtNretroStyle),
+        XTRESSTR(XtCRetroStyle),
+        XtRBoolean,
+        sizeof(Boolean),
+        XtOffsetOf(AppData, retro_style),
+        XtRImmediate,
+        XtPointer(False)
+    },
+
+    {
         XTRESSTR(XtNopenDataWindow),
         XTRESSTR(XtCWindow),
         XtRBoolean,

@@ -958,7 +958,7 @@ Ddd*variableWidthFont: Liberation Sans
 Ddd*fixedWidthFont:    Liberation Mono
 
 ! The font to use for data displays.
-Ddd*dataFont:          Liberation mono
+Ddd*dataFont:          Liberation Mono
 
 ! The base font size; overrides the point settings as set above.
 Ddd*FontSize:          12
@@ -3546,6 +3546,10 @@ Ddd*windowsMenu*separate.labelString:		Separate Windows
 Ddd*preferences*colortheme.labelString:		Color Theme
 Ddd*colorthemeMenu*lightmode.labelString:		Light Mode
 Ddd*colorthemeMenu*darkmode.labelString:		Dark Mode
+
+Ddd*preferences*guistyle.labelString:		Style
+Ddd*guistyleMenu*modernstyle.labelString:		Modern (Flat)
+Ddd*guistyleMenu*retrostyle.labelString:		Classic (Motif)
 
 Ddd*preferences*iconscaling.labelString:	Large Icons
 Ddd*iconscalingMenu*toolbarscaling.labelString:	Tool Bar

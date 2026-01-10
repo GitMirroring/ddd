@@ -4681,6 +4681,10 @@ Click on @bf Reset@rm  to restore the saved preferences.
 @Ddd@*colorthemeMenu*lightmode.labelString:		Light Mode
 @Ddd@*colorthemeMenu*darkmode.labelString:		Dark Mode
 
+@Ddd@*preferences*guistyle.labelString:		Style
+@Ddd@*guistyleMenu*modernstyle.labelString:		Modern (Flat)
+@Ddd@*guistyleMenu*retrostyle.labelString:		Classic (Motif)
+
 @Ddd@*preferences*iconscaling.labelString:	Large Icons
 @Ddd@*iconscalingMenu*toolbarscaling.labelString:	Tool Bar
 @Ddd@*iconscalingMenu*glyphscaling.labelString:	Glyphs
@@ -8356,6 +8360,15 @@ uncompressing program is within your executable path.
 @Ddd@*no_news_error.dialogTitle: @DDD@: No news is good news
 @Ddd@*no_news_error*helpString:	\
 @rm The @DDD@ news could not be uncompressed.\n\
+\n\
+Please verify the contents of the\n\
+@bf Edit->@bf Preferences->@bf Helpers->@bf Uncompress@rm \n\
+setting and make sure that the given\n\
+uncompressing program is within your executable path.
+
+@Ddd@*no_ddd_manual_error.dialogTitle: @DDD@: No Manual
+@Ddd@*no_ddd_manual_error*helpString:	\
+@rm The @DDD@ manual could not be uncompressed.\n\
 \n\
 Please verify the contents of the\n\
 @bf Edit->@bf Preferences->@bf Helpers->@bf Uncompress@rm \n\

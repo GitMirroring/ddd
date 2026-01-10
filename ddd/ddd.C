@@ -1549,6 +1549,18 @@ static MMDesc color_theme_menu [] =
     MMEnd
 };
 
+// Style
+static Widget set_modern_style_w;
+static Widget set_retro_style_w;
+static MMDesc gui_style_menu [] =
+{
+    { "modernstyle",  MMToggle, { dddRetroStyleCB, XtPointer(False) },
+    0, &set_modern_style_w, 0, 0 },
+    { "retrostyle",  MMToggle, { dddRetroStyleCB, XtPointer(True) },
+    0, &set_retro_style_w, 0, 0 },
+    MMEnd
+};
+
 
 static Widget set_button_images_w;
 static Widget set_button_captions_w;
@@ -1586,6 +1598,7 @@ static MMDesc appearance_menu [] =
     { "fixedWidth",      MMPanel,  MMNoCB, fixed_width_font_menu, 0, 0, 0 },
     { "data",            MMPanel,  MMNoCB, data_font_menu, 0, 0, 0 },
     { "colortheme",     MMRadioPanel,  MMNoCB, color_theme_menu, 0, 0, 0 },
+    { "guistyle",     MMRadioPanel,  MMNoCB, gui_style_menu, 0, 0, 0 },
     { "buttons",         MMButtonPanel, MMNoCB, button_appearance_menu, 0, 0, 0 },
     { "iconscaling",  MMButtonPanel, MMNoCB, iconscaling_menu, 0, 0, 0 },
 
@@ -2800,7 +2813,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                                          app_data.console_buttons);
 
     arg = 0;
-    XtSetArg(args[arg], ARGSTR(XmNpaneMaximum), 5000); arg++;
+    XtSetArg(args[arg], ARGSTR(XmNpaneMaximum), 10000); arg++;
     gdb_w = verify(XmCreateScrolledText(left_paned_work_w, 
                                         XMST("gdb_w"), args, arg));
 
@@ -2989,6 +3002,16 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     untraverse_sashes(paned_work_w);
     if (source_view_shell && data_disp_shell)
         unmanage_sashes(paned_work_w);
+
+
+    if (!app_data.retro_style)
+    {     
+        install_sash_handlers(paned_work_w);
+        if (paned_work_w != left_paned_work_w)
+            install_sash_handlers(left_paned_work_w);
+    }
+
+    hide_sash_for_child(status_w);
 
     // Create subshells.  We do this after the main window has been
     // realized, since LessTif won't make the shells transient otherwise.
@@ -3952,6 +3975,8 @@ void update_options()
 
     set_toggle(set_light_mode_w, !app_data.dark_mode);
     set_toggle(set_dark_mode_w, app_data.dark_mode);
+    set_toggle(set_modern_style_w, !app_data.retro_style);
+    set_toggle(set_retro_style_w, app_data.retro_style);
     set_toggle(toolbar_scaling_w, app_data.scale_toolbar);
     set_toggle(glyph_scaling_w, app_data.scale_glyphs);
 
@@ -4551,6 +4576,9 @@ static bool startup_preferences_changed()
         return true;
 
     if (app_data.dark_mode != initial_app_data.dark_mode)
+        return true;
+
+    if (app_data.retro_style != initial_app_data.retro_style)
         return true;
 
     if (app_data.scale_toolbar != initial_app_data.scale_toolbar)

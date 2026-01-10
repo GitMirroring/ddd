@@ -34,5 +34,8 @@
 extern void untraverse_sashes(Widget paned);
 extern void unmanage_sashes(Widget paned);
 
+void install_sash_handlers(Widget paned);
+void hide_sash_for_child(Widget any_child_in_pane);
+
 #endif // _DDD_sashes_h
 // DON'T ADD ANYTHING BEHIND THIS #endif

@@ -31,9 +31,10 @@ char darkmode_rcsid[] =
 #include "darkmode.h"
 
 #include <Xm/Xm.h>
+#include <Xm/ScrollBar.h>
 
     
-void setColorMode(Widget w, bool darkmode)
+void setColorMode(Widget w, bool darkmode, bool retrostyle)
 {
     // Fetch children
     WidgetList children;
@@ -46,18 +47,23 @@ void setColorMode(Widget w, bool darkmode)
         Pixel color;
         XtVaGetValues(child, XmNbackground, &color,  XtPointer(0));
         int sumcolor = ((color & 0xff0000)>>16) + ((color & 0x00ff00)>>8) + (color & 0x0000ff);
-        if (darkmode && sumcolor>3*128)
+        if ((darkmode && sumcolor>3*128) || (!darkmode && sumcolor<=3*128))
         {
+            // invert color
             color = color ^ 0xffffff;
+
+            // special case for scrollbar: Keep forground color #808080
+            Pixel fg;
+            if (!retrostyle && XmIsScrollBar(child))
+                XtVaGetValues(child, XmNforeground,  &fg, nullptr);
+
             XmChangeColor(child, color);
-        }
-        else if (!darkmode && sumcolor<=3*128)
-        {
-            color = color ^ 0xffffff;
-            XmChangeColor(child, color);
+
+            if (!retrostyle && XmIsScrollBar(child))
+                XtVaSetValues(child, XmNforeground, fg, nullptr);
         }
 
-        setColorMode (child, darkmode);
+        setColorMode (child, darkmode, retrostyle);
     }
 }
 

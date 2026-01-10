@@ -60,6 +60,7 @@ char file_rcsid[] =
 #include "base/uniquify.h"
 #include "x11/verify.h"
 #include "wm.h"
+#include "scrollbar.h"
 
 #include <limits.h>
 #include <string.h>		// strerror()
@@ -207,6 +208,13 @@ static Widget file_dialog(Widget w, const string& name,
 	XtSetArg(args[arg], XmNdirectory, xmpwd.xmstring()); arg++;
     }
 
+    if (!app_data.retro_style)
+    {     
+        XtSetArg(args[arg], XmNpathMode, XmPATH_MODE_RELATIVE); arg++;
+        XtSetArg(args[arg], XmNtextColumns, 60); arg++;           // wider
+        XtSetArg(args[arg], XmNlistVisibleItemCount, 20); arg++;  // taller
+    }
+
     Widget dialog = 
 	verify(XmCreateFileSelectionDialog(w, XMST(name.chars()), args, arg));
     Delay::register_shell(dialog);
@@ -231,6 +239,23 @@ static Widget file_dialog(Widget w, const string& name,
 
     file_dialogs.push_back(dialog);
 
+    if (!app_data.retro_style)
+    {
+        Widget file_list = XmFileSelectionBoxGetChild(dialog, XmDIALOG_LIST);
+        modernize_scrollbar(file_list);
+
+        Widget dir_list = XmFileSelectionBoxGetChild(dialog, XmDIALOG_DIR_LIST);
+        modernize_scrollbar(dir_list);
+ 
+        Widget ok        = XmFileSelectionBoxGetChild(dialog, XmDIALOG_OK_BUTTON);
+        Widget apply     = XmFileSelectionBoxGetChild(dialog, XmDIALOG_APPLY_BUTTON);
+        Widget cancel    = XmFileSelectionBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON);
+        Widget help      = XmFileSelectionBoxGetChild(dialog, XmDIALOG_HELP_BUTTON);
+        XtVaSetValues(ok,     XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        XtVaSetValues(apply,  XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        XtVaSetValues(cancel, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        XtVaSetValues(help,   XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+    }
     return dialog;
 }
 
@@ -1794,7 +1819,7 @@ void gdbOpenProcessCB(Widget w, XtPointer, XtPointer)
 						XMST("processes"), 
 						args, arg));
 
-	Delay::register_shell(dialog);
+        Delay::register_shell(dialog);
 
 	XtUnmanageChild(XmSelectionBoxGetChild(dialog, 
 					       XmDIALOG_SELECTION_LABEL));
@@ -1804,6 +1829,9 @@ void gdbOpenProcessCB(Widget w, XtPointer, XtPointer)
 	processes = XmSelectionBoxGetChild(dialog, XmDIALOG_LIST);
         XtVaSetValues(processes, XmNheight, 600, NULL);
 
+        if (!app_data.retro_style)
+             modernize_scrollbar(processes);
+ 
 	XtAddCallback(processes, XmNsingleSelectionCallback,
 		      SelectProcessCB, XtPointer(processes));
 	XtAddCallback(processes, XmNmultipleSelectionCallback,
@@ -1910,9 +1938,7 @@ void gdbLookupSourceCB(Widget w, XtPointer client_data, XtPointer call_data)
 	int arg = 0;
     
 	XtSetArg(args[arg], XmNautoUnmanage, False); arg++;
-#if XmVersion >= 1002
 	XtSetArg(args[arg], XmNchildPlacement, XmPLACE_TOP); arg++;
-#endif
 	dialog = verify(XmCreateSelectionDialog(find_shell(w), 
 						XMST("sources"), args, arg));
 
@@ -1952,19 +1978,20 @@ void gdbLookupSourceCB(Widget w, XtPointer client_data, XtPointer call_data)
 	XtManageChild(source_filter);
 
 	arg = 0;
-	Widget sharedlibrary = 
+        Widget sharedlibrary = 
 	    XmCreatePushButton(bigbox, XMST("sharedlibrary"), args, arg);
 	XtManageChild(sharedlibrary);
 
-#if XmVersion >= 1002
 	arg = 0;
 	Widget lookup = XmCreatePushButton(dialog, 
 					   XMST("lookup"), args, arg);
 	XtManageChild(lookup);
-#endif
 
-	source_list = XmSelectionBoxGetChild(dialog, XmDIALOG_LIST);
+        source_list = XmSelectionBoxGetChild(dialog, XmDIALOG_LIST);
         XtVaSetValues(source_list, XmNheight, 600, NULL);
+
+        if (!app_data.retro_style)
+            modernize_scrollbar(source_list);
 
 	XtAddCallback(source_list, XmNsingleSelectionCallback,
 		      SelectSourceCB, XtPointer(source_list));
@@ -1988,10 +2015,8 @@ void gdbLookupSourceCB(Widget w, XtPointer client_data, XtPointer call_data)
 	XtAddCallback(sharedlibrary, XmNactivateCallback, 
 		      LoadSharedLibrariesCB, 0);
 
-#if XmVersion >= 1002
 	XtAddCallback(lookup, XmNactivateCallback, 
 		      lookupSourceDone, XtPointer(source_list));
-#endif
     }
 
     update_sources(source_list, source_filter);

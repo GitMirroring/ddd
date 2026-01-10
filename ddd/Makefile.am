@@ -443,6 +443,8 @@ DDD_SRC = \
 	resources.h  \
 	sashes.C     \
 	sashes.h     \
+	scrollbar.C  \
+	scrollbar.h  \
 	select.C     \
 	select.h     \
 	session.C    \

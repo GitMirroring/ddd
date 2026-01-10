@@ -85,7 +85,7 @@ static void DontIgnoreAutoRaiseCB(XtPointer client_data, XtIntervalId *)
 // auto-raise windows which would otherwise hide menu panels.
 static void AutoRaiseEH(Widget shell, XtPointer, XEvent *event, Boolean *)
 {
-    setColorMode(shell, app_data.dark_mode);
+    setColorMode(shell, app_data.dark_mode, app_data.retro_style);
 
     static bool ignore = false;
 

@@ -1266,7 +1266,7 @@ void set_buttons(Widget buttons, const _XtString _button_list, bool manage)
     // Update `define' panel
     UpdateDefinePanelCB();
 
-    setColorMode(XtParent(buttons), app_data.dark_mode);
+    setColorMode(XtParent(buttons), app_data.dark_mode, app_data.retro_style);
     delete delay;
 }
 

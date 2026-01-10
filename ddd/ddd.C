@@ -158,6 +158,7 @@ char ddd_rcsid[] =
 #include <Xm/Display.h>
 #include <Xm/DragDrop.h>
 #include <Xm/RepType.h>                // XmRepTypeInstallTearOffModelConverter()
+#include <Xm/ScrollBar.h>
 
 #if HAVE_X11_XMU_EDITRES_H
 #include <X11/Xmu/Editres.h>
@@ -244,6 +245,7 @@ char ddd_rcsid[] =
 #include "resources.h"
 #include "root.h"
 #include "sashes.h"
+#include "scrollbar.h"
 #include "select.h"
 #include "x11/selection.h"
 #include "session.h"
@@ -2816,6 +2818,9 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     gdb_w = verify(XmCreateScrolledText(left_paned_work_w, 
                                         XMST("gdb_w"), args, arg));
 
+    if (!app_data.retro_style)
+        modernize_scrollbar(gdb_w);
+
     XtAddCallback (gdb_w,
                    XmNmodifyVerifyCallback,
                    gdbModifyCB,
@@ -3066,7 +3071,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         initial_popup_shell(command_shell);
     }
 
-    setColorMode(main_window, app_data.dark_mode);
+    setColorMode(main_window, app_data.dark_mode, app_data.retro_style);
 
     // Trace positions and visibility of all DDD windows
     if (command_shell)
@@ -5112,11 +5117,9 @@ static void BlinkCB(XtPointer client_data, XtIntervalId *id)
 
     bool set = bool(long(client_data));
     if (set)
-        XtVaSetValues(led_w, XmNselectColor, led_select_color, 
-                      XtPointer(0));
+        XtVaSetValues(led_w, XmNselectColor, led_select_color, XtPointer(0));
     else
-        XtVaSetValues(led_w, XmNselectColor, led_background_color, 
-                      XtPointer(0));
+        XtVaSetValues(led_w, XmNselectColor, led_background_color, XtPointer(0));
 
     XFlush(XtDisplay(led_w));
     XmUpdateDisplay(led_w);

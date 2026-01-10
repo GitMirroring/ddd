@@ -193,6 +193,6 @@ void manage_and_raise(Widget w)
 
     raise_shell(w);
 
-    setColorMode(XtParent(w), app_data.dark_mode);
+    setColorMode(XtParent(w), app_data.dark_mode, app_data.retro_style);
 }
 

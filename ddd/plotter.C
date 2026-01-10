@@ -585,7 +585,7 @@ static PlotWindowInfo *new_decoration(const string& name)
 	MMaddCallbacks(simple_help_menu);
 	MMaddHelpCallback(menubar, ImmediateHelpCB);
 
-        setColorMode(main_window, app_data.dark_mode);
+        setColorMode(main_window, app_data.dark_mode, app_data.retro_style);
 
         // Create work window
         plot->gnuplot = XtVaCreateManagedWidget("plotArea", xmDrawingAreaWidgetClass, main_window,

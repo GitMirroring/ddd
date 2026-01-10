@@ -91,6 +91,7 @@ char settings_rcsid[] =
 #include "vsldoc.h"
 #include "wm.h"
 #include "x11/charsets.h"
+#include "scrollbar.h"
 
 #if !HAVE_PCLOSE_DECL
 extern "C" int pclose(FILE *stream);
@@ -2743,6 +2744,9 @@ static Widget create_panel(DebuggerType type, SettingsType stype)
     Widget scroll = 
 	verify(XmCreateScrolledWindow(column, CONST_CAST(char *,"scroll"), args, arg));
     fix_clip_window_translations(scroll);
+
+    if (!app_data.retro_style)
+        modernize_scrollbar(scroll);
 
     // Add a form.
     arg = 0;

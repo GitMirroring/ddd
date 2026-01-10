@@ -125,6 +125,7 @@ char SourceView_rcsid[] =
 #include "version.h"
 #include "windows.h"
 #include "wm.h"
+#include "scrollbar.h"
 
 // Motif stuff
 #include <Xm/Xm.h>
@@ -2799,6 +2800,9 @@ void SourceView::create_shells()
     up_w   = XmSelectionBoxGetChild(stack_dialog_w, XmDIALOG_OK_BUTTON);
     down_w = XmSelectionBoxGetChild(stack_dialog_w, XmDIALOG_APPLY_BUTTON);
 
+    if (!app_data.retro_style)
+        modernize_scrollbar(stack_dialog_w);
+
     set_sensitive(up_w,   False);
     set_sensitive(down_w, False);
     refresh_buttons();
@@ -2879,6 +2883,9 @@ void SourceView::create_shells()
                   XmNselectionPolicy, XmSINGLE_SELECT,
                   XtPointer(0));
 
+    if (!app_data.retro_style)
+        modernize_scrollbar(register_list_w);
+
     XtAddCallback(register_list_w,
                   XmNsingleSelectionCallback, SelectRegisterCB, 0);
     XtAddCallback(register_list_w,
@@ -2916,6 +2923,9 @@ void SourceView::create_shells()
         XtUnmanageChild(XmSelectionBoxGetChild(thread_dialog_w, 
                                                XmDIALOG_APPLY_BUTTON));
     }
+
+    if (!app_data.retro_style)
+        modernize_scrollbar(thread_dialog_w);
 
     arg = 0;
     thread_list_w = XmSelectionBoxGetChild(thread_dialog_w, XmDIALOG_LIST);
@@ -3007,6 +3017,8 @@ void SourceView::create_text(Widget parent, const char *base,
     XtAddCallback(text, XmhNviewportChangedCallback, CheckScrollCB, XtPointer(0));
     InstallTextTips(text);
 
+    if (!app_data.retro_style)
+        modernize_scrollbar(XmhColorTextViewGetScrolledWindow(text));
 }
 
 

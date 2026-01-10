@@ -1863,7 +1863,7 @@ Ddd*manual_help*source.mnemonic:        	R
 Ddd*sourceMenu*viewIndex.labelString:  		Index
 Ddd*sourceMenu*viewIndex.mnemonic:     		I
 Ddd*sourceMenu*viewIndex.accelerator:		Meta<Key>1
-Ddd*sourceMenu*viewIndex.acceleratorText:	Alt+1
+Ddd*sourceMenu*viewIndex.acceleratorText:	@accel Alt+1
 Ddd*sourceMenu*viewIndex.documentationString:\
 @rm Toggle display of manual index
 
@@ -2028,14 +2028,14 @@ Ddd*fileMenu*tearOffTitle:   File
 Ddd*menubar*fileMenu.open_file.labelString: Open Program...
 Ddd*menubar*fileMenu.open_file.mnemonic:    O
 Ddd*menubar*fileMenu.open_file.accelerator:      ~Shift Ctrl<Key>O
-Ddd*menubar*fileMenu.open_file.acceleratorText:  Ctrl+O
+Ddd*menubar*fileMenu.open_file.acceleratorText:  @accel Ctrl+O
 Ddd*menubar*fileMenu.open_file.documentationString:   \
 @rm Open a program to be debugged
 
 Ddd*menubar*fileMenu.open_class.labelString: Open Class...
 Ddd*menubar*fileMenu.open_class.mnemonic:    O
 Ddd*menubar*fileMenu.open_class.accelerator:      ~Shift Ctrl<Key>O
-Ddd*menubar*fileMenu.open_class.acceleratorText:  Ctrl+O
+Ddd*menubar*fileMenu.open_class.acceleratorText:  @accel Ctrl+O
 Ddd*menubar*fileMenu.open_class.documentationString:   \
 @rm Open a class to be debugged
 
@@ -2057,13 +2057,13 @@ Ddd*menubar*fileMenu.open_source.documentationString:   \
 Ddd*menubar*fileMenu.open_session.labelString:	        Open Session...
 Ddd*menubar*fileMenu.open_session.mnemonic:	        n
 Ddd*menubar*fileMenu.open_session.accelerator:          ~Shift Ctrl<Key>N
-Ddd*menubar*fileMenu.open_session.acceleratorText:      Ctrl+N
+Ddd*menubar*fileMenu.open_session.acceleratorText:      @accel Ctrl+N
 Ddd*menubar*fileMenu.open_session.documentationString:  \
 @rm Restore a previously saved DDD session
 
 Ddd*menubar*fileMenu.save_session.labelString:	        Save Session As...
 Ddd*menubar*fileMenu.save_session.accelerator:          ~Shift Ctrl<Key>S
-Ddd*menubar*fileMenu.save_session.acceleratorText:      Ctrl+S
+Ddd*menubar*fileMenu.save_session.acceleratorText:      @accel Ctrl+S
 Ddd*menubar*fileMenu.save_session.mnemonic:	        v
 Ddd*menubar*fileMenu.save_session.documentationString:  \
 @rm Save this DDD session for resuming later
@@ -2080,7 +2080,7 @@ Ddd*menubar*fileMenu.detach.documentationString:
 Ddd*menubar*fileMenu.print.labelString:	 	Print Graph...
 Ddd*menubar*fileMenu.print.mnemonic:	 	P
 Ddd*menubar*fileMenu.print.accelerator:         ~Shift Ctrl<Key>P
-Ddd*menubar*fileMenu.print.acceleratorText:     Ctrl+P
+Ddd*menubar*fileMenu.print.acceleratorText:     @accel Ctrl+P
 Ddd*menubar*fileMenu.print.documentationString:   \
 @rm Print the contents of the data display
 
@@ -2097,35 +2097,35 @@ Ddd*menubar*fileMenu.cd.documentationString:  \
 Ddd*menubar*fileMenu.make.labelString:	 Make...
 Ddd*menubar*fileMenu.make.mnemonic:	 M
 Ddd*menubar*fileMenu.make.accelerator:      ~Shift Ctrl<Key>M
-Ddd*menubar*fileMenu.make.acceleratorText:  Ctrl+M
+Ddd*menubar*fileMenu.make.acceleratorText:  @accel Ctrl+M
 Ddd*menubar*fileMenu.make.documentationString:  \
 @rm Run the make program
 
 Ddd*menubar*fileMenu.makeAgain.labelString:	 Make Again
 Ddd*menubar*fileMenu.makeAgain.mnemonic:	 i
 Ddd*menubar*fileMenu.makeAgain.accelerator:      Shift Ctrl<Key>M
-Ddd*menubar*fileMenu.makeAgain.acceleratorText:  Shift+Ctrl+M
+Ddd*menubar*fileMenu.makeAgain.acceleratorText:  @accel Shift+Ctrl+M
 Ddd*menubar*fileMenu.makeAgain.documentationString:  \
 @rm Run the make program with the most recently given arguments
 
 Ddd*menubar*fileMenu.close.labelString:	 Close
 Ddd*menubar*fileMenu.close.mnemonic:	 C
 Ddd*menubar*fileMenu.close.accelerator:      ~Shift Ctrl<Key>W
-Ddd*menubar*fileMenu.close.acceleratorText:  Ctrl+W
+Ddd*menubar*fileMenu.close.acceleratorText:  @accel Ctrl+W
 Ddd*menubar*fileMenu.close.documentationString:   \
 @rm Close this window
 
 Ddd*menubar*fileMenu.restart.labelString: Restart
 Ddd*menubar*fileMenu.restart.mnemonic:	 e
 Ddd*menubar*fileMenu.restart.accelerator:      Shift Ctrl<Key>Q
-! Ddd*menubar*fileMenu.restart.acceleratorText:  Shift+Ctrl+Q
+! Ddd*menubar*fileMenu.restart.acceleratorText:  @accel Shift+Ctrl+Q
 Ddd*menubar*fileMenu.restart.documentationString:   \
 @rm Close all windows and restart DDD from scratch
 
 Ddd*menubar*fileMenu.exit.labelString:	 Exit
 Ddd*menubar*fileMenu.exit.mnemonic:	 x
 Ddd*menubar*fileMenu.exit.accelerator:	    ~Shift Ctrl<Key>Q
-Ddd*menubar*fileMenu.exit.acceleratorText:  Ctrl+Q
+Ddd*menubar*fileMenu.exit.acceleratorText:  @accel Ctrl+Q
 Ddd*menubar*fileMenu.exit.documentationString:   \
 @rm Close all windows and exit DDD
 
@@ -2179,32 +2179,32 @@ Ddd*editMenu*tearOffTitle:   Edit
 Ddd*editMenu.undo.labelString:				Undo
 Ddd*editMenu.undo.mnemonic:				U
 Ddd*editMenu.undo.accelerator:				Ctrl<Key>Z
-Ddd*editMenu.undo.acceleratorText:			Ctrl+Z
+Ddd*editMenu.undo.acceleratorText:			@accel Ctrl+Z
 Ddd*editMenu.undo.documentationString: \
 @rm Undo last action
 
 Ddd*editMenu.redo.labelString:				Redo
 Ddd*editMenu.redo.mnemonic:				R
 Ddd*editMenu.redo.accelerator:				Ctrl<Key>Y
-Ddd*editMenu.redo.acceleratorText:			Ctrl+Y
+Ddd*editMenu.redo.acceleratorText:			@accel Ctrl+Y
 Ddd*editMenu.redo.documentationString: \
 @rm Redo next action
 
 ! Have standard Motif bindings
 ! Ddd*editMenu.cut.accelerator:		Shift<Key>Delete
-! Ddd*editMenu.cut.acceleratorText:	Shift+Del
+! Ddd*editMenu.cut.acceleratorText:	@accel Shift+Del
 ! Ddd*editMenu.copy.accelerator:  	Ctrl<Key>Insert
-! Ddd*editMenu.copy.acceleratorText:	Ctrl+Ins
+! Ddd*editMenu.copy.acceleratorText:	@accel Ctrl+Ins
 ! Ddd*editMenu.paste.accelerator:  	Shift<Key>Insert
-! Ddd*editMenu.paste.acceleratorText:	Shift+Ins
+! Ddd*editMenu.paste.acceleratorText:	@accel Shift+Ins
 
 ! Alternative, KDE-like bindings
 ! Ddd*editMenu.cut.accelerator:				~Shift Ctrl<Key>X
-! Ddd*editMenu.cut.acceleratorText:			Ctrl+X
+! Ddd*editMenu.cut.acceleratorText:			@accel Ctrl+X
 ! Ddd*editMenu.copy.accelerator:			~Shift Ctrl<Key>C
-! Ddd*editMenu.copy.acceleratorText:			Ctrl+C
+! Ddd*editMenu.copy.acceleratorText:			@accel Ctrl+C
 ! Ddd*editMenu.paste.accelerator:			~Shift Ctrl<Key>V
-! Ddd*editMenu.paste.acceleratorText:			Ctrl+V
+! Ddd*editMenu.paste.acceleratorText:			@accel Ctrl+V
 
 
 Ddd*editMenu.cut.labelString:				Cut
@@ -2226,7 +2226,7 @@ Ddd*editMenu.clearAll.labelString:			Clear
 Ddd*editMenu.clearAll.mnemonic:				l
 Ddd*editMenu.clearAll.documentationString: \
 @rm Clear the selection, all arguments, and the @GDB@ command line
-Ddd*editMenu.clearAll.acceleratorText:			Ctrl+U
+Ddd*editMenu.clearAll.acceleratorText:			@accel Ctrl+U
 
 Ddd*editMenu.delete.labelString:			Delete
 Ddd*editMenu.delete.mnemonic:				D
@@ -2235,7 +2235,7 @@ Ddd*editMenu.delete.documentationString: \
 
 Ddd*editMenu.selectAll.labelString:			Select All
 Ddd*editMenu.selectAll.mnemonic:			A
-Ddd*editMenu.selectAll.acceleratorText:			Ctrl+A
+Ddd*editMenu.selectAll.acceleratorText:			@accel Ctrl+A
 Ddd*editMenu.selectAll.documentationString: \
 @rm Select all items
 
@@ -2280,42 +2280,42 @@ Ddd*viewsMenu*tearOffTitle:     View
 
 Ddd*viewsMenu.tool.labelString:			Command Tool...
 Ddd*viewsMenu.tool.mnemonic:			T
-Ddd*viewsMenu.tool.acceleratorText:		Alt+8
+Ddd*viewsMenu.tool.acceleratorText:		@accel Alt+8
 Ddd*viewsMenu.tool.accelerator:			Meta<Key>8
 Ddd*viewsMenu.tool.documentationString: \
 @rm Open the command tool and move it to its original position
 
 Ddd*viewsMenu.exec.labelString:			Execution Window...
 Ddd*viewsMenu.exec.mnemonic:			x
-Ddd*viewsMenu.exec.acceleratorText:		Alt+9
+Ddd*viewsMenu.exec.acceleratorText:		@accel Alt+9
 Ddd*viewsMenu.exec.accelerator:			Meta<Key>9
 Ddd*viewsMenu.exec.documentationString: \
 @rm Open the program execution window
 
 Ddd*viewsMenu.console.labelString:		@GDB@ Console
 Ddd*viewsMenu.console.mnemonic:			C
-Ddd*viewsMenu.console.acceleratorText:		Alt+1
+Ddd*viewsMenu.console.acceleratorText:		@accel Alt+1
 Ddd*viewsMenu.console.accelerator:		Meta<Key>1
 Ddd*viewsMenu.console.documentationString: \
 @rm Toggle showing the @GDB@ console
 
 Ddd*viewsMenu.source.labelString:		Source Window
 Ddd*viewsMenu.source.mnemonic:			S
-Ddd*viewsMenu.source.acceleratorText:		Alt+2
+Ddd*viewsMenu.source.acceleratorText:		@accel Alt+2
 Ddd*viewsMenu.source.accelerator:		Meta<Key>2
 Ddd*viewsMenu.source.documentationString: \
 @rm Toggle showing the source window
 
 Ddd*viewsMenu.data.labelString:			Data Window
 Ddd*viewsMenu.data.mnemonic:			D
-Ddd*viewsMenu.data.acceleratorText:		Alt+3
+Ddd*viewsMenu.data.acceleratorText:		@accel Alt+3
 Ddd*viewsMenu.data.accelerator:			Meta<Key>3
 Ddd*viewsMenu.data.documentationString: \
 @rm Toggle showing the data window
 
 Ddd*viewsMenu.code.labelString:			Machine Code Window
 Ddd*viewsMenu.code.mnemonic:			M
-Ddd*viewsMenu.code.acceleratorText:		Alt+4
+Ddd*viewsMenu.code.acceleratorText:		@accel Alt+4
 Ddd*viewsMenu.code.accelerator:			Meta<Key>4
 Ddd*viewsMenu.code.documentationString: \
 @rm Toggle showing the machine code window
@@ -2345,35 +2345,35 @@ Ddd*viewMenu*tearOffTitle:      View
 
 Ddd*viewMenu.tool.labelString:			Command Tool...
 Ddd*viewMenu.tool.mnemonic:			T
-Ddd*viewMenu.tool.acceleratorText:		Alt+8
+Ddd*viewMenu.tool.acceleratorText:		@accel Alt+8
 Ddd*viewMenu.tool.accelerator:			Meta<Key>8
 Ddd*viewMenu.tool.documentationString: \
 @rm Open the command tool and move it to its original position
 
 Ddd*viewMenu.exec.labelString:			Execution Window...
 Ddd*viewMenu.exec.mnemonic:			x
-Ddd*viewMenu.exec.acceleratorText:		Alt+9
+Ddd*viewMenu.exec.acceleratorText:		@accel Alt+9
 Ddd*viewMenu.exec.accelerator:			Meta<Key>9
 Ddd*viewMenu.exec.documentationString: \
 @rm Open the program execution window
 
 Ddd*viewMenu.console.labelString:		@GDB@ Console...
 Ddd*viewMenu.console.mnemonic:			C
-Ddd*viewMenu.console.acceleratorText:		Alt+1
+Ddd*viewMenu.console.acceleratorText:		@accel Alt+1
 Ddd*viewMenu.console.accelerator:		Meta<Key>1
 Ddd*viewMenu.console.documentationString: \
 @rm Open the @GDB@ console
 
 Ddd*viewMenu.source.labelString:		Source Window...
 Ddd*viewMenu.source.mnemonic:			S
-Ddd*viewMenu.source.acceleratorText:		Alt+2
+Ddd*viewMenu.source.acceleratorText:		@accel Alt+2
 Ddd*viewMenu.source.accelerator:		Meta<Key>2
 Ddd*viewMenu.source.documentationString: \
 @rm Open the source window
 
 Ddd*viewMenu.data.labelString:			Data Window...
 Ddd*viewMenu.data.mnemonic:			D
-Ddd*viewMenu.data.acceleratorText:		Alt+3
+Ddd*viewMenu.data.acceleratorText:		@accel Alt+3
 Ddd*viewMenu.data.accelerator:			Meta<Key>3
 Ddd*viewMenu.data.documentationString: \
 @rm Open the data window
@@ -2421,14 +2421,14 @@ Ddd*programMenu*tearOffTitle:   Program
 Ddd*menubar*programMenu.run.labelString:	   Run...
 Ddd*menubar*programMenu.run.mnemonic:		   R
 Ddd*menubar*programMenu.run.accelerator:	   <Key>F2
-Ddd*menubar*programMenu.run.acceleratorText:	   F2
+Ddd*menubar*programMenu.run.acceleratorText:	   @accel F2
 Ddd*menubar*programMenu.run.documentationString: \
 @rm Start debugged program.  You may specify arguments to give it.
 
 Ddd*menubar*programMenu.run_again.labelString:	   Run Again
 Ddd*menubar*programMenu.run_again.mnemonic:	   A
 Ddd*menubar*programMenu.run_again.accelerator:	   <Key>F3
-Ddd*menubar*programMenu.run_again.acceleratorText: F3
+Ddd*menubar*programMenu.run_again.acceleratorText: @accel F3
 Ddd*menubar*programMenu.run_again.documentationString: \
 @rm Restart debugged program, using the previous arguments.
 
@@ -2440,69 +2440,69 @@ Ddd*menubar*programMenu.separateExecWindow.documentationString:\
 Ddd*menubar*programMenu.step.labelString:	   Step
 Ddd*menubar*programMenu.step.mnemonic:		   S
 Ddd*menubar*programMenu.step.accelerator:	   ~Shift<Key>F5
-Ddd*menubar*programMenu.step.acceleratorText:	   F5
+Ddd*menubar*programMenu.step.acceleratorText:	   @accel F5
 Ddd*menubar*programMenu.step.documentationString:
 
 Ddd*menubar*programMenu.stepi.labelString:	   Step Instruction
 Ddd*menubar*programMenu.stepi.mnemonic:		   I
 Ddd*menubar*programMenu.stepi.accelerator:	   Shift<Key>F5
-Ddd*menubar*programMenu.stepi.acceleratorText:	   Shift+F5
+Ddd*menubar*programMenu.stepi.acceleratorText:	   @accel Shift+F5
 Ddd*menubar*programMenu.stepi.documentationString:
 
 Ddd*menubar*programMenu.next.labelString:	   Next
 Ddd*menubar*programMenu.next.mnemonic:		   N
 Ddd*menubar*programMenu.next.accelerator:	   ~Shift<Key>F6
-Ddd*menubar*programMenu.next.acceleratorText:	   F6
+Ddd*menubar*programMenu.next.acceleratorText:	   @accel F6
 Ddd*menubar*programMenu.next.documentationString:
 
 Ddd*menubar*programMenu.nexti.labelString:	   Next Instruction
 Ddd*menubar*programMenu.nexti.mnemonic:		   x
 Ddd*menubar*programMenu.nexti.accelerator:	   Shift<Key>F6
-Ddd*menubar*programMenu.nexti.acceleratorText:	   Shift+F6
+Ddd*menubar*programMenu.nexti.acceleratorText:	   @accel Shift+F6
 Ddd*menubar*programMenu.nexti.documentationString:
 
 Ddd*menubar*programMenu.until.labelString:	   Until
 Ddd*menubar*programMenu.until.mnemonic:	   	   U
 Ddd*menubar*programMenu.until.accelerator:	   <Key>F7
-Ddd*menubar*programMenu.until.acceleratorText:	   F7
+Ddd*menubar*programMenu.until.acceleratorText:	   @accel F7
 Ddd*menubar*programMenu.until.documentationString:
 
 Ddd*menubar*programMenu.finish.labelString:	   Finish
 Ddd*menubar*programMenu.finish.mnemonic:	   F
 Ddd*menubar*programMenu.finish.accelerator:	   <Key>F8
-Ddd*menubar*programMenu.finish.acceleratorText:	   F8
+Ddd*menubar*programMenu.finish.acceleratorText:	   @accel F8
 Ddd*menubar*programMenu.finish.documentationString:
 
 Ddd*menubar*programMenu.cont.labelString:	   Continue
 Ddd*menubar*programMenu.cont.mnemonic:		   C
 Ddd*menubar*programMenu.cont.accelerator:	   ~Shift<Key>F9
-Ddd*menubar*programMenu.cont.acceleratorText:	   F9
+Ddd*menubar*programMenu.cont.acceleratorText:	   @accel F9
 Ddd*menubar*programMenu.cont.documentationString:
 
 Ddd*menubar*programMenu.signal0.labelString:	   Continue Without Signal
 Ddd*menubar*programMenu.signal0.mnemonic:          t
 Ddd*menubar*programMenu.signal0.accelerator:	   Shift<Key>F9
-Ddd*menubar*programMenu.signal0.acceleratorText:   Shift+F9
+Ddd*menubar*programMenu.signal0.acceleratorText:   @accel Shift+F9
 Ddd*menubar*programMenu.signal0.documentationString: \
 @rm Continue program without giving it a signal.
 
 Ddd*menubar*programMenu.kill.labelString:	   Kill
 Ddd*menubar*programMenu.kill.mnemonic:		   K
 Ddd*menubar*programMenu.kill.accelerator:	   <Key>F4
-Ddd*menubar*programMenu.kill.acceleratorText:	   F4
+Ddd*menubar*programMenu.kill.acceleratorText:	   @accel F4
 Ddd*menubar*programMenu.kill.documentationString:
 
 Ddd*menubar*programMenu.break.labelString:	   Interrupt
 Ddd*menubar*programMenu.break.mnemonic:		   p
 ! Ddd*menubar*programMenu.break.accelerator:	   <Key>Escape
-Ddd*menubar*programMenu.break.acceleratorText:	   Esc
+Ddd*menubar*programMenu.break.acceleratorText:	   @accel Esc
 Ddd*menubar*programMenu.break.documentationString: \
 @rm Interrupt program (or current @GDB@ command)
 
 Ddd*menubar*programMenu.quit.labelString:	   Abort
 Ddd*menubar*programMenu.quit.mnemonic:		   b
 Ddd*menubar*programMenu.quit.accelerator:	   Ctrl<Key>\\ 
-Ddd*menubar*programMenu.quit.acceleratorText:	   Ctrl+\\ 
+Ddd*menubar*programMenu.quit.acceleratorText:	   @accel Ctrl+\\ 
 Ddd*menubar*programMenu.quit.documentationString: \
 @rm Abort program (or current @GDB@ command)
 
@@ -2548,14 +2548,14 @@ Ddd*commandsMenu.history.documentationString: \
 Ddd*commandsMenu.prev.labelString:	        Previous
 Ddd*commandsMenu.prev.mnemonic:		        P
 ! Ddd*commandsMenu.prev.accelerator:	        Ctrl<Key>P
-Ddd*commandsMenu.prev.acceleratorText:	        Up
+Ddd*commandsMenu.prev.acceleratorText:	        @accel Up
 Ddd*commandsMenu.prev.documentationString: \
 @rm Get previous command
 
 Ddd*commandsMenu.next.labelString:	        Next
 Ddd*commandsMenu.next.mnemonic:		        N
 ! Ddd*commandsMenu.next.accelerator:	        Ctrl<Key>N
-Ddd*commandsMenu.next.acceleratorText:          Down
+Ddd*commandsMenu.next.acceleratorText:          @accel Down
 Ddd*commandsMenu.next.documentationString: \
 @rm Get next command
 
@@ -2563,48 +2563,48 @@ Ddd*commandsMenu.complete.labelString:	        Complete
 Ddd*commandsMenu.complete.mnemonic:	        C
 ! Ddd*commandsMenu.complete.accelerator:	~Ctrl ~Shift ~Meta<Key>Tab
 ! Ddd*commandsMenu.complete.accelerator:	Ctrl<Key>I
-Ddd*commandsMenu.complete.acceleratorText:	Tab
+Ddd*commandsMenu.complete.acceleratorText:	@accel Tab
 Ddd*commandsMenu.complete.documentationString: \
 @rm Complete current command
 
 Ddd*commandsMenu.apply.labelString:	        Apply
 Ddd*commandsMenu.apply.mnemonic:	        A
 ! Ddd*commandsMenu.apply.accelerator:	        ~Ctrl ~Shift ~Meta<Key>Return
-Ddd*commandsMenu.apply.acceleratorText:         Return
+Ddd*commandsMenu.apply.acceleratorText:         @accel Return
 Ddd*commandsMenu.apply.documentationString: \
 @rm Execute current command
 
 Ddd*commandsMenu.isearch_prev.labelString:	Find Backward
 Ddd*commandsMenu.isearch_prev.mnemonic:	        B
 ! Ddd*commandsMenu.isearch_prev.accelerator:	Ctrl<Key>B
-Ddd*commandsMenu.isearch_prev.acceleratorText:  Ctrl+B
+Ddd*commandsMenu.isearch_prev.acceleratorText:  @accel Ctrl+B
 Ddd*commandsMenu.isearch_prev.documentationString: \
 @rm Do incremental search backward in command history
 
 Ddd*commandsMenu.isearch_next.labelString:	Find Forward
 Ddd*commandsMenu.isearch_next.mnemonic:	        F
 ! Ddd*commandsMenu.isearch_next.accelerator:	Ctrl<Key>F
-Ddd*commandsMenu.isearch_next.acceleratorText:  Ctrl+F
+Ddd*commandsMenu.isearch_next.acceleratorText:  @accel Ctrl+F
 Ddd*commandsMenu.isearch_next.documentationString: \
 @rm Do incremental search forward in command history
 
 Ddd*commandsMenu.isearch_exit.labelString:	Quit Search
 Ddd*commandsMenu.isearch_exit.mnemonic:	        Q
-Ddd*commandsMenu.isearch_exit.acceleratorText:  Esc
+Ddd*commandsMenu.isearch_exit.acceleratorText:  @accel Esc
 Ddd*commandsMenu.isearch_exit.documentationString: \
 @rm Quit incremental search
 
 Ddd*commandsMenu.clear_line.labelString:        Clear Line
 Ddd*commandsMenu.clear_line.mnemonic:	        L
 ! *commandsMenu.clear_line.accelerator:	        ~Shift ~Meta Ctrl<Key>U
-Ddd*commandsMenu.clear_line.acceleratorText:    Ctrl+U
+Ddd*commandsMenu.clear_line.acceleratorText:    @accel Ctrl+U
 Ddd*commandsMenu.clear_line.documentationString: \
 @rm Clear @GDB@ command line
 
 Ddd*commandsMenu.clear_window.labelString:      Clear Window
 Ddd*commandsMenu.clear_window.mnemonic:	        W
 Ddd*commandsMenu.clear_window.accelerator:      ~Meta Shift Ctrl<Key>U
-Ddd*commandsMenu.clear_window.acceleratorText:  Shift+Ctrl+U
+Ddd*commandsMenu.clear_window.acceleratorText:  @accel Shift+Ctrl+U
 Ddd*commandsMenu.clear_window.documentationString: \
 @rm Clear all before last @GDB@ prompt
 
@@ -2665,14 +2665,14 @@ Ddd*stackMenu.signals.documentationString: \
 Ddd*stackMenu.up.labelString:		Up
 Ddd*stackMenu.up.mnemonic:		U
 Ddd*stackMenu.up.accelerator:		Ctrl<Key>Up
-Ddd*stackMenu.up.acceleratorText:	Ctrl+Up
+Ddd*stackMenu.up.acceleratorText:	@accel Ctrl+Up
 Ddd*stackMenu.up.documentationString: \
 @rm Show the function that called the current one
 
 Ddd*stackMenu.down.labelString:		Down
 Ddd*stackMenu.down.mnemonic:		D
 Ddd*stackMenu.down.accelerator:		Ctrl<Key>Down
-Ddd*stackMenu.down.acceleratorText:	Ctrl+Down
+Ddd*stackMenu.down.acceleratorText:	@accel Ctrl+Down
 Ddd*stackMenu.down.documentationString: \
 @rm Show the function that was called by the current one
 
@@ -2716,63 +2716,63 @@ Ddd*sourceMenu.breakpoints.documentationString: \
 Ddd*sourceMenu.lookup.labelString:	        Lookup ()
 Ddd*sourceMenu.lookup.mnemonic:			L
 Ddd*sourceMenu.lookup.accelerator:		Ctrl<Key>slash
-Ddd*sourceMenu.lookup.acceleratorText:		Ctrl+/
+Ddd*sourceMenu.lookup.acceleratorText:		@accel Ctrl+/
 Ddd*sourceMenu.lookup.documentationString:\
 @rm Lookup LBL(()) in the source
 
 Ddd*sourceMenu.findForward.labelString:	        LBL_FIND_FORWARD
 ! Ddd*sourceMenu.findForward.mnemonic:		>
 Ddd*sourceMenu.findForward.accelerator:		Ctrl<Key>period
-Ddd*sourceMenu.findForward.acceleratorText:	Ctrl+.
+Ddd*sourceMenu.findForward.acceleratorText:	@accel Ctrl+.
 Ddd*sourceMenu.findForward.documentationString:\
 @rm Search the next occurrence of LBL(())
 
 Ddd*sourceMenu.findBackward.labelString:	LBL_FIND_BACKWARD
 ! Ddd*sourceMenu.findBackward.mnemonic:		<
 Ddd*sourceMenu.findBackward.accelerator:	Ctrl<Key>comma
-Ddd*sourceMenu.findBackward.acceleratorText:	Ctrl+,
+Ddd*sourceMenu.findBackward.acceleratorText:	@accel Ctrl+,
 Ddd*sourceMenu.findBackward.documentationString:\
 @rm Search the previous occurrence of LBL(())
 
 Ddd*sourceMenu.findWordsOnly.labelString:	Find Words Only
 Ddd*sourceMenu.findWordsOnly.mnemonic:		W
 Ddd*sourceMenu.findWordsOnly.accelerator:	Meta<Key>W
-Ddd*sourceMenu.findWordsOnly.acceleratorText:	Alt+W
+Ddd*sourceMenu.findWordsOnly.acceleratorText:	@accel Alt+W
 Ddd*sourceMenu.findWordsOnly.documentationString:\
 @rm Switch between finding complete words and finding arbitrary occurrences
 
 Ddd*sourceMenu.findCaseSensitive.labelString:	Find Case Sensitive
 Ddd*sourceMenu.findCaseSensitive.mnemonic:	i
 Ddd*sourceMenu.findCaseSensitive.accelerator:	Meta<Key>I
-Ddd*sourceMenu.findCaseSensitive.acceleratorText: Alt+I
+Ddd*sourceMenu.findCaseSensitive.acceleratorText: @accel Alt+I
 Ddd*sourceMenu.findCaseSensitive.documentationString:\
 @rm Toggle case-sensitive search
 
 Ddd*sourceMenu.disassemble.labelString:		Display Machine Code
 Ddd*sourceMenu.disassemble.mnemonic:		M
 Ddd*sourceMenu.disassemble.accelerator:		Meta<Key>4
-Ddd*sourceMenu.disassemble.acceleratorText:	Alt+4
+Ddd*sourceMenu.disassemble.acceleratorText:	@accel Alt+4
 Ddd*sourceMenu.disassemble.documentationString:\
 @rm Toggle display of machine code window
 
 Ddd*sourceMenu.lineNumbers.labelString:		Display Line Numbers
 Ddd*sourceMenu.lineNumbers.mnemonic:		N
 Ddd*sourceMenu.lineNumbers.accelerator:		Meta<Key>N
-Ddd*sourceMenu.lineNumbers.acceleratorText:	Alt+N
+Ddd*sourceMenu.lineNumbers.acceleratorText:	@accel Alt+N
 Ddd*sourceMenu.lineNumbers.documentationString:\
 @rm Toggle displaying source line numbers
 
 Ddd*sourceMenu.edit.labelString:	Edit Source...
 Ddd*sourceMenu.edit.mnemonic:		E
 Ddd*sourceMenu.edit.accelerator:	~Meta Shift Ctrl<Key>V
-Ddd*sourceMenu.edit.acceleratorText:	Shift+Ctrl+V
+Ddd*sourceMenu.edit.acceleratorText:	@accel Shift+Ctrl+V
 Ddd*sourceMenu.edit.documentationString: \
 @rm Invoke text editor for the current source
 
 Ddd*sourceMenu.reload.labelString:	Reload Source
 Ddd*sourceMenu.reload.mnemonic:		R
 Ddd*sourceMenu.reload.accelerator:	~Meta Shift Ctrl<Key>L
-Ddd*sourceMenu.reload.acceleratorText:	Shift+Ctrl+L
+Ddd*sourceMenu.reload.acceleratorText:	@accel Shift+Ctrl+L
 Ddd*sourceMenu.reload.documentationString: \
 @rm Reload current source file
 
@@ -2835,21 +2835,21 @@ Ddd*dataMenu.examine.documentationString: \
 Ddd*dataMenu.print.labelString:		Print ()
 Ddd*dataMenu.print.mnemonic:		P
 Ddd*dataMenu.print.accelerator:		Ctrl<Key>equal
-Ddd*dataMenu.print.acceleratorText:	Ctrl+=
+Ddd*dataMenu.print.acceleratorText:	@accel Ctrl+=
 Ddd*dataMenu.print.documentationString: \
 @rm Print the argument LBL(()) in the @GDB@ console
 
 Ddd*dataMenu.display.labelString:	Display ()
 Ddd*dataMenu.display.mnemonic:		i
 Ddd*dataMenu.display.accelerator:	Ctrl<Key>minus
-Ddd*dataMenu.display.acceleratorText:	Ctrl+-
+Ddd*dataMenu.display.acceleratorText:	@accel Ctrl+-
 Ddd*dataMenu.display.documentationString: \
 @rm Display the argument LBL(()) in the data window
 
 Ddd*dataMenu.detectAliases.labelString:	Detect Aliases
 Ddd*dataMenu.detectAliases.mnemonic:	A
 Ddd*dataMenu.detectAliases.accelerator:	Meta<Key>A
-Ddd*dataMenu.detectAliases.acceleratorText: Alt+A
+Ddd*dataMenu.detectAliases.acceleratorText: @accel Alt+A
 Ddd*dataMenu.detectAliases.documentationString:	\
 @rm Detect aliases (shared data structures)
 
@@ -2857,7 +2857,7 @@ Ddd*dataMenu.detectAliases.documentationString:	\
 Ddd*dataMenu.info locals.labelString:	Display Local Variables
 Ddd*dataMenu.info locals.mnemonic:	L
 Ddd*dataMenu.info locals.accelerator:	Meta<Key>L
-Ddd*dataMenu.info locals.acceleratorText: Alt+L
+Ddd*dataMenu.info locals.acceleratorText: @accel Alt+L
 Ddd*dataMenu.info locals.documentationString: \
 @rm Display the local variables of the current stack frame
 
@@ -2865,7 +2865,7 @@ Ddd*dataMenu.info locals.documentationString: \
 Ddd*dataMenu.info args.labelString:	Display Arguments
 Ddd*dataMenu.info args.mnemonic:	u
 Ddd*dataMenu.info args.accelerator:	Meta<Key>U
-Ddd*dataMenu.info args.acceleratorText: Alt+U
+Ddd*dataMenu.info args.acceleratorText: @accel Alt+U
 Ddd*dataMenu.info args.documentationString: \
 @rm Display the argument variables of the current stack frame
 
@@ -2873,7 +2873,7 @@ Ddd*dataMenu.info args.documentationString: \
 Ddd*dataMenu.dump.labelString:		Display Local Variables
 Ddd*dataMenu.dump.mnemonic:		L
 Ddd*dataMenu.dump.accelerator:		Meta<Key>L
-Ddd*dataMenu.dump.acceleratorText:	Alt+L
+Ddd*dataMenu.dump.acceleratorText:	@accel Alt+L
 Ddd*dataMenu.dump.documentationString: \
 @rm Display all local variables of the current stack frame
 
@@ -2881,7 +2881,7 @@ Ddd*dataMenu.dump.documentationString: \
 Ddd*dataMenu.l.labelString:		Display Local Variables
 Ddd*dataMenu.l.mnemonic:		L
 Ddd*dataMenu.l.accelerator:		Meta<Key>L
-Ddd*dataMenu.l.acceleratorText:		Alt+L
+Ddd*dataMenu.l.acceleratorText:		@accel Alt+L
 Ddd*dataMenu.l.documentationString: \
 @rm Display all local variables of the current stack frame
 
@@ -2889,7 +2889,7 @@ Ddd*dataMenu.l.documentationString: \
 Ddd*dataMenu.locals.labelString:	Display Local Variables
 Ddd*dataMenu.locals.mnemonic:		L
 Ddd*dataMenu.locals.accelerator:	Meta<Key>L
-Ddd*dataMenu.locals.acceleratorText:	Alt+L
+Ddd*dataMenu.locals.acceleratorText:	@accel Alt+L
 Ddd*dataMenu.locals.documentationString: \
 @rm Display all local variables of the current stack frame
 
@@ -2901,28 +2901,28 @@ Ddd*dataMenu.infos.documentationString: \
 Ddd*dataMenu.align.labelString:		Align on Grid
 Ddd*dataMenu.align.mnemonic:		G
 Ddd*dataMenu.align.accelerator:		Meta<Key>G
-Ddd*dataMenu.align.acceleratorText:	Alt+G
+Ddd*dataMenu.align.acceleratorText:	@accel Alt+G
 Ddd*dataMenu.align.documentationString:	\
 @rm Align all displays on the next grid point
 
 Ddd*dataMenu.rotate.labelString:	Rotate Graph
 Ddd*dataMenu.rotate.mnemonic:		R
 Ddd*dataMenu.rotate.accelerator:	Meta<Key>R
-Ddd*dataMenu.rotate.acceleratorText:	Alt+R
+Ddd*dataMenu.rotate.acceleratorText:	@accel Alt+R
 Ddd*dataMenu.rotate.documentationString:	\
 @rm Rotate the graph clockwise by 90 degrees
 
 Ddd*dataMenu.layout.labelString:	Layout Graph
 Ddd*dataMenu.layout.mnemonic:		y
 Ddd*dataMenu.layout.accelerator:	Meta<Key>Y
-Ddd*dataMenu.layout.acceleratorText:	Alt+Y
+Ddd*dataMenu.layout.acceleratorText:	@accel Alt+Y
 Ddd*dataMenu.layout.documentationString:	\
 @rm Layout the graph
 
 Ddd*dataMenu.refresh.labelString:	Refresh
 Ddd*dataMenu.refresh.mnemonic:		f
 Ddd*dataMenu.refresh.accelerator:	~Shift ~Meta Ctrl<Key>L
-Ddd*dataMenu.refresh.acceleratorText:	Ctrl+L
+Ddd*dataMenu.refresh.acceleratorText:	@accel Ctrl+L
 Ddd*dataMenu.refresh.documentationString:	\
 @rm Redraw all displays, using current values
 
@@ -2957,7 +2957,7 @@ Ddd*maintenanceMenu*tearOffTitle:   Maintenance
 Ddd*maintenanceMenu.debug.labelString:		Debug DDD...
 Ddd*maintenanceMenu.debug.mnemonic:		D
 Ddd*maintenanceMenu.debug.accelerator:		~Shift ~Ctrl<Key>F12
-Ddd*maintenanceMenu.debug.acceleratorText:	F12
+Ddd*maintenanceMenu.debug.acceleratorText:	@accel F12
 Ddd*maintenanceMenu.debug.documentationString:	\
 @rm Invoke a debugger on this DDD instance
 
@@ -3064,7 +3064,7 @@ Ddd*helpMenu.onItem.accelerator:		~Shift ~Ctrl<Key>HELP_KEY
 ! selected first.  Since `on context' help is also what we get
 ! when `on item' is selected via the menu, display the `alternate'
 ! accelerator instead.
-Ddd*helpMenu.onItem.acceleratorText:	        Shift+HELP_KEY
+Ddd*helpMenu.onItem.acceleratorText:	        @accel Shift+HELP_KEY
 Ddd*helpMenu.onItem.documentationString:	\
 @rm Get help on the current item
 
@@ -3082,7 +3082,7 @@ Ddd*helpMenu.onWindow.accelerator:		Shift ~Ctrl<Key>HELP_KEY
 Ddd*helpMenu.whatNext.labelString:		What Now?...
 Ddd*helpMenu.whatNext.mnemonic:			N
 Ddd*helpMenu.whatNext.accelerator:		~Shift Ctrl<Key>HELP_KEY
-Ddd*helpMenu.whatNext.acceleratorText:		Ctrl+HELP_KEY
+Ddd*helpMenu.whatNext.acceleratorText:		@accel Ctrl+HELP_KEY
 Ddd*helpMenu.whatNext.documentationString:	\
 @rm Explain the current situation and suggest what to do next
 
@@ -4998,7 +4998,7 @@ Ddd*plot*area.helpString:       PLOT_WINDOW_HELP
 Ddd*plot*replot.labelString:    Refresh Plot
 Ddd*plot*replot.mnemonic:       R
 Ddd*plot*replot.accelerator:	~Shift ~Meta Ctrl<Key>L
-Ddd*plot*replot.acceleratorText: Ctrl+L
+Ddd*plot*replot.acceleratorText: @accel Ctrl+L
 Ddd*plot*replot.documentationString:   \
 @rm Refresh plot, using current values
 

@@ -129,7 +129,7 @@ static void setup_xft_fonts(AppData& ad, XrmDatabase& db)
     if (ad.variable_width_font_size>=80)
         ad.variable_width_font_size = 11; // size seem to be in points -> set default
 
-    XrmPutLineResource(&db, "Ddd*renderTable: rm,tt,llogo,logo,small,tb,key,bf,sl,bs");
+    XrmPutLineResource(&db, "Ddd*renderTable: rm,tt,llogo,logo,small,tb,key,bf,sl,bs,accel");
 
     XrmPutLineResource(&db, "Ddd*rm*fontType: FONT_IS_XFT");
     XrmPutLineResource(&db, (string("Ddd*rm*fontName: ") + ad.variable_width_font).chars());
@@ -168,6 +168,19 @@ static void setup_xft_fonts(AppData& ad, XrmDatabase& db)
     XrmPutLineResource(&db, (string("Ddd*key*fontName: ") + ad.variable_width_font).chars());
     XrmPutLineResource(&db, (string("Ddd*key*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
     XrmPutLineResource(&db, "Ddd*key*fontStyle: Bold");
+
+    if (ad.retro_style)
+    {
+        XrmPutLineResource(&db, "Ddd*accel*fontType: FONT_IS_XFT");
+        XrmPutLineResource(&db, (string("Ddd*accel*fontName: ") + ad.variable_width_font).chars());
+        XrmPutLineResource(&db, (string("Ddd*accel*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
+    }
+    else
+    {
+        XrmPutLineResource(&db, "Ddd*accel*fontType: FONT_IS_XFT");
+        XrmPutLineResource(&db, (string("Ddd*accel*fontName: ") + ad.fixed_width_font).chars());
+        XrmPutLineResource(&db, (string("Ddd*accel*fontSize: ") + itostring(ad.variable_width_font_size*0.8)).chars());
+    }
 }
 
 string make_xftfont(const AppData& ad, DDDFont base)

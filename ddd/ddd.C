@@ -4970,10 +4970,13 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNtopAttachment,      XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNbottomAttachment,   XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNrightAttachment,    XmATTACH_FORM); arg++;
-    XtSetArg(args[arg], XmNrightOffset,        25); arg++;
+    XtSetArg(args[arg], XmNrightOffset,        16); arg++;
+    XtSetArg(args[arg], XmNtopOffset,          1); arg++;
     XtSetArg(args[arg], XmNresizable,          False); arg++;
     XtSetArg(args[arg], XmNfillOnSelect,       True); arg++;
     XtSetArg(args[arg], XmNset,                True); arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNdetailShadowThickness, 0); arg++; }
     XtSetArg(args[arg], XmNindicatorType, XmONE_OF_MANY_ROUND); arg++;
     XtSetArg(args[arg], XmNvisibleWhenOff, true); arg++;
     led_w = verify(XmCreateToggleButton(status_form, XMST("led"), args, arg));
@@ -4982,7 +4985,10 @@ static void create_status(Widget parent)
     XtAddCallback(led_w, XmNvalueChangedCallback, ToggleBlinkCB, XtPointer(0));
 
     Pixel arrow_foreground;
-    XtVaGetValues(status_form, XmNbackground, &arrow_foreground, XtPointer(0));
+    if (app_data.retro_style)
+        XtVaGetValues(status_form, XmNbackground, &arrow_foreground, XtPointer(0));
+    else
+        XtVaGetValues(status_form, XmNbottomShadowColor, &arrow_foreground, XtPointer(0));
 
     // Create `Get more status messages' button
     arg = 0;
@@ -4990,20 +4996,16 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNbottomAttachment, XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNleftAttachment,   XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNresizable,        False); arg++;
+    XtSetArg(args[arg], XmNleftOffset,          6); arg++;
     XtSetArg(args[arg], XmNshadowThickness,  0); arg++;
     XtSetArg(args[arg], XmNforeground,       arrow_foreground); arg++;
     XtSetArg(args[arg], XmNarrowDirection, XmARROW_UP); arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNdetailShadowThickness,   0); arg++; }
     Widget arrow_w = verify(XmCreateArrowButton(status_form, XMST("arrow"), args, arg));
     XtManageChild(arrow_w);
 
-    // Give some `dummy' status message.  Some Motif versions limit
-    // the size of the status window to the length of the very first
-    // message, so we give some huge string at the beginning.
-//     MString short_msg = rm("Hello, world!");
-//     MString long_msg = short_msg + rm(replicate(' ', 90));
-
     arg = 0;
-//     XtSetArg(args[arg], XmNlabelString,      long_msg.xmstring()); arg++;
     XtSetArg(args[arg], XmNtopAttachment,    XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNbottomAttachment, XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNleftAttachment,   XmATTACH_WIDGET); arg++;

@@ -116,13 +116,13 @@ bool have_decorated_transients(Widget parent)
     // DDD for 5 seconds; this can be avoided by using an explicit
     // `decorateTool' resource value.
     Window frame_window = 0;
-    for (int trial = 1; trial < 5; trial++)
+    for (int trial = 1; trial < 20; trial++)
     {
 	frame_window = frame(XtDisplay(init_shell), XtWindow(init_shell));
 	if (frame_window != XtWindow(init_shell))
 	    break;
 	XSync(XtDisplay(init_label), False);
-	sleep(1);
+	usleep(50000);
     }
 
     XWindowAttributes frame_attributes;

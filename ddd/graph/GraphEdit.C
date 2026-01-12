@@ -3150,8 +3150,20 @@ static void Normalize(Widget w, XEvent *event, String *params,
 static void CallPannerPage(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
-    Widget scroller = scrollerOfGraphEdit(w);
-    CallActionScrolled(scroller, event, params, num_params);
+    if (app_data.panned_graph_editor)
+    {
+#if HAVE_ATHENA
+        // redirect to panner
+        Widget panner = pannerOfGraphEdit(w);
+
+        CallActionPagem(panner, event, params, num_params);
+#endif
+    }
+    else
+    {
+        Widget scroller = scrollerOfGraphEdit(w);
+        CallActionScrolled(scroller, event, params, num_params);
+    }
 }
 
 // Show and hide edges

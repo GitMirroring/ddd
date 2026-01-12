@@ -301,8 +301,8 @@ static const char *defaultTranslations =
     "<Btn1Motion>:	       follow()\n"
     "<Btn1Up>:		       end()\n"
     "<Btn2Down>:	       toggle()\n"
-    "<Btn2Motion>:	       follow()\n"
-    "<Btn2Up>:		       end()\n"
+    // "<Btn2Motion>:	       follow()\n"
+    // "<Btn2Up>:		       end()\n"
     "~Shift Ctrl<Key>KP_1:     move-selected(-grid, +grid)\n"
     "~Shift Ctrl<Key>KP_2:     move-selected(    0, +grid)\n"
     "~Shift Ctrl<Key>KP_3:     move-selected(+grid, +grid)\n"
@@ -470,6 +470,7 @@ Pixel InvertColor(bool inv, Pixel color)
 
 
 // Method function definitions
+static void graphEditAutoScroll(Widget w, XEvent *event);
 
 // Set widget to minimal size
 void graphEditSizeChanged(Widget w)
@@ -1366,6 +1367,8 @@ static void Initialize(Widget request, Widget w, ArgList, Cardinal *)
     XtIntervalId& redrawTimer       = _w->graphEditP.redrawTimer;
     Dimension& requestedWidth       = _w->res_.graphEdit.requestedWidth;
     Dimension& requestedHeight      = _w->res_.graphEdit.requestedHeight;
+    Time& lastMoveTime              = _w->graphEditP.lastMoveTime;
+    XtIntervalId& autoScrollTimer = _w->graphEditP.autoScrollTimer;
 
     // init state
     state = NopState;
@@ -1390,6 +1393,12 @@ static void Initialize(Widget request, Widget w, ArgList, Cardinal *)
 
     // set grid pixmap
     gridPixmap = None;
+
+    // init lastMoveTime
+    lastMoveTime = 0;
+
+    // init autoscroll timer
+    autoScrollTimer = 0;
 
     // create cursors if not already set
     createCursor(w, moveCursor,              XC_fleur);
@@ -1705,21 +1714,6 @@ inline void drawSelectFrame(Widget w)
 	BoxRegion(BoxPoint(0, 0), BoxSize(0, 0)));
 }
 
-
-// Redraw selection frame
-static void redrawSelectFrame(Widget w, const BoxPoint& p)
-{
-    const GraphEditWidget _w = GraphEditWidget(w);
-    BoxPoint& endAction      = _w->graphEditP.endAction;
-
-    BoxRegion r0 = frameRegion(w);
-    endAction = p;
-    BoxRegion r1 = frameRegion(w);
-
-    drawSelectFrames(w, r0, r1);
-}
-
-
 // Find min possible offset
 static void getMinimalOffset(Widget w)
 {
@@ -2008,6 +2002,9 @@ static void _SelectOrMove(Widget w, XEvent *event, String *params,
     BoxPoint& endAction      = _w->graphEditP.endAction;
     Time& lastSelectTime     = _w->graphEditP.lastSelectTime;
 
+    if (state == SelectState || state == MoveState)
+        return;
+
     // Get the input focus
     XmProcessTraversal(w, XmTRAVERSE_CURRENT);
 
@@ -2167,6 +2164,150 @@ static void Toggle(Widget w, XEvent *event, String *params,
     _SelectOrMove(w, event, params, num_params, ToggleSelection, False);
 }
 
+static void AutoScrollTimeout(XtPointer client_data, XtIntervalId *id)
+{
+    Widget w = (Widget)client_data;
+    GraphEditWidget _w = GraphEditWidget(w);
+    XtIntervalId &timer = _w->graphEditP.autoScrollTimer;
+
+    if (*id != timer)
+        return;     // stale timer
+    timer = 0;
+
+    GraphEditState state = _w->graphEditP.state;
+    if (state != SelectState && state != MoveState)
+        return;
+
+    // erase old drawing
+    if (state == SelectState)
+    {
+        BoxRegion oldFrame = frameRegion(w); 
+        redrawSelectFrame(w, oldFrame);      // erase old frame (XOR)
+    }
+    else // MoveState
+    {
+        BoxPoint oldOffset = _w->graphEditP.lastOffset;
+        drawOutlines(w, oldOffset);          // erase old outlines (XOR)
+    }
+
+    // Scroll according to current pointer
+    Display *dpy = XtDisplay(w);
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask;
+    if (!XQueryPointer(dpy, DefaultRootWindow(dpy), &root, &child, &root_x, &root_y,
+                       &win_x, &win_y, &mask))
+        return;
+
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.type                = MotionNotify;
+    ev.xmotion.type        = MotionNotify;
+    ev.xmotion.display     = dpy;
+    ev.xmotion.root        = root;
+    ev.xmotion.x_root      = root_x;
+    ev.xmotion.y_root      = root_y;
+    ev.xmotion.state       = mask;
+    ev.xmotion.same_screen = True;
+
+    graphEditAutoScroll(w, &ev);   // calls callpannerpage + re-arms timer
+
+    // Get new pointer position relative to widget after scroll
+        if (!XQueryPointer(dpy, XtWindow(w), &root, &child, &root_x, &root_y,
+                       &win_x, &win_y, &mask))
+        return;
+
+    _w->graphEditP.endAction = BoxPoint(win_x, win_y);
+
+    // Draw new frame / outlines with updated endAction
+    if (state == SelectState)
+    {
+        BoxRegion newFrame = frameRegion(w);
+        redrawSelectFrame(w, newFrame);      // draw new frame (XOR)
+        setRegionCursor(w);
+    }
+    else // MoveState
+    {
+        BoxPoint newOffset = actionOffset(w);
+        _w->graphEditP.lastOffset = newOffset;
+        drawOutlines(w, newOffset);          // draw new outlines (XOR)
+    }
+}
+
+
+static void graphEditAutoScroll(Widget w, XEvent *event)
+{
+    if (!event || event->type != MotionNotify)
+        return;
+
+    const GraphEditWidget _w = GraphEditWidget(w);
+    XtIntervalId &timer = _w->graphEditP.autoScrollTimer;
+    // Cancel old timer if any
+    if (timer)
+    {
+        XtRemoveTimeOut(timer);
+        timer = 0;
+    }
+
+    // Find clip (viewport) and scrolled window
+    Widget clip = XtParent(w);
+    if (!clip)
+        return;
+    Widget sw = XtParent(clip);
+    if (!sw || !XmIsScrolledWindow(sw))
+        return;
+
+    // Pointer position in clip coordinates
+    Position clip_x, clip_y;
+    XtTranslateCoords(clip, 0, 0, &clip_x, &clip_y);
+
+    int px = event->xmotion.x_root - clip_x;
+    int py = event->xmotion.y_root - clip_y;
+
+    // Visible size
+    Dimension vw, vh;
+    XtVaGetValues(clip,
+                  XmNwidth,  &vw,
+                  XmNheight, &vh,
+                  NULL);
+
+    const int margin = 10;          // pixels from edge
+    String  params[2];
+    Cardinal nparams  = 2;
+    Boolean do_scroll = False;
+
+    if (px < margin)
+    {
+        params[0] = (char *)"-.25p";
+        params[1] = (char *)"0";      // left
+        do_scroll = True;
+    }
+    else if (px > (int)vw - margin)
+    {
+        params[0] = (char *)"+.25p";
+        params[1] = (char *)"0";      // right
+        do_scroll = True;
+    }
+    else if (py < margin)
+    {
+        params[0] = (char *)"0";
+        params[1] = (char *)"-.25p";      // up
+        do_scroll = True;
+    }
+    else if (py > (int)vh - margin)
+    {
+        params[0] = (char *)"0";
+        params[1] = (char *)"+.25p";      // down
+        do_scroll = True;
+    }
+
+    if (!do_scroll)
+        return;
+
+    timer = XtAppAddTimeOut(XtWidgetToApplicationContext(w), 33, AutoScrollTimeout, (XtPointer)w);
+    XtCallActionProc(w, (char *)"callpannerpage", event, params, nparams);
+}
+
 // Keep on acting...
 static void Follow(Widget w, XEvent *event, String *, Cardinal *)
 {
@@ -2183,9 +2324,30 @@ static void Follow(Widget w, XEvent *event, String *, Cardinal *)
     switch(state)
     {
 	case SelectState:
+        {
 	    // Draw new select frame
-	    redrawSelectFrame(w, p);
-	    break;
+            Time t = time(event);
+            if (lasttime + 33 > t)
+                break;
+
+            lasttime = t;
+
+            BoxRegion r0 = frameRegion(w);
+            endAction = p;
+            BoxRegion r1 = frameRegion(w);
+
+            // Clear old frame (by redrawing it)
+            redrawSelectFrame(w, r0);
+
+            graphEditAutoScroll(w, event);
+
+            // Draw new frame
+            redrawSelectFrame(w, r1);
+
+            // Set appropriate cursor
+            setRegionCursor(w);
+            break;
+        }
 
 	case MoveState:
 	{
@@ -2193,13 +2355,15 @@ static void Follow(Widget w, XEvent *event, String *, Cardinal *)
 	    endAction = p;
 	    BoxPoint newOffset = actionOffset(w);
             Time t = time(event);
-            // restict update intervall to 33ms (30 fps)
+            // restrict update interval to 33ms (30 fps)
 	    if (newOffset != lastOffset && lasttime + 33 < t)
 	    {
-		drawOutlines(w, lastOffset);
-		drawOutlines(w, lastOffset = newOffset);
+                drawOutlines(w, lastOffset);  // XOR erase old outlines
+                graphEditAutoScroll(w, event);
+		drawOutlines(w, newOffset);  // XOR draw new outlines
+                lastOffset = newOffset;
                 lasttime = t;
-	    }
+            }
 	    break;
 	}
 
@@ -2212,7 +2376,8 @@ static void Follow(Widget w, XEvent *event, String *, Cardinal *)
 		endAction = p;
 		getMinimalOffset(w);
 		graphEditSizeChanged(w);
-		drawOutlines(w, lastOffset = actionOffset(w));
+                lastOffset = actionOffset(w);
+		drawOutlines(w, lastOffset);
 		state = MoveState;
 	    }
 	    break;
@@ -2270,6 +2435,13 @@ static void End(Widget w, XEvent *event, String *, Cardinal *)
 
     BoxPoint& endAction        = _w->graphEditP.endAction;
     GraphEditState& state      = _w->graphEditP.state;
+    XtIntervalId &timer  = _w->graphEditP.autoScrollTimer;
+
+    if (timer)
+    {
+        XtRemoveTimeOut(timer);
+        timer = 0;
+    }
 
     Boolean changed = False;
 
@@ -2290,8 +2462,7 @@ static void End(Widget w, XEvent *event, String *, Cardinal *)
 		if (!node->selected())
 		{
 		    // Intersection must be non-empty
-		    BoxRegion intersection = 
-			selected & node->region(graphGC);
+		    BoxRegion intersection = selected & node->region(graphGC);
 
 		    if (!intersection.isEmpty())
 		    {
@@ -2312,8 +2483,7 @@ static void End(Widget w, XEvent *event, String *, Cardinal *)
 		    if (node->selected())
 		    {
 			// Intersection must be non-empty
-			BoxRegion intersection = 
-			    selected & node->region(graphGC);
+			BoxRegion intersection = selected & node->region(graphGC);
 
 			if (!intersection.isEmpty())
 			{
@@ -2332,7 +2502,7 @@ static void End(Widget w, XEvent *event, String *, Cardinal *)
         case MoveState:
 	{
 	    // Move all selected nodes to new positions
-		   
+
 	    // clear graph area
 	    drawOutlines(w, lastOffset);
 
@@ -2342,7 +2512,7 @@ static void End(Widget w, XEvent *event, String *, Cardinal *)
 	    move_selected_nodes(w, offset);
 
 	    state = NopState;
-	    break;
+            break;
 	}
 
 	default:
@@ -2980,20 +3150,8 @@ static void Normalize(Widget w, XEvent *event, String *params,
 static void CallPannerPage(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
-    if (app_data.panned_graph_editor)
-    {
-#if HAVE_ATHENA
-        // redirect to panner
-        Widget panner = pannerOfGraphEdit(w);
-
-        CallActionPagem(panner, event, params, num_params);
-#endif
-    }
-    else
-    {
-        Widget scroller = scrollerOfGraphEdit(w);
-        CallActionScrolled(scroller, event, params, num_params);
-    }
+    Widget scroller = scrollerOfGraphEdit(w);
+    CallActionScrolled(scroller, event, params, num_params);
 }
 
 // Show and hide edges

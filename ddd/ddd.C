@@ -6128,9 +6128,9 @@ static void setup_cut_copy_paste_bindings(XrmDatabase db)
     {
         case KDEBindings:
             resources =
-                "*editMenu.cut.acceleratorText: Ctrl+X\n"
-                "*editMenu.copy.acceleratorText: Ctrl+C\n"
-                "*editMenu.paste.acceleratorText: Ctrl+V\n"
+                "*editMenu.cut.acceleratorText: @accel Ctrl+X\n"
+                "*editMenu.copy.acceleratorText: @accel Ctrl+C\n"
+                "*editMenu.paste.acceleratorText: @accel Ctrl+V\n"
                 "*editMenu.cut.accelerator: ~Shift Ctrl<Key>X\n"
                 "*editMenu.copy.accelerator: ~Shift Ctrl<Key>C\n"
                 "*editMenu.paste.accelerator: ~Shift Ctrl<Key>V\n";
@@ -6138,9 +6138,9 @@ static void setup_cut_copy_paste_bindings(XrmDatabase db)
 
         case MotifBindings:
             resources =
-                "*editMenu.cut.acceleratorText: Shift+Del\n"
-                "*editMenu.copy.acceleratorText: Ctrl+Ins\n"
-                "*editMenu.paste.acceleratorText: Shift+Ins\n"
+                "*editMenu.cut.acceleratorText: @accel Shift+Del\n"
+                "*editMenu.copy.acceleratorText: @accel Ctrl+Ins\n"
+                "*editMenu.paste.acceleratorText: @accel Shift+Ins\n"
                 "*editMenu.cut.accelerator: ~Ctrl Shift<Key>Delete\n"
                 "*editMenu.copy.accelerator: ~Shift Ctrl<Key>Insert\n"
                 "*editMenu.paste.accelerator: ~Ctrl Shift<Key>Insert\n";
@@ -6156,31 +6156,16 @@ static void setup_cut_copy_paste_bindings(XrmDatabase db)
 // Update select all bindings
 static void set_select_all_bindings(MMDesc *menu, BindingStyle style)
 {
-    if (menu == 0 || menu[0].widget == 0)
+    if (!menu || !menu[0].widget)
         return;
 
-    switch (style)
-    {
-        case KDEBindings:
-        {
-            MString select_all("Ctrl+A");
+    const char *txt =
+    (style == KDEBindings) ? "@accel Ctrl+A" : "@accel Shift+Ctrl+A";
 
-            XtVaSetValues(menu[EditItems::SelectAll].widget,
-                        XmNacceleratorText, select_all.xmstring(),
-                        XtPointer(0));
-            break;
-        }
-
-        case MotifBindings:
-        {
-            MString select_all("Shift+Ctrl+A");
-
-            XtVaSetValues(menu[EditItems::SelectAll].widget,
-                        XmNacceleratorText, select_all.xmstring(),
-                        XtPointer(0));
-            break;
-        }
-    }
+    XtVaSetValues(menu[EditItems::SelectAll].widget,
+                  XtVaTypedArg, XmNacceleratorText, XmRString,
+                  txt, strlen(txt) + 1,
+                  NULL);
 }
 
 static void setup_select_all_bindings(XrmDatabase db)
@@ -6192,12 +6177,12 @@ static void setup_select_all_bindings(XrmDatabase db)
     {
         case KDEBindings:
             resources =
-                "*editMenu.selectAll.acceleratorText: Ctrl+A\n";
+                "*editMenu.selectAll.acceleratorText: @accel Ctrl+A\n";
             break;
 
         case MotifBindings:
             resources =
-                "*editMenu.selectAll.acceleratorText: Shift+Ctrl+A\n";
+                "*editMenu.selectAll.acceleratorText: @accel Shift+Ctrl+A\n";
             break;
     }
 

@@ -3858,7 +3858,7 @@ DispNode *DataDisp::new_data_node(const string& given_name,
 	}
 
         // retry plotting with dereferenced pointer
-        if (dn->value()!=nullptr && dn->value()->type()==Pointer)
+        if (dn->value()!=nullptr && dn->value()->type()==Pointer && given_name.length()>0 && given_name[0]!='*')
             new_display("*"+given_name, 0, "", false, true);
 	else
 	    post_gdb_message("Nothing to plot.", true, nullptr);

@@ -662,16 +662,6 @@ we prevent its use in jdb.
 { XRMOPTSTR("-no-value-tips"),         XRMOPTSTR(XtNvalueTips),            
                                         XrmoptionNoArg, XPointer(OFF) },
 
-{ XRMOPTSTR("--panned-graph-editor"),  XRMOPTSTR(XtNpannedGraphEditor),    
-                                        XrmoptionNoArg, XPointer(ON) },
-{ XRMOPTSTR("-panned-graph-editor"),   XRMOPTSTR(XtNpannedGraphEditor),    
-                                        XrmoptionNoArg, XPointer(ON) },
-
-{ XRMOPTSTR("--scrolled-graph-editor"), XRMOPTSTR(XtNpannedGraphEditor),   
-                                        XrmoptionNoArg, XPointer(OFF) },
-{ XRMOPTSTR("-scrolled-graph-editor"), XRMOPTSTR(XtNpannedGraphEditor),    
-                                        XrmoptionNoArg, XPointer(OFF) },
-
 { XRMOPTSTR("--sync-debugger"),        XRMOPTSTR(XtNsynchronousDebugger),  
                                         XrmoptionNoArg, XPointer(ON) },
 { XRMOPTSTR("-sync-debugger"),         XRMOPTSTR(XtNsynchronousDebugger),  
@@ -1434,17 +1424,6 @@ static MMDesc keyboard_focus_menu [] =
     MMEnd
 };
 
-static Widget set_scrolling_panner_w;
-static Widget set_scrolling_scrollbars_w;
-static MMDesc data_scrolling_menu [] = 
-{
-    { "panner", MMToggle,     { dddSetPannerCB, XtPointer(True) },
-      0, &set_scrolling_panner_w, 0, 0 },
-    { "scrollbars", MMToggle, { dddSetPannerCB, XtPointer(False) },
-      0, &set_scrolling_scrollbars_w, 0, 0 },
-    MMEnd
-};
-
 static Widget set_debugger_bash_w;
 static Widget set_debugger_dbg_w;
 static Widget set_debugger_dbx_w;
@@ -1529,7 +1508,6 @@ static MMDesc startup_preferences_menu [] =
     { "cutCopyPaste",    MMRadioPanel,  MMNoCB, cut_copy_paste_menu, 0, 0, 0 },
     { "selectAll",       MMRadioPanel,  MMNoCB, select_all_menu, 0, 0, 0 },
     { "keyboardFocus",   MMRadioPanel,  MMNoCB, keyboard_focus_menu, 0, 0, 0 },
-    { "dataScrolling",   MMRadioPanel,  MMNoCB, data_scrolling_menu, 0, 0, 0 },
     { "autoDebugger",    MMButtonPanel, MMNoCB,
                                         auto_debugger_menu, 0, 0, 0 },
     { "debugger",        MMRadioPanel,  MMNoCB,
@@ -3949,9 +3927,6 @@ void update_options()
     set_toggle(set_focus_pointer_w,        policy == XmPOINTER);
     set_toggle(set_focus_explicit_w,       policy == XmEXPLICIT);
 
-    set_toggle(set_scrolling_panner_w,     app_data.panned_graph_editor);
-    set_toggle(set_scrolling_scrollbars_w, !app_data.panned_graph_editor);
-
     set_toggle(set_button_images_w,        app_data.button_images);
     set_toggle(set_button_captions_w,      app_data.button_captions);
 
@@ -4515,11 +4490,6 @@ static void ResetStartupPreferencesCB(Widget, XtPointer, XtPointer)
     notify_set_toggle(set_focus_explicit_w,
                       initial_focus_policy == XmEXPLICIT);
 
-    notify_set_toggle(set_scrolling_panner_w, 
-               initial_app_data.panned_graph_editor);
-    notify_set_toggle(set_scrolling_scrollbars_w, 
-               !initial_app_data.panned_graph_editor);
-
     DebuggerType debugger_type;
     bool type_ok = get_debugger_type(initial_app_data.debugger, debugger_type);
     notify_set_toggle(set_debugger_bash_w, type_ok && debugger_type == BASH);
@@ -4613,9 +4583,6 @@ static bool startup_preferences_changed()
     XtVaGetValues(command_shell, XmNkeyboardFocusPolicy, &focus_policy, 
                   XtPointer(0));
     if (focus_policy != initial_focus_policy)
-        return true;
-
-    if (app_data.panned_graph_editor != initial_app_data.panned_graph_editor)
         return true;
 
     if (app_data.auto_debugger != initial_app_data.auto_debugger)

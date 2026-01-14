@@ -120,7 +120,6 @@ extern void dddSetToolbarScalingCB          (Widget, XtPointer, XtPointer);
 extern void dddSetGlyphScalingCB            (Widget, XtPointer, XtPointer);
 extern void dddSetToolBarCB                 (Widget, XtPointer, XtPointer);
 extern void dddSetKeyboardFocusPolicyCB     (Widget, XtPointer, XtPointer);
-extern void dddSetPannerCB                  (Widget, XtPointer, XtPointer);
 extern void dddSetDebuggerCB                (Widget, XtPointer, XtPointer);
 extern void dddToggleAutoDebuggerCB         (Widget, XtPointer, XtPointer);
 extern void dddSetCutCopyPasteBindingsCB    (Widget, XtPointer, XtPointer);

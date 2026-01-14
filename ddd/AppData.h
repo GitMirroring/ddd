@@ -219,8 +219,6 @@
 #define XtCEditCommand           "EditCommand"
 #define XtNgetCoreCommand        "getCoreCommand"
 #define XtCGetCoreCommand        "GetCoreCommand"
-#define XtNpannedGraphEditor     "pannedGraphEditor"
-#define XtCPannedGraphEditor     "PannedGraphEditor"
 #define XtNfindWordsOnly         "findWordsOnly"
 #define XtCFindWordsOnly         "FindWordsOnly"
 #define XtNfindCaseSensitive     "findCaseSensitive"
@@ -487,7 +485,6 @@ struct AppData {
     const _XtString    paper_size;
     const _XtString    edit_command;
     const _XtString    get_core_command;
-    Boolean   panned_graph_editor;
     Boolean   find_words_only;
     Boolean   find_case_sensitive;
     Boolean   group_iconify;

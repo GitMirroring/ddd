@@ -946,20 +946,6 @@ void dddSetKeyboardFocusPolicyCB (Widget w, XtPointer client_data, XtPointer)
     update_options();
 }
 
-void dddSetPannerCB (Widget w, XtPointer client_data, XtPointer)
-{
-    Boolean state = (int)(long)client_data;
-    app_data.panned_graph_editor = state;
-
-    if (state)
-        set_status(next_ddd_will_start_with + "a panned graph editor.");
-    else
-        set_status(next_ddd_will_start_with + "a scrolled graph editor.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 static void report_debugger_type()
 {
     DebuggerType type;
@@ -2491,8 +2477,6 @@ static bool save_options_init(unsigned long flags)
 
     // Graph editor
     os << "\n! Data.\n";
-    os << bool_app_value(XtNpannedGraphEditor, 
-                         app_data.panned_graph_editor) << '\n';
     os << widget_value(data_disp->graph_edit, XtNshowGrid)   << '\n';
     os << widget_value(data_disp->graph_edit, XtNsnapToGrid) << '\n';
     os << widget_value(data_disp->graph_edit, XtNshowHints)  << '\n';

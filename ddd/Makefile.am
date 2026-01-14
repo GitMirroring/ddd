@@ -340,9 +340,6 @@ GRAPH_SRC = \
 	graph/LineGraphE.h \
 	graph/LineGESI.C   \
 	graph/LineGESI.h   \
-	graph/PannedGE.C   \
-	graph/PannedGE.h   \
-	graph/PannedGEP.h  \
 	graph/PosGraphN.C  \
 	graph/PosGraphN.h  \
 	graph/RegionGN.C   \
@@ -571,12 +568,6 @@ DDD_SRC = \
 	WhatNextCB.C \
 	WhatNextCB.h
 
-# part of the athena library modified for DDD
-ATHENA_SRC = \
-	athena_ddd/PannerM.C \
-	athena_ddd/PannerM.h \
-	athena_ddd/PannerMP.h 
-
 # Make sure needed headers are built before they are used
 BUILT_SOURCES = \
 	build.h      \
@@ -707,8 +698,7 @@ ddd_SOURCES = ddd.C \
 	$(BOX_SRC) \
 	$(VSL_SRC) \
 	$(GRAPH_SRC) \
-	$(DDD_SRC) \
-	$(ATHENA_SRC)
+	$(DDD_SRC)
 
 stringify_SOURCES = stringify.C
 STRINGIFY = ./stringify$(EXEEXT)

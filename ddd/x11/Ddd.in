@@ -707,16 +707,6 @@ main_vxworks
 @Ddd@*vslLibrary:			builtin
 @Ddd@*vslPath:			user_themes:ddd_themes:.
 
-! What shall we use if the graph gets too large to be displayed?
-! If on, an Athena panner is used (a kind of two-directional scrollbar).
-! If off, two Motif scrollbars are used.
-!
-! Although a panned graph editor is much more comfortable, we set-up Motif
-! scrollbars as a default: Many OSF/Motif installations choke
-! on intermixed Motif/Athena applications and we don't want to get bug
-! reports that should be directed to OSF.
-@Ddd@*pannedGraphEditor:		off
-
 ! Nodes are moved when dragged more than 4 pixels.
 @Ddd@*graph_edit.moveDelta:	4
 
@@ -4654,10 +4644,6 @@ buttons have ordinary labels.\n\
     @tt -@rm  @bf Click to Type@rm  means that you must click on a window\n\
         to direct the keyboard focus to it.\n\
     @tt -@rm  @bf Point to Type@rm  means that pointing to the window suffices.\n\
-@tt \267 @rm @bf Data Scrolling@rm  sets the data window scrolling mode.\n\
-    @tt -@rm  @bf Panner@rm  means to use a two-dimensional scrollbar\n\
-        (not available in all @DDD@ configurations).\n\
-    @tt -@rm  @bf Scrollbars@rm  means to use two scrollbars.\n\
 @tt \267 @rm @bf Debugger Type@rm  sets the type of the inferior debugger.\n\
     If @bf Determine Automatically...@rm  is set, the inferior debugger is set\n\
     dependent on the arguments given to @DDD@.\n\
@@ -4704,10 +4690,6 @@ Click on @bf Reset@rm  to restore the saved preferences.
 @Ddd@*preferences*keyboardFocus.labelString:	Keyboard Focus
 @Ddd@*keyboardFocusMenu*explicit.labelString:	Click to Type
 @Ddd@*keyboardFocusMenu*pointer.labelString:	Point to Type
-
-@Ddd@*preferences*dataScrolling.labelString:	Data Scrolling
-@Ddd@*dataScrollingMenu*panner.labelString:	Panner
-@Ddd@*dataScrollingMenu*scrollbars.labelString:	Scrollbars
 
 @Ddd@*preferences*autoDebugger.labelString:	Debugger Type
 @Ddd@*preferences*automatic.labelString:		\

@@ -60,27 +60,7 @@ char GraphEdit_rcsid[] =
 #include "EdgeAPA.h"
 #include "GraphNPA.h"
 #include "base/casts.h"
-#include "PannedGE.h"
 #include "ScrolledGE.h"
-
-#if HAVE_ATHENA
-#include "athena_ddd/PannerM.h"
-#endif
-
-#if XmVersion < 1002
-// Motif 1.1 backwards compatibility
-#ifndef XmInheritBorderHighlight
-#define XmInheritBorderHighlight (XtWidgetProc)_XtInherit
-#endif
-
-#ifndef XmInheritBorderUnhighlight
-#define XmInheritBorderUnhighlight (XtWidgetProc)_XtInherit
-#endif
-
-#ifndef XmInheritArmAndActivate
-#define XmInheritArmAndActivate (XmArmAndActivate)_XtInherit
-#endif
-#endif // XmVersion
 
 
 static BoxRegion EVERYWHERE(BoxPoint(0,0), BoxSize(INT_MAX, INT_MAX));
@@ -3192,20 +3172,8 @@ static void Normalize(Widget w, XEvent *event, String *params,
 static void CallPannerPage(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
-    if (app_data.panned_graph_editor)
-    {
-#if HAVE_ATHENA
-        // redirect to panner
-        Widget panner = pannerOfGraphEdit(w);
-
-        CallActionPagem(panner, event, params, num_params);
-#endif
-    }
-    else
-    {
-        Widget scroller = scrollerOfGraphEdit(w);
-        CallActionScrolled(scroller, event, params, num_params);
-    }
+    Widget scroller = scrollerOfGraphEdit(w);
+    CallActionScrolled(scroller, event, params, num_params);
 }
 
 // Show and hide edges

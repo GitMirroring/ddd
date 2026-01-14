@@ -76,7 +76,6 @@ char DataDisp_rcsid[] =
 #include "motif/MString.h"
 #include "motif/MakeMenu.h"
 #include "template/Map.h"
-#include "graph/PannedGE.h"
 #include "PosBuffer.h"
 #include "ProgressM.h"
 #include "graph/ScrolledGE.h"
@@ -6913,17 +6912,8 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     if (!app_data.retro_style)
        { XtSetArg(args[arg], XmNhighlightThickness, 0); arg++; }
 
-
-    if (app_data.panned_graph_editor)
-    {
-	graph_edit = createPannedGraphEdit(parent, "graph_edit", args, arg);
-	graph_form_w = formOfGraphEdit(graph_edit);
-    }
-    else
-    {
-	graph_edit = createScrolledGraphEdit(parent, "graph_edit", args, arg);
-	graph_form_w = scrollerOfGraphEdit(graph_edit);
-    }
+    graph_edit = createScrolledGraphEdit(parent, "graph_edit", args, arg);
+    graph_form_w = scrollerOfGraphEdit(graph_edit);
 
     // Add actions
     XtAppAddActions (app_context, actions, XtNumber (actions));

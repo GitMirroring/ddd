@@ -991,16 +991,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNpannedGraphEditor),
-        XTRESSTR(XtCPannedGraphEditor),
-        XtRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, panned_graph_editor),
-        XtRImmediate,
-        XtPointer(False)
-    },
-
-    {
         XTRESSTR(XtNfindWordsOnly),
         XTRESSTR(XtCFindWordsOnly),
         XtRBoolean,

@@ -29,10 +29,12 @@ char ScrolledGraphEdit_rcsid[] =
     "$Id$";
 
 #include <iostream>
+#include "AppData.h"
 #include "ScrolleGEP.h"
 #include "GraphEdit.h"
 #include "x11/verify.h"
 #include "base/strclass.h"
+#include "scrollbar.h"
 
 // We have no special class for scrolling a graph editor, but use the
 // Motif ScrolledWindow class instead.
@@ -112,7 +114,10 @@ Widget createScrolledGraphEdit(Widget parent, const _XtString name,
 				     scrolledGraphEditWidgetClass,
 				     parent, args, arg));
 
-    Widget graphEdit = 
+    if (!app_data.retro_style)
+        modernize_scrollbar(scrolledWindow);
+
+    Widget graphEdit =
 	verify(XtCreateManagedWidget(name, graphEditWidgetClass,
 				     scrolledWindow, arglist, argcount));
 

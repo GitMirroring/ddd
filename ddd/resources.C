@@ -1581,6 +1581,16 @@ XtResource ddd_resources[] = {
     },
 
     {
+        XTRESSTR(XtNoverviewMode),
+        XTRESSTR(XtCoverviewMode),
+        XmRInt,
+        sizeof(int),
+        XtOffsetOf(AppData, overview_mode),
+        XtRImmediate,
+        XtPointer(1)
+    },
+
+    {
         XTRESSTR(XtNstatusHistorySize),
         XTRESSTR(XtCHistorySize),
         XtRCardinal,

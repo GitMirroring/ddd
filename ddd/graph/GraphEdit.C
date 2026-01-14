@@ -37,6 +37,7 @@ char GraphEdit_rcsid[] =
 
 #include <Xm/Xm.h>
 #include <Xm/ScrolledW.h>
+#include <Xm/ScrollBar.h>
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/Intrinsic.h>
@@ -457,7 +458,20 @@ GraphEditClassRec graphEditClassRec = {
   },
 };
 
+static const unsigned int OVERVIEW_BASE = 120;   // smaller side
+static const int          OVERVIEW_MARGIN = 4;   // distance from clip border
+
+
 WidgetClass graphEditWidgetClass = (WidgetClass)&graphEditClassRec;
+
+// Method function declarations
+static void graphEditRedrawOverview(Widget w);
+static void graphEditAutoScroll(Widget w, XEvent *event);
+static void UpdateOverviewGeometry(Widget ge, Dimension cw, Dimension ch);
+static void CreateOverviewWindow(Widget w);
+
+
+// Method function definitions
 
 Pixel InvertColor(bool inv, Pixel color)
 {
@@ -466,11 +480,6 @@ Pixel InvertColor(bool inv, Pixel color)
 
     return color;
 }
-
-
-
-// Method function definitions
-static void graphEditAutoScroll(Widget w, XEvent *event);
 
 // Set widget to minimal size
 void graphEditSizeChanged(Widget w)
@@ -485,8 +494,8 @@ void graphEditSizeChanged(Widget w)
     const Dimension highlight_thickness = _w->res_.primitive.highlight_thickness;
     Boolean& sizeChanged                = _w->graphEditP.sizeChanged;
     const GraphGC& graphGC              = _w->graphEditP.graphGC;
-    const Dimension extraWidth          = _w->res_.graphEdit.extraWidth;
-    const Dimension extraHeight         = _w->res_.graphEdit.extraHeight;
+    //const Dimension extraWidth          = _w->res_.graphEdit.extraWidth;
+    //const Dimension extraHeight         = _w->res_.graphEdit.extraHeight;
 
     // Could it be this is invoked without any graph yet?
     if (graph == 0)
@@ -522,11 +531,30 @@ void graphEditSizeChanged(Widget w)
 	    parentHeight -= parentSpacing;
     }
 
-    Dimension width  = max(parentWidth, myWidth);
-    Dimension height = max(parentHeight, myHeight);
+    Dimension width  = parentWidth;
+    Dimension height = parentHeight;
 
-    width  += extraWidth;
-    height += extraHeight;
+    if ((app_data.overview_mode ==1 && (myWidth > parentWidth || myHeight > parentHeight)) || app_data.overview_mode ==2)
+    {
+        // printf("my %d %d  parent %d %d\n", myWidth, myHeight, parentWidth, parentHeight);
+        myWidth  += OVERVIEW_BASE+OVERVIEW_MARGIN;
+        myHeight += OVERVIEW_BASE+OVERVIEW_MARGIN;
+
+        width  = max(parentWidth, myWidth);
+        height = max(parentHeight, myHeight);
+        // printf("result %d %d\n", width, height);
+        _w->graphEditP.overview_enabled = True;
+    }
+    else
+    {
+        width  = max(parentWidth, myWidth);
+        height = max(parentHeight, myHeight);
+        _w->graphEditP.overview_enabled = False;
+    }
+
+    // deactivate overview for a small data display widget
+    if (width<2*OVERVIEW_BASE || height<2*OVERVIEW_BASE)
+        _w->graphEditP.overview_enabled = False;
 
     Dimension width_return;
     Dimension height_return;
@@ -536,13 +564,15 @@ void graphEditSizeChanged(Widget w)
 	result = XtMakeResizeRequest(w, width_return, height_return,
 				     &width_return, &height_return);
 
-    if (result == XtGeometryYes)
+    Widget clip = XtParent(w);
+    if (clip && XtIsRealized(clip))
     {
-	// Normally, we should let our manager resize ourselves.
-	// But LessTif 0.87 wants it this way.
-	XtResizeWidget(w, width_return, height_return, 0);
-
-	graphEditRedraw(w);
+        Dimension cw = 0, ch = 0;
+        XtVaGetValues(clip,
+                        XmNwidth,  &cw,
+                        XmNheight, &ch,
+                        NULL);
+        UpdateOverviewGeometry(w, cw, ch);
     }
 }
 
@@ -694,6 +724,9 @@ static void RedrawCB(XtPointer client_data, XtIntervalId *id)
 
 	node->redraw() = False;
     }
+
+    // Keep overview in sync with any logical redraw
+    graphEditRedrawOverview(w);
 }
 
 // Launch redrawing procedure
@@ -1400,6 +1433,12 @@ static void Initialize(Widget request, Widget w, ArgList, Cardinal *)
     // init autoscroll timer
     autoScrollTimer = 0;
 
+    _w->graphEditP.overview_win   = 0;
+    _w->graphEditP.overview_gc    = 0;
+    _w->graphEditP.viewport_gc    = 0;
+    _w->graphEditP.overview_enabled = False;
+    _w->graphEditP.overview_dragging = False;
+
     // create cursors if not already set
     createCursor(w, moveCursor,              XC_fleur);
     createCursor(w, selectCursor,            XC_plus);
@@ -1444,6 +1483,8 @@ static void Realize(Widget w,
     
     // Setup default cursor
     defineCursor(w, defaultCursor);
+
+    graphEditSizeChanged(w);
 }
 
 
@@ -1473,6 +1514,9 @@ static void Redisplay(Widget w, XEvent *event, Region)
 	graphEditClassRec.primitive_class.border_highlight(w);
 
     graph->draw(w, BoxRegion(point(event), size(event)), graphGC);
+
+    // Update overview for expose-driven redraws
+    graphEditRedrawOverview(w);
 }
 
 
@@ -1563,8 +1607,6 @@ static void Destroy(Widget)
 {
     // Delete graph?
 }
-
-
 
 
 // Action function definitions
@@ -3247,4 +3289,413 @@ static void HideEdges(Widget w, XEvent *event, String *params,
     Cardinal *num_params)
 {
     considerEdges(w, event, params, num_params, True);
+}
+
+// ------------------- Overview window ------------------------------------------
+
+static void ComputeOverviewSize(Widget w,
+                                unsigned int clip_w,
+                                unsigned int clip_h,
+                                unsigned int &ow,
+                                unsigned int &oh)
+{
+    GraphEditWidget _w = GraphEditWidget(w);
+    Graph *graph       = _w->res_.graphEdit.graph;
+
+    ow = oh = OVERVIEW_BASE;
+
+    if (!graph)
+        return;
+
+    Dimension width = 0;
+    Dimension height = 0;
+    XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, NULL);
+
+    float aspect = float(width) / float(height); // world width / height
+
+    // Fix smaller side to OVERVIEW_BASE, preserve aspect ratio
+    if (aspect >= 1.0f)
+    {
+        // wider than tall
+        oh = OVERVIEW_BASE;
+        ow = (unsigned int)(OVERVIEW_BASE * aspect + 0.5);
+
+        if (ow > clip_w)
+        {
+            oh *= float(clip_w) / float(ow);
+            ow = clip_w;
+        }
+    }
+    else
+    {
+        // taller than wide
+        ow = OVERVIEW_BASE;
+        oh = (unsigned int)(OVERVIEW_BASE / aspect + 0.5);
+
+        if (oh > clip_h)
+        {
+            ow *= float(clip_h) / float(oh);
+            oh = clip_h;
+        }
+    }
+
+}
+
+static void ClipConfigureHandler(Widget, XtPointer client_data,
+                                 XEvent *event, Boolean *)
+{
+    if (event->type != ConfigureNotify)
+        return;
+
+    Widget w = (Widget)client_data;        // GraphEdit widget
+    int cw = event->xconfigure.width;
+    int ch = event->xconfigure.height;
+
+    UpdateOverviewGeometry(w, cw, ch);
+}
+
+static void UpdateOverviewGeometry(Widget ge, Dimension cw, Dimension ch)
+{
+    GraphEditWidget _w = GraphEditWidget(ge);
+    Display *dpy       = XtDisplay(ge);
+    Window   &overview_win = _w->graphEditP.overview_win;
+    Boolean  &overview_enabled = _w->graphEditP.overview_enabled;
+
+    // If overview is not needed, hide it (if it exists)
+    if (!overview_enabled)
+    {
+        if (overview_win != 0)
+            XUnmapWindow(dpy, overview_win);
+        return;
+    }
+
+    // If we need it but it doesn’t exist yet, create it
+    if (overview_win == 0)
+    {
+        CreateOverviewWindow(ge);
+        if (overview_win == 0)
+            return;
+    }
+    else
+    {
+        // Make sure it is visible
+        XMapWindow(dpy, overview_win);
+    }
+
+    Window ov = overview_win;
+
+    unsigned int ow = 0, oh = 0;
+    ComputeOverviewSize(ge, cw, ch, ow, oh);
+
+    int ox = std::max(OVERVIEW_MARGIN, (int)cw - (int)ow - OVERVIEW_MARGIN);
+    int oy = std::max(OVERVIEW_MARGIN, (int)ch - (int)oh - OVERVIEW_MARGIN);
+
+    XMoveResizeWindow(dpy, ov, ox, oy, ow, oh);
+
+    graphEditRedrawOverview(ge);
+}
+
+static void OverviewSetViewFromPoint(Widget ge, int ox, int oy)
+{
+    GraphEditWidget _w = GraphEditWidget(ge);
+    Graph *graph       = _w->res_.graphEdit.graph;
+    const GraphGC &graphGC = _w->graphEditP.graphGC;
+    Window overview_win    = _w->graphEditP.overview_win;
+
+    if (!graph || !overview_win)
+        return;
+
+    Display *dpy = XtDisplay(ge);
+    XWindowAttributes attr;
+    if (!XGetWindowAttributes(dpy, overview_win, &attr))
+        return;
+
+    int ow = attr.width;
+    int oh = attr.height;
+    if (ow <= 0 || oh <= 0)
+        return;
+
+    BoxRegion world = graph->region(graphGC);
+    if (world.isEmpty())
+        return;
+
+    Dimension width = 0;
+    Dimension height = 0;
+    XtVaGetValues(ge, XmNwidth, &width, XmNheight, &height, NULL);
+
+    float sx = float(ow) / float(width);
+    float sy = float(oh) / float(height);
+    float s  = std::min(sx, sy);
+    float wx_center = ox / s;
+    float wy_center = oy / s;
+
+    Widget scroller = scrollerOfGraphEdit(ge);
+    if (!scroller)
+        return;
+
+    Widget hsb = 0, vsb = 0;
+    XtVaGetValues(scroller,
+                  XmNhorizontalScrollBar, &hsb,
+                  XmNverticalScrollBar,   &vsb,
+                  NULL);
+
+    if (hsb)
+    {
+        int hmin=0, hmax=0, hsize=0, hinc=0, hpage=0;
+        XtVaGetValues(hsb,
+                      XmNminimum,      &hmin,
+                      XmNmaximum,      &hmax,
+                      XmNsliderSize,   &hsize,
+                      XmNincrement,    &hinc,
+                      XmNpageIncrement,&hpage,
+                      NULL);
+
+        int maxv = hmax - hsize;
+        int new_hval = std::max(hmin, std::min(maxv, int(wx_center - hsize / 2.0)));
+
+        XmScrollBarSetValues(hsb, new_hval, hsize, hinc, hpage, True);
+    }
+
+    if (vsb)
+    {
+        int vmin=0, vmax=0, vsize=0, vinc=0, vpage=0;
+        XtVaGetValues(vsb,
+                      XmNminimum,      &vmin,
+                      XmNmaximum,      &vmax,
+                      XmNsliderSize,   &vsize,
+                      XmNincrement,    &vinc,
+                      XmNpageIncrement,&vpage,
+                      NULL);
+
+        int maxv = vmax - vsize;
+        int new_vval = std::max(vmin, std::min(maxv, int(wy_center - vsize / 2.0)));
+
+        XmScrollBarSetValues(vsb, new_vval, vsize, vinc, vpage, True);
+    }
+}
+static void OverviewEventHandler(Widget, XtPointer client_data,
+                                 XEvent *event, Boolean *)
+{
+    Widget ge = (Widget)client_data;    // GraphEdit widget
+    GraphEditWidget _w = GraphEditWidget(ge);
+    Window overview_win = _w->graphEditP.overview_win;
+    Boolean &overview_dragging = _w->graphEditP.overview_dragging;
+
+    if (!overview_win)
+        return;
+
+    if (event->xany.window != overview_win)
+        return;
+
+    switch (event->type)
+    {
+        case Expose:
+            graphEditRedrawOverview(ge);
+            break;
+
+        case ButtonPress:
+            if (event->xbutton.button == Button1)
+            {
+                overview_dragging = True;
+                OverviewSetViewFromPoint(ge, event->xbutton.x, event->xbutton.y);
+                graphEditRedrawOverview(ge);
+            }
+            break;
+
+        case MotionNotify:
+            if (overview_dragging)
+            {
+                OverviewSetViewFromPoint(ge, event->xmotion.x, event->xmotion.y);
+                graphEditRedrawOverview(ge);
+            }
+            break;
+
+        case ButtonRelease:
+            if (event->xbutton.button == Button1)
+                overview_dragging = False;
+        break;
+    }
+}
+
+static void CreateOverviewWindow(Widget w)
+{
+    GraphEditWidget _w = GraphEditWidget(w);
+    if (!_w->graphEditP.overview_enabled)
+        return;
+
+    if (_w->graphEditP.overview_win)     // already created
+        return;
+
+    Widget clip = XtParent(w);
+    if (!clip)
+        return;
+    Widget sw = XtParent(clip);
+    if (!sw || !XmIsScrolledWindow(sw))
+        return;
+
+    Display *dpy = XtDisplay(w);
+    Window clip_win = XtWindow(clip);
+    if (!clip_win)
+        return;
+
+    Dimension cw, ch;
+    XtVaGetValues(clip,
+                  XmNwidth,  &cw,
+                  XmNheight, &ch,
+                  NULL);
+
+    unsigned int ow = 0, oh = 0;
+    ComputeOverviewSize(w, cw, ch, ow, oh);
+
+    int ox = std::max(OVERVIEW_MARGIN, cw - (int)ow - OVERVIEW_MARGIN);
+    int oy = std::max(OVERVIEW_MARGIN, ch - (int)oh - OVERVIEW_MARGIN);
+
+
+    bool inv = app_data.dark_mode;
+    Pixel fg = InvertColor(inv, BlackPixelOfScreen(XtScreen(w)));
+    Pixel bg = InvertColor(inv, WhitePixelOfScreen(XtScreen(w)));
+
+    Window ov = XCreateSimpleWindow(dpy, clip_win,
+                                    ox, oy, ow, oh,
+                                    1,
+                                    fg,
+                                    bg);
+    XSelectInput(dpy, ov,
+                 ExposureMask | ButtonPressMask |
+                 ButtonReleaseMask | PointerMotionMask);
+    XMapWindow(dpy, ov);
+
+    // Associate ov with the clip widget so Xt delivers events
+    XtRegisterDrawable(dpy, ov, clip);
+
+    // Event handler for overview events (Expose, Button, Motion)
+    XtAddEventHandler(clip,
+                      ExposureMask | ButtonPressMask |
+                      ButtonReleaseMask | PointerMotionMask,
+                      False,
+                      OverviewEventHandler,
+                      (XtPointer)w);
+
+    XGCValues gcv_ov;
+    gcv_ov.foreground = fg;
+    gcv_ov.background = bg;
+    GC ov_gc = XCreateGC(dpy, ov, GCForeground | GCBackground, &gcv_ov);
+
+    Pixel     clip_bg;
+    XGCValues gcv_vp;
+    XtVaGetValues(clip, XmNbackground, &clip_bg, NULL);
+    gcv_vp.foreground = clip_bg;
+    gcv_vp.background = bg;
+    GC vp_gc = XCreateGC(dpy, ov, GCForeground | GCBackground, &gcv_vp);
+
+    _w->graphEditP.overview_win = ov;
+    _w->graphEditP.overview_gc  = ov_gc;
+    _w->graphEditP.viewport_gc  = vp_gc;
+
+    XtAddEventHandler(clip,
+                      StructureNotifyMask,
+                      False,
+                      ClipConfigureHandler,
+                      (XtPointer)w);
+}
+
+static void graphEditRedrawOverview(Widget w)
+{
+    GraphEditWidget _w = GraphEditWidget(w);
+    Graph *graph           = _w->res_.graphEdit.graph;
+    const GraphGC &graphGC = _w->graphEditP.graphGC;
+    Window overview_win    = _w->graphEditP.overview_win;
+    GC overview_gc         = _w->graphEditP.overview_gc;
+    GC viewport_gc         = _w->graphEditP.viewport_gc;
+
+    if (!graph || overview_win == 0 || overview_gc == 0)
+        return;
+
+    Display *dpy = XtDisplay(w);
+
+    // Get overview window size
+    XWindowAttributes attr;
+    if (!XGetWindowAttributes(dpy, overview_win, &attr))
+        return;
+
+    int ow = attr.width;
+    int oh = attr.height;
+    if (ow <= 0 || oh <= 0)
+        return;
+
+    XClearWindow(dpy, overview_win);
+
+    // Full graph region in widget coordinates
+    BoxRegion world = graph->region(graphGC);
+    if (world.isEmpty())
+        return;
+
+    Dimension width = 0;
+    Dimension height = 0;
+    XtVaGetValues(w, XmNwidth, &width, XmNheight, &height, NULL);
+
+    float sx = float(ow) / float(width);
+    float sy = float(oh) / float(height);
+    float s  = std::min(sx, sy);
+
+    // Draw viewport rectangle (current visible region)
+    Widget scroller = scrollerOfGraphEdit(w);
+    if (scroller)
+    {
+        Widget hsb = 0, vsb = 0;
+        XtVaGetValues(scroller,
+                      XmNhorizontalScrollBar, &hsb,
+                      XmNverticalScrollBar,   &vsb,
+                      NULL);
+
+        int hval = 0, hsize = 0;
+        int vval = 0, vsize = 0;
+
+        if (hsb)
+            XtVaGetValues(hsb,
+                          XmNvalue,      &hval,
+                          XmNsliderSize, &hsize,
+                          NULL);
+
+        if (vsb)
+            XtVaGetValues(vsb,
+                            XmNvalue,      &vval,
+                            XmNsliderSize, &vsize,
+                            NULL);
+
+        int vx = hval;     // visible x in widget coords
+        int vy = vval;     // visible y in widget coords
+        int vw = hsize;    // visible width
+        int vh = vsize;    // visible height
+
+        int rx = int(vx * s + 0.5f);
+        int ry = int(vy * s + 0.5f);
+        int rw = std::max(1, int(vw * s + 0.5f));
+        int rh = std::max(1, int(vh * s + 0.5f));
+
+        XFillRectangle(dpy, overview_win, viewport_gc, rx, ry, rw, rh);
+    }
+
+    // Draw nodes (scaled bounding boxes)
+    for (GraphNode *node = graph->firstVisibleNode();  node != 0;
+         node = graph->nextVisibleNode(node))
+    {
+        BoxRegion r = node->region(graphGC);
+
+        int nx = r.origin(X);
+        int ny = r.origin(Y);
+        int nw = r.space(X);
+        int nh = r.space(Y);
+
+        int x = int(nx * s);
+        int y = int(ny * s);
+        int w_rect = std::max(1, int(nw * s));
+        int h_rect = std::max(1, int(nh * s));
+
+        if (node->selected())
+            XFillRectangle(dpy, overview_win, overview_gc, x, y, w_rect, h_rect);
+        else
+            XDrawRectangle(dpy, overview_win, overview_gc, x, y, w_rect, h_rect);
+    }
+
 }

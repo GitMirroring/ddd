@@ -325,6 +325,8 @@
 #define XtNclusterDisplays       "clusterDisplays"
 #define XtCClusterDisplays       "ClusterDisplays"
 #define XtNdisplayPlacement      "displayPlacement"
+#define XtNoverviewMode          "overviewMode"
+#define XtCoverviewMode          "OverviewMode"
 #define XtNstatusHistorySize     "statusHistorySize"
 #define XtCHistorySize           "HistorySize"
 #define XtNpopdownHistorySize    "popsownHistorySize"
@@ -544,6 +546,7 @@ struct AppData {
     Boolean   show_dependent_display_titles;
     Boolean   cluster_displays;
     unsigned char display_placement;
+    int       overview_mode;
     Cardinal  status_history_size;
     Cardinal  popdown_history_size;
     Boolean   sort_popdown_history;

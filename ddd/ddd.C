@@ -1348,6 +1348,21 @@ static MMDesc placement_menu[] =
     MMEnd
 };
 
+static Widget graph_overview_on_w;
+static Widget graph_overview_auto_w;
+static Widget graph_overview_off_w;
+static MMDesc graph_overview_menu [] =
+{
+    { "overviewOn",  MMToggle, { graphSetOverviewModeCB, XtPointer(2) },
+      0, &graph_overview_on_w, 0, 0 },
+    { "overviewAuto",  MMToggle, { graphSetOverviewModeCB, XtPointer(1) },
+      0, &graph_overview_auto_w, 0, 0 },
+    { "overviewOff",  MMToggle, { graphSetOverviewModeCB, XtPointer(0) },
+      0, &graph_overview_off_w, 0, 0 },
+    MMEnd
+};
+
+
 static Widget graph_snap_to_grid_w;
 
 static MMDesc themes_menu[] = 
@@ -1376,6 +1391,8 @@ static MMDesc data_preferences_menu[] =
     { "show",          MMPanel, MMNoCB, show_menu, 0, 0, 0 },
     { "placement",     MMPanel, MMNoCB, placement_menu, 0, 0, 0 },
     { "layout",        MMPanel, MMNoCB, layout_menu, 0, 0, 0 },
+    { "overview",      MMRadioPanel,  MMNoCB, graph_overview_menu, 0, 0, 0 },
+
     { "detectAliases", MMToggle, { graphToggleDetectAliasesCB, 0 },
       0, &graph_detect_aliases_w, 0, 0 },
     { "align2dArrays", MMToggle,  { graphToggleAlign2dArraysCB, 0 },
@@ -3909,6 +3926,10 @@ void update_options()
     set_toggle(graph_top_to_bottom_w,
                app_data.display_placement == XmVERTICAL);
 
+    set_toggle(graph_overview_on_w, app_data.overview_mode == 2);
+    set_toggle(graph_overview_auto_w, app_data.overview_mode == 1);
+    set_toggle(graph_overview_off_w, app_data.overview_mode == 0);
+
     set_toggle(graph_show_hints_w, show_hints);
     set_toggle(graph_show_annotations_w, show_annotations);
     set_toggle(graph_auto_layout_w, auto_layout);
@@ -4339,7 +4360,12 @@ static void ResetDataPreferencesCB(Widget, XtPointer, XtPointer)
                       initial_app_data.display_placement == XmHORIZONTAL);
     notify_set_toggle(graph_top_to_bottom_w,
                       initial_app_data.display_placement == XmVERTICAL);
-    notify_set_toggle(graph_cluster_displays_w, 
+
+    notify_set_toggle(graph_overview_on_w, initial_app_data.overview_mode == 2);
+    notify_set_toggle(graph_overview_auto_w, initial_app_data.overview_mode == 1);
+    notify_set_toggle(graph_overview_off_w, initial_app_data.overview_mode == 0);
+
+    notify_set_toggle(graph_cluster_displays_w,
                       initial_app_data.cluster_displays);
     notify_set_toggle(graph_align_2d_arrays_w, 
                       initial_app_data.align_2d_arrays);
@@ -4409,6 +4435,9 @@ static bool data_preferences_changed()
         return true;
 
     if (app_data.display_placement != initial_app_data.display_placement)
+        return true;
+
+    if (app_data.overview_mode != initial_app_data.overview_mode)
         return true;
 
     if (app_data.align_2d_arrays != initial_app_data.align_2d_arrays)

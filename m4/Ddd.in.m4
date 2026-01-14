@@ -3476,6 +3476,12 @@ Left to right
 Ddd*preferences*clusterDisplays.labelString:    \
 Clustered
 
+Ddd*preferences*overview.labelString:       Show Overview
+Ddd*preferences*overviewOn.labelString:     Always
+Ddd*preferences*overviewAuto.labelString:   Automatic
+Ddd*preferences*overviewOff.labelString:    Never
+
+
 Ddd*preferences*gridSize.orientation:		XmHORIZONTAL
 Ddd*preferences*gridSize.minimum:		0
 Ddd*preferences*gridSize.maximum:		64

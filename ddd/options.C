@@ -488,6 +488,29 @@ void graphSetDisplayPlacementCB(Widget, XtPointer client_data,
     }
 }
 
+void graphSetOverviewModeCB(Widget, XtPointer client_data, XtPointer)
+{
+    int state = (int)(long)client_data;
+    switch (state)
+    {
+        case 0:
+            app_data.overview_mode = 0;
+            set_status("Overview is never visible.");
+            break;
+
+        case 1:
+            app_data.overview_mode = 1;
+            set_status("Overview is visible when needed.");
+            break;
+
+        case 2:
+            app_data.overview_mode = 2;
+            set_status("Overview is always visible.");
+            break;
+    }
+
+    update_options();
+}
 
 //-----------------------------------------------------------------------------
 // General Options
@@ -2505,6 +2528,8 @@ static bool save_options_init(unsigned long flags)
 
     os << orientation_app_value(XtNdisplayPlacement,
                                 app_data.display_placement) << '\n';
+
+    os << int_app_value(XtNoverviewMode, app_data.overview_mode) << '\n';
 
     os << bool_app_value(XtNalign2dArrays, app_data.align_2d_arrays)  << '\n';
 

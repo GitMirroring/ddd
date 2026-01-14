@@ -179,6 +179,12 @@ typedef struct _GraphEditPartPrivate {
     Time lastSelectTime;	// Last selection time (for multi-clicks)
     XtIntervalId redrawTimer;	// Timer used for redrawing
 
+    Window   overview_win;   // X window for the mini-map, 0 if not created
+    GC       overview_gc;    // GC for drawing outlines
+    GC       viewport_gc;    // GC for drawing outlines
+    Boolean  overview_enabled;
+    Boolean overview_dragging;
+
     GC nodeGC;			// Graphic context for nodes
     GC edgeGC;			// Graphic context for edges
     GC invertGC;		// Graphic context for inverting

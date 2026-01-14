@@ -47,30 +47,59 @@ static void ResizeEH(Widget, XtPointer client_data, XEvent *, Boolean *)
     graphEditSizeChanged(graphEdit);
 }
 
+static float parse_param_p(const char *s)
+{
+    // skip leading spaces
+    while (isspace((unsigned char)*s)) s++;
+
+    int sign = 1;
+    if (*s == '+')
+    {
+        sign = 1;
+        ++s;
+    }
+    else if (*s == '-')
+    {
+        sign = -1;
+        ++s;
+    }
+
+    float v = 0.0f;
+
+    // integer part
+    while (isdigit((unsigned char)*s))
+    {
+        v = v * 10.0f + (float)(*s - '0');
+        ++s;
+    }
+
+    // fractional part with '.' only (locale‑independent)
+    if (*s == '.')
+    {
+        ++s;
+        float factor = 0.1f;
+        while (isdigit((unsigned char)*s))
+        {
+            v += factor * (float)(*s - '0');
+            factor *= 0.1f;
+            ++s;
+        }
+    }
+
+    return sign * v;
+}
+
 void CallActionScrolled(Widget gw, XEvent *event, String *params, Cardinal *num_params)
 {
     (void) event;
     if (*num_params != 2)
         return;
 
-    int dir = 2;   // 0: horizontal, 1: vertical, 2: unknown
-    for (int i=0; i<int(*num_params); i++)
-    {
-        if (params[i][0] != '0')
-        {
-            dir = i;
-            break;
-        }
-    }
-
-    if (dir == 2)
-        return;
+    float dx = parse_param_p(params[0]);
+    float dy = parse_param_p(params[1]);
 
     Widget sbw = nullptr;
-    if (dir == 0)
-        XtVaGetValues (gw, XmNhorizontalScrollBar, &sbw, nullptr);
-    else
-        XtVaGetValues (gw, XmNverticalScrollBar, &sbw, nullptr);
+    XtVaGetValues (gw, XmNverticalScrollBar, &sbw, nullptr);
     int increment=0;
     int maximum=0;
     int minimum=0;
@@ -85,10 +114,27 @@ void CallActionScrolled(Widget gw, XEvent *event, String *params, Cardinal *num_
                         XmNvalue, &value,
                         NULL);
 
-    if (params[dir][0] == '-')
-        value -= increment;
-    else
-        value += increment;
+    value += dy * increment;
+    value = std::max(minimum, std::min(maximum-slider_size, value));
+
+    XmScrollBarSetValues(sbw, value, slider_size, increment, page_incr, true);
+
+    XtVaGetValues (gw, XmNhorizontalScrollBar, &sbw, nullptr);
+    increment=0;
+    maximum=0;
+    minimum=0;
+    page_incr=0;
+    slider_size=0;
+    value=0;
+    XtVaGetValues (sbw, XmNincrement, &increment,
+                   XmNmaximum, &maximum,
+                   XmNminimum, &minimum,
+                   XmNpageIncrement, &page_incr,
+                   XmNsliderSize, &slider_size,
+                   XmNvalue, &value,
+                   NULL);
+
+    value += dx * increment;
 
     value = std::max(minimum, std::min(maximum-slider_size, value));
 

@@ -584,7 +584,8 @@ BUILT_SOURCES = \
 	root.h       \
 	version.h    \
 	Ddd.ad.h     \
-	ddd.vsl.h
+	ddd.vsl.h    \
+	eps-code.h
 
 # -----------------------------------------------------------------------------
 # Local Libraries.
@@ -846,10 +847,8 @@ regexps.$(OBJEXT): rxscan.C
 	$(RM) tmp.C
 
 # Reference.
-# ddd.info.txt does NOT depend on ddd.info since we don't want it to get
-# re-created after each configuration.
-$(builddocdir)/ddd.info.txt: $(srcdir)/ddd.texi
-	$(MAKE) ddd.info
+# ddd.info.txt is derived from the already-built ddd.info
+$(builddocdir)/ddd.info.txt: $(srcdir)/ddd.info
 	@-test -d $(builddocdir) || mkdir $(builddocdir)
 	info --subnodes -o - -f $(srcdir)/ddd.info | $(DELETE_CR) > $@~ \
 	    && $(MV) $@~ $@
@@ -886,21 +885,13 @@ DDDFLAGS = @DEBUGGER_OPTION@
 DDDTARGET = cxxtest$(EXEEXT)
 
 # For demonstration and debugging purposes
-.PHONY: check
-check: x11/Ddd ./$(ddd)$(EXEEXT) cxxtest$(EXEEXT) check-now
-
-.PHONY: check-now
-check-now:
+check-local: x11/Ddd ./$(ddd)$(EXEEXT) cxxtest$(EXEEXT)
 	MALLOC_CHECK_=2 \
 	DDD_HOME=$(srcdir)/.. \
 	XUSERFILESEARCHPATH=%N XAPPLRESDIR=. \
 	./$(ddd)$(EXEEXT) $(DDDFLAGS) $(DDDTARGET)
 
-.PHONY: debug
-debug: x11/Ddd ./$(ddd)$(EXEEXT) cxxtest$(EXEEXT) .gdbinit debug-now
-
-.PHONY: debug-now
-debug-now:
+debug-local: x11/Ddd ./$(ddd)$(EXEEXT) cxxtest$(EXEEXT) .gdbinit
 	MALLOC_CHECK_=2 \
 	DDD_HOME=$(srcdir)/.. \
 	XUSERFILESEARCHPATH=%N XAPPLRESDIR=. \

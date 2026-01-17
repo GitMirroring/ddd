@@ -143,12 +143,12 @@ static void setup_xft_fonts(AppData& ad, XrmDatabase& db)
     XrmPutLineResource(&db, "Ddd*sl*fontType: FONT_IS_XFT");
     XrmPutLineResource(&db, (string("Ddd*sl*fontName: ") + ad.variable_width_font).chars());
     XrmPutLineResource(&db, (string("Ddd*sl*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*sl*fontStyle: Oblique");
+    XrmPutLineResource(&db, "Ddd*sl*fontStyle: Bold"); // Oblique fonts do not work in Motif
 
     XrmPutLineResource(&db, "Ddd*bs*fontType: FONT_IS_XFT");
     XrmPutLineResource(&db, (string("Ddd*bs*fontName: ") + ad.variable_width_font).chars());
     XrmPutLineResource(&db, (string("Ddd*bs*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*bs*fontStyle: Bold"); // combination of Bold and Oblique not possibe in Motif
+    XrmPutLineResource(&db, "Ddd*bs*fontStyle: Bold"); // combination of Bold and Oblique not possible in Motif
 
     XrmPutLineResource(&db, "Ddd*small*fontType: FONT_IS_XFT");
     XrmPutLineResource(&db, (string("Ddd*small*fontName: ") + ad.variable_width_font).chars());

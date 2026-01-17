@@ -3325,9 +3325,6 @@ Warn if Multiple DDD Instances are Running
 Ddd*preferences*source*helpString:	\
 WIDGET(Source Preferences)\n\
 \n\
-ITEM DDD can show the current position and breakpoints\n\
-    SUBITEM LBL(as glyphs), using small images in the text,\n\
-    SUBITEM LBL(as text), using ordinary text characters.\n\
 ITEM The LBL(Tool Buttons) can be placed\n\
     SUBITEM in the LBL(Command Tool) which can be moved around DDD, or\n\
     SUBITEM in the LBL(Source Window), as line of buttons.\n\
@@ -3343,11 +3340,8 @@ ITEM If LBL(Cache source files) is set, source texts are cached in memory.\n\
 ITEM If LBL(Cache machine code) is set, disassembled code is cached \
 in memory.\n\
     Otherwise, code is re-disassembled upon each function change.\n\
-ITEM LBL(Display line numbers) enables numbered source lines.\n\
 ITEM In LBL(Tab Width), you can set the spacing of tab stops.\n\
     Setting the tab width to 8 sets a tab stop every 8 characters.\n\
-ITEM In LBL(Indentation), you can indent the source and machine code,\n\
-    giving additional room for the breakpoint area.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on LBL(Reset) to restore the saved preferences.
@@ -3417,6 +3411,10 @@ ITEM LBL(Layout) controls the automatic layout:\n\
         suitable for homogeneous structures only.\n\
     SUBITEM LBL(Automatic layout) makes DDD relayout the graph\n\
         after each change.\n\
+ITEM LBL(Mini-Map) is a small overview widget on the bottom left:\n\
+    SUBITEM LBL(On): Always show the mini-map.\n\
+    SUBITEM LBL(Auto): Show the mini-map when needed.\n\
+    SUBITEM LBL(Off): Never show the mini-map.\n\
 ITEM If LBL(Detect aliases) is set, DDD detects displays with the same\n\
     physical address and suppresses all aliases except the one that was\n\
     least recently changed.  Useful for examining shared data structures.\n\
@@ -3466,10 +3464,10 @@ Left to right
 Ddd*preferences*clusterDisplays.labelString:    \
 Clustered
 
-Ddd*preferences*overview.labelString:       Show Overview
-Ddd*preferences*overviewOn.labelString:     Always
+Ddd*preferences*overview.labelString:       Mini-Map
+Ddd*preferences*overviewOn.labelString:     On
 Ddd*preferences*overviewAuto.labelString:   Automatic
-Ddd*preferences*overviewOff.labelString:    Never
+Ddd*preferences*overviewOff.labelString:    Off
 
 
 Ddd*preferences*gridSize.orientation:		XmHORIZONTAL
@@ -3490,17 +3488,12 @@ These preferences are effective only after a restart.\n\
 ITEM LBL(Window Layout) sets the window layout.\n\
     SUBITEM LBL(Stacked Windows) means to use one top-level window\n\
         where source, data, and the @GDB@ console are stacked.\n\
+    SUBITEM LBL(Side by Side Windows) means to use one top-level window\n\
+        where the source and the @GDB@ console are on the left side and the\n\
+        data console on the right side.\n\
     SUBITEM LBL(Separate Windows) means to use a separate top-level window\n\
         for each of source, data, and the @GDB@ console.\n\
 ITEM The LBL(Ctrl+C) and LBL(Ctrl+A) keys can be bound to different actions.\n\
-ITEM The LBL(Tool Bar) can appear as follows:\n\
-    SUBITEM LBL(Images) shows a small symbol for each action, and/or\n\
-    SUBITEM LBL(Captions) shows the action name below the image.\n\
-    If neither LBL(Images) nor LBL(Captions) is set, \
-buttons have ordinary labels.\n\
-    SUBITEM LBL(Color) enables colored button images.\n\
-    SUBITEM LBL(Bottom) places the tool bar at the bottom of the window.\n\
-    This can only be done with separate windows or ordinary labels.\n\
 ITEM LBL(Keyboard Focus) sets the keyboard focus policy.\n\
     SUBITEM LBL(Click to Type) means that you must click on a window\n\
         to direct the keyboard focus to it.\n\
@@ -3571,21 +3564,26 @@ Ddd*preferences*splashScreen.labelString:	DDD Splash Screen
 Ddd*preferences*startupTips.labelString:	Tip of the Day
 
 
-Ddd*preferences*fonts*helpString: \
-WIDGET([DDD] fonts)\n\
+Ddd*preferences*appearance*helpString: \
+WIDGET([DDD] Appearance)\n\
 \n\
-ITEM LBL(Default Font) is the font used for DDD labels and buttons.\n\
-ITEM LBL(Variable Width) is the font used for messages (such as this one).\n\
+ITEM LBL(Variable Width) is the font used for DDD labels, buttons, and messages (such as this one).\n\
 ITEM LBL(Fixed Width) is the font used for program code and text fields.\n\
 ITEM LBL(Data) is the font used for data displays.\n\
-\n\
-To change a font, enter its name and size (in 1/10 points).\n\
-A pair VAR(family)-VAR(weight) as font name is sufficient.\n\
-\n\
-Using LBL(Browse), you can select fonts using the CODE(xfontsel)\n\
-font selection program.\n\
-Click on LBL(select) to select the chosen font.\n\
-Wildcard entries (SAMP(*)) will be ignored.\n\
+ITEM LBL(Color Theme)\n\
+    SUBITEM LBL(Light Mode:) light background\n\
+    SUBITEM LBL(Dark Mode:) dark background\n\
+ITEM LBL(Style)\n\
+    SUBITEM LBL(Modern (Flat):) An attempt to create a modern look under Motif.\n\
+    SUBITEM LBL(Classic (Motif):) The well known 3D Motif style.\n\
+ITEM The LBL(Tool Bar) can appear as follows:\n\
+    SUBITEM LBL(Images) shows a small symbol for each action, and/or\n\
+    SUBITEM LBL(Captions) shows the action name below the image.\n\
+    If neither LBL(Images) nor LBL(Captions) is set, \
+buttons have ordinary labels.\n\
+    SUBITEM LBL(Color) enables colored button images.\n\
+ITEM The LBL(Large Icons) doubles the size of the LBL(Tool Bar) icons and/or\n\
+    the LBL(Glyph) icons.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on LBL(Reset) to restore the saved preferences.
@@ -3624,18 +3622,8 @@ ITEM LBL(Execution Window) is a command to start a terminal emulator.\n\
     To this command, DDD appends bourne shell commands to be executed\n\
     within the execution window.\n\
     Example: SAMP(@XTERM@ -e /bin/sh -c)\n\
-ITEM LBL(Uncompress) is an uncompression command.\n\
-    The command reads from standard input and writes to standard output.\n\
-    Example: SAMP(gunzip -c)\n\
-ITEM LBL(Web Browser) invokes a WWW browser.\n\
-    SAMP(@ URL@ ) is replaced by the URL to be shown.\n\
-    Example: SAMP(netscape @ URL@ )\n\
 ITEM LBL(Plot) invokes a Gnuplot program for plotting data.\n\
     Example: SAMP(gnuplot)\n\
-ITEM LBL(Plot Window) indicates the type of plot window to use.\n\
-    SUBITEM The LBL(builtin) DDD window uses fewer resources.\n\
-    SUBITEM The LBL(external) Gnuplot window is much faster, but\n\
-        does not work with all window managers.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on LBL(Reset) to restore the saved preferences.
@@ -6788,7 +6776,7 @@ define(THEME_HELP,
 You are about to apply a theme to an expression or a pattern.\n\
 \n\
 Applying a theme is EMPH(permanent); that is, it will be applied to all\n\
-present and future occurrences of the expression. (You can always\n\
+present EMPH(and future) occurrences of the expression. (You can always\n\
 unapply the theme via LBL(Data, Themes).)\n])
 
 Ddd*select_apply_theme_dialog.dialogTitle: DDD: Apply Theme

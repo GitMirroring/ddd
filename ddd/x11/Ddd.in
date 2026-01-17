@@ -4464,9 +4464,6 @@ Warn if Multiple @DDD@ Instances are Running
 @Ddd@*preferences*source*helpString:	\
 @bs Source Preferences@rm \n\
 \n\
-@tt \267 @rm @DDD@ can show the current position and breakpoints\n\
-    @tt -@rm  @bf as glyphs@rm , using small images in the text,\n\
-    @tt -@rm  @bf as text@rm , using ordinary text characters.\n\
 @tt \267 @rm The @bf Tool Buttons@rm  can be placed\n\
     @tt -@rm  in the @bf Command Tool@rm  which can be moved around @DDD@, or\n\
     @tt -@rm  in the @bf Source Window@rm , as line of buttons.\n\
@@ -4482,11 +4479,8 @@ Warn if Multiple @DDD@ Instances are Running
 @tt \267 @rm If @bf Cache machine code@rm  is set, disassembled code is cached \
 in memory.\n\
     Otherwise, code is re-disassembled upon each function change.\n\
-@tt \267 @rm @bf Display line numbers@rm  enables numbered source lines.\n\
 @tt \267 @rm In @bf Tab Width@rm , you can set the spacing of tab stops.\n\
     Setting the tab width to 8 sets a tab stop every 8 characters.\n\
-@tt \267 @rm In @bf Indentation@rm , you can indent the source and machine code,\n\
-    giving additional room for the breakpoint area.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on @bf Reset@rm  to restore the saved preferences.
@@ -4556,6 +4550,10 @@ Machine Code Indentation
         suitable for homogeneous structures only.\n\
     @tt -@rm  @bf Automatic layout@rm  makes @DDD@ relayout the graph\n\
         after each change.\n\
+@tt \267 @rm @bf Mini-Map@rm  is a small overview widget on the bottom left:\n\
+    @tt -@rm  @bf On@rm : Always show the mini-map.\n\
+    @tt -@rm  @bf Auto@rm : Show the mini-map when needed.\n\
+    @tt -@rm  @bf Off@rm : Never show the mini-map.\n\
 @tt \267 @rm If @bf Detect aliases@rm  is set, @DDD@ detects displays with the same\n\
     physical address and suppresses all aliases except the one that was\n\
     least recently changed.  Useful for examining shared data structures.\n\
@@ -4605,10 +4603,10 @@ Left to right
 @Ddd@*preferences*clusterDisplays.labelString:    \
 Clustered
 
-@Ddd@*preferences*overview.labelString:       Show Overview
-@Ddd@*preferences*overviewOn.labelString:     Always
+@Ddd@*preferences*overview.labelString:       Mini-Map
+@Ddd@*preferences*overviewOn.labelString:     On
 @Ddd@*preferences*overviewAuto.labelString:   Automatic
-@Ddd@*preferences*overviewOff.labelString:    Never
+@Ddd@*preferences*overviewOff.labelString:    Off
 
 
 @Ddd@*preferences*gridSize.orientation:		XmHORIZONTAL
@@ -4629,17 +4627,12 @@ These preferences are effective only after a restart.\n\
 @tt \267 @rm @bf Window Layout@rm  sets the window layout.\n\
     @tt -@rm  @bf Stacked Windows@rm  means to use one top-level window\n\
         where source, data, and the @GDB@ console are stacked.\n\
+    @tt -@rm  @bf Side by Side Windows@rm  means to use one top-level window\n\
+        where the source and the @GDB@ console are on the left side and the\n\
+        data console on the right side.\n\
     @tt -@rm  @bf Separate Windows@rm  means to use a separate top-level window\n\
         for each of source, data, and the @GDB@ console.\n\
 @tt \267 @rm The @bf Ctrl+C@rm  and @bf Ctrl+A@rm  keys can be bound to different actions.\n\
-@tt \267 @rm The @bf Tool Bar@rm  can appear as follows:\n\
-    @tt -@rm  @bf Images@rm  shows a small symbol for each action, and/or\n\
-    @tt -@rm  @bf Captions@rm  shows the action name below the image.\n\
-    If neither @bf Images@rm  nor @bf Captions@rm  is set, \
-buttons have ordinary labels.\n\
-    @tt -@rm  @bf Color@rm  enables colored button images.\n\
-    @tt -@rm  @bf Bottom@rm  places the tool bar at the bottom of the window.\n\
-    This can only be done with separate windows or ordinary labels.\n\
 @tt \267 @rm @bf Keyboard Focus@rm  sets the keyboard focus policy.\n\
     @tt -@rm  @bf Click to Type@rm  means that you must click on a window\n\
         to direct the keyboard focus to it.\n\
@@ -4710,21 +4703,26 @@ Determine Automatically from Arguments
 @Ddd@*preferences*startupTips.labelString:	Tip of the Day
 
 
-@Ddd@*preferences*fonts*helpString: \
-@bs @DDD@ fonts@rm \n\
+@Ddd@*preferences*appearance*helpString: \
+@bs @DDD@ Appearance@rm \n\
 \n\
-@tt \267 @rm @bf Default Font@rm  is the font used for @DDD@ labels and buttons.\n\
-@tt \267 @rm @bf Variable Width@rm  is the font used for messages (such as this one).\n\
+@tt \267 @rm @bf Variable Width@rm  is the font used for @DDD@ labels, buttons, and messages (such as this one).\n\
 @tt \267 @rm @bf Fixed Width@rm  is the font used for program code and text fields.\n\
 @tt \267 @rm @bf Data@rm  is the font used for data displays.\n\
-\n\
-To change a font, enter its name and size (in 1/10 points).\n\
-A pair @sl family@rm -@sl weight@rm  as font name is sufficient.\n\
-\n\
-Using @bf Browse@rm , you can select fonts using the @tt xfontsel@rm \n\
-font selection program.\n\
-Click on @bf select@rm  to select the chosen font.\n\
-Wildcard entries (`@tt *@rm') will be ignored.\n\
+@tt \267 @rm @bf Color Theme@rm \n\
+    @tt -@rm  @bf Light Mode:@rm  light background\n\
+    @tt -@rm  @bf Dark Mode:@rm  dark background\n\
+@tt \267 @rm @bf Style@rm \n\
+    @tt -@rm  @bf Modern (Flat):@rm  An attempt to create a modern look under Motif.\n\
+    @tt -@rm  @bf Classic (Motif):@rm  The well known 3D Motif style.\n\
+@tt \267 @rm The @bf Tool Bar@rm  can appear as follows:\n\
+    @tt -@rm  @bf Images@rm  shows a small symbol for each action, and/or\n\
+    @tt -@rm  @bf Captions@rm  shows the action name below the image.\n\
+    If neither @bf Images@rm  nor @bf Captions@rm  is set, \
+buttons have ordinary labels.\n\
+    @tt -@rm  @bf Color@rm  enables colored button images.\n\
+@tt \267 @rm The @bf Large Icons@rm  doubles the size of the @bf Tool Bar@rm  icons and/or\n\
+    the @bf Glyph@rm  icons.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on @bf Reset@rm  to restore the saved preferences.
@@ -4763,18 +4761,8 @@ from a running process.\n\
     To this command, @DDD@ appends bourne shell commands to be executed\n\
     within the execution window.\n\
     Example: `@tt @XTERM@ -e /bin/sh -c@rm'\n\
-@tt \267 @rm @bf Uncompress@rm  is an uncompression command.\n\
-    The command reads from standard input and writes to standard output.\n\
-    Example: `@tt gunzip -c@rm'\n\
-@tt \267 @rm @bf Web Browser@rm  invokes a WWW browser.\n\
-    `@tt @ URL@ @rm' is replaced by the URL to be shown.\n\
-    Example: `@tt netscape @ URL@ @rm'\n\
 @tt \267 @rm @bf Plot@rm  invokes a Gnuplot program for plotting data.\n\
     Example: `@tt gnuplot@rm'\n\
-@tt \267 @rm @bf Plot Window@rm  indicates the type of plot window to use.\n\
-    @tt -@rm  The @bf builtin@rm  @DDD@ window uses fewer resources.\n\
-    @tt -@rm  The @bf external@rm  Gnuplot window is much faster, but\n\
-        does not work with all window managers.\n\
 \n\
 Use the buttons above to view and change other preferences.\n\
 Click on @bf Reset@rm  to restore the saved preferences.
@@ -8113,7 +8101,7 @@ expressions matching @tt "@PATTERN@"@rm ?
 You are about to apply a theme to an expression or a pattern.\n\
 \n\
 Applying a theme is @sl permanent@rm ; that is, it will be applied to all\n\
-present and future occurrences of the expression. (You can always\n\
+present @sl and future@rm  occurrences of the expression. (You can always\n\
 unapply the theme via @bf Data->@bf Themes@rm .)\n\n\
 You can choose where @sl @THEME_DOC@@rm  should be applied:\n\
 \n\
@@ -8135,7 +8123,7 @@ matching @tt "@PATTERN@"@rm ,\n\
 You are about to apply a theme to an expression or a pattern.\n\
 \n\
 Applying a theme is @sl permanent@rm ; that is, it will be applied to all\n\
-present and future occurrences of the expression. (You can always\n\
+present @sl and future@rm  occurrences of the expression. (You can always\n\
 unapply the theme via @bf Data->@bf Themes@rm .)\n\n\
 To apply @sl @THEME_DOC@@rm  on @tt @EXPR@@rm , click on @bf Apply@rm .\n\
 To cancel applying the theme, click on @bf Cancel@rm .

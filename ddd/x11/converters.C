@@ -1036,7 +1036,7 @@ void registerOwnConverters()
 
     // String -> XmString
     XtSetTypeConverter(XmRString, XmRXmString, CvtStringToXmString,
-		       XtConvertArgList(0), 0, (XtCacheAll | XtCacheRefCount),
+		       XtConvertArgList(0), 0, XtCacheNone,
 		       CvtStringToXmStringDestroy);
 
 #if OWN_FONT_CONVERTERS

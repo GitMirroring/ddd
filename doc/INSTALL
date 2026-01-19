@@ -14,7 +14,7 @@ To build a complete DDD from sources, you need:
 
    * A `make' program.  We recommend GNU make.
 
-   * The Motif Widget library (2.3.4 or later)  
+   * The Motif Widget library (2.3.8 or later)  
      -   motif
 
    * The X window library (Xlib) and X toolkit library (Xt), X11R6.3 and later.
@@ -32,16 +32,10 @@ To build a complete DDD from sources, you need:
    * Curses terminal manipulation library
      -   ncurses
 
-   * FreeType 2 font engine and drawing libraries (recommended)
+   * FreeType 2 font engine and drawing libraries
      -   libfreetype
      -   libxft
      -   libfontconfig
-
-   * Liberation fonts
-     -   fonts-liberation
-
-   * X Athena Widgets (optional)
-     -   libXaw
 
 Be sure to install the headers for these libraries, usually in a 
 a package named <pkg>-devel or similar.
@@ -108,7 +102,7 @@ need to install the Subversion source management system if it is
 not already installed on your system.
 
 DDD sources can be obtained from the FSF GNU Savannah website:
-https://savannah.gnu.org/svn/?group=ddd.
+https://savannah.gnu.org/git/?group=ddd.
 We recommend that you do not download the entire DDD repository.  
 It is more than 1.1Gb, including all branches and tags.
 
@@ -123,7 +117,7 @@ development tree may contain changes which have not been completely
 tested. 
 
 Download the latest sources:
-  $ svn co svn://svn.savannah.gnu.org/ddd/<module> ddd
+  $ git clone https://git.savannah.gnu.org/git/ddd.git ddd
 Configure for building DDD:
   $ cd ddd
   $ autoreconf -ifv

@@ -1,4 +1,3 @@
-// $Id$  -*- C++ -*-
 // Interactive Help Callbacks
 
 // Copyright (C) 1998 Technische Universitaet Braunschweig, Germany.
@@ -570,14 +569,14 @@ static void _MStringHelpCB(Widget widget,
         verify(XmCreateInformationDialog(shell, 
                                          XMST("help"), args, arg));
 
-#ifdef  LOGO3_5
+
+#ifdef LOGO3_5
         // cheat transparency by setting background of icon to background of dialog
+        Display *display = XtDisplay(shell);
         Pixmap logo = iconlogo(shell);
         Pixmap mask = iconmask(shell);
-        if (mask != None &&  logo != None)
+        if (mask != None && logo != None)
         {
-            Display *display = XtDisplay(widget);
-            Window win = XtWindow(widget);
             Pixel bg;
             XtVaGetValues(help_dialog, XmNbackground, &bg, NULL);
             if (app_data.dark_mode)
@@ -588,7 +587,7 @@ static void _MStringHelpCB(Widget widget,
             unsigned int w, h, border, depth;
             XGetGeometry(display, logo, &root, &x, &y, &w, &h, &border, &depth);
 
-            Pixmap dst = XCreatePixmap(display, win, w, h, depth);
+            Pixmap dst = XCreatePixmap(display, root, w, h, depth);
 
             GC gc = XCreateGC(display, dst, 0, NULL);
 
@@ -597,11 +596,9 @@ static void _MStringHelpCB(Widget widget,
             XFillRectangle(display, dst, gc, 0, 0, w, h);
 
             // Copy the logo, clipped by mask
-            if (mask != None)
-            {
-                XSetClipMask(display, gc, mask);
-                XSetClipOrigin(display, gc, 0, 0);
-            }
+            XSetClipMask(display, gc, mask);
+            XSetClipOrigin(display, gc, 0, 0);
+
             XCopyArea(display, logo, dst, gc, 0, 0, w, h, 0, 0);
 
             // Clean up

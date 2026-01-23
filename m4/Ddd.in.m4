@@ -343,26 +343,6 @@ Ddd*plotInitCommands:
 Ddd*plot2dSettings:   unset border; set autoscale fix
 Ddd*plot3dSettings:   set border
 
-! Which plot window to choose.
-!
-! `xlib' means to use the plot window built into DDD:
-!      + no interference with window manager
-!      + requires less X resources than Gnuplot window
-!      - slower
-!      - no customization
-! `x11' instructs DDD to `swallow' the plot window supplied by Gnuplot:
-!      + works just as Gnuplot users expect
-!      - swallowing interferes with some window managers such as MWM.
-!
-! Default is `x11' due to problems with xlib.
-Ddd*plotTermType: x11
-
-! The time (in ms) to wait for notification that the swallowed plot window
-! has been created.  After this time has passed, DDD searches the plot window
-! among all windows, even without notification.
-Ddd*plotWindowDelay: 200
-
-
 ! Tool Bar appearance.
 
 ! Whether to have one common tool bar for one-window configurations.
@@ -4955,7 +4935,7 @@ define(PLOT_WINDOW_HELP, [\
 WIDGET(Plot Window)\n\
 \n\
 This window shows a plot of numerical arrays and/or scalars\n\
-of the debugged program.\n\
+or images of the debugged program.\n\
 \n\
 In a 2-D plot, a point at X/Y shows the value Y at the array index X.\n\
 In a 3-D plot, a point at X/Y/Z shows the value Z at the array index X/Y.\n\
@@ -4968,8 +4948,7 @@ Use LBL(File, Close) to close this window.
 ])dnl
 
 Ddd*plot.helpString:            PLOT_WINDOW_HELP
-Ddd*plot*swallower.helpString:  PLOT_WINDOW_HELP
-Ddd*plot*area.helpString:       PLOT_WINDOW_HELP
+Ddd*plot*plotArea.helpString:  PLOT_WINDOW_HELP
 
 Ddd*plot*replot.labelString:    Refresh Plot
 Ddd*plot*replot.mnemonic:       R
@@ -5192,18 +5171,6 @@ You can now enter a Gnuplot command at the SAMP(gnuplot>) prompt.\n\
 The plot will automatically be refreshed after execution.\n\
 \n\
 See the Gnuplot documentation for useful commands.
-
-
-! The default Gnuplot window is 640x540 pixels wide.
-Ddd*plot*area.width:        640
-Ddd*plot*area.height:       450
-Ddd*plot*area.background:   TEXT_BACKGROUND_COLOR
-
-! Ideally, these values would come from the swallowed window.
-! Unfortunately, LessTif has problems with these, so we set them explicitly.
-Ddd*plot*swallower.width:        640
-Ddd*plot*swallower.height:       450
-Ddd*plot*swallower.background:   TEXT_BACKGROUND_COLOR
 
 Ddd*plot*XmScrollBar.borderWidth:		0
 Ddd*plot*XmScrollBar.highlightThickness:        0

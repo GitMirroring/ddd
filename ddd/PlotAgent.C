@@ -135,7 +135,7 @@ int PlotAgent::flush()
 
     // Issue plot command
     string cmd;
-    if (is_any_of_elements(PlotElement::IMAGE) || is_any_of_elements(PlotElement::RGBIMAGE) || is_any_of_elements(PlotElement::BGRIMAGE))
+    if (isImage())
     {
         cmd += "set yrange reverse\n";
         cmd += "set size ratio -1; set view equal xy\n";

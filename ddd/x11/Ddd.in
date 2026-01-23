@@ -342,26 +342,6 @@ gnuplot -e \"set terminal x11 window '@X_ID@' title '@NAME@' font '@FONT@'\" -
 @Ddd@*plot2dSettings:   unset border; set autoscale fix
 @Ddd@*plot3dSettings:   set border
 
-! Which plot window to choose.
-!
-! `xlib' means to use the plot window built into @DDD@:
-!      + no interference with window manager
-!      + requires less X resources than Gnuplot window
-!      - slower
-!      - no customization
-! `x11' instructs @DDD@ to `swallow' the plot window supplied by Gnuplot:
-!      + works just as Gnuplot users expect
-!      - swallowing interferes with some window managers such as MWM.
-!
-! Default is `x11' due to problems with xlib.
-@Ddd@*plotTermType: x11
-
-! The time (in ms) to wait for notification that the swallowed plot window
-! has been created.  After this time has passed, @DDD@ searches the plot window
-! among all windows, even without notification.
-@Ddd@*plotWindowDelay: 200
-
-
 ! Tool Bar appearance.
 
 ! Whether to have one common tool bar for one-window configurations.
@@ -6208,7 +6188,7 @@ Press @key F1@rm  on a button to get a short command description.
 @bs Plot Window@rm \n\
 \n\
 This window shows a plot of numerical arrays and/or scalars\n\
-of the debugged program.\n\
+or images of the debugged program.\n\
 \n\
 In a 2-D plot, a point at X/Y shows the value Y at the array index X.\n\
 In a 3-D plot, a point at X/Y/Z shows the value Z at the array index X/Y.\n\
@@ -6219,26 +6199,11 @@ You can modify the plot appearance via the options in the menu bar.\n\
 \n\
 Use @bf File->@bf Close@rm  to close this window.
 
-@Ddd@*plot*swallower.helpString:  \
+@Ddd@*plot*plotArea.helpString:  \
 @bs Plot Window@rm \n\
 \n\
 This window shows a plot of numerical arrays and/or scalars\n\
-of the debugged program.\n\
-\n\
-In a 2-D plot, a point at X/Y shows the value Y at the array index X.\n\
-In a 3-D plot, a point at X/Y/Z shows the value Z at the array index X/Y.\n\
-Scalars are shown as lines and can be rotated using the @bf Rotate ()@rm  button.\n\
-\n\
-You can modify the plot appearance via the options in the menu bar.\n\
-@bf File->@bf Command@rm  gives you direct access to the Gnuplot program.\n\
-\n\
-Use @bf File->@bf Close@rm  to close this window.
-
-@Ddd@*plot*area.helpString:       \
-@bs Plot Window@rm \n\
-\n\
-This window shows a plot of numerical arrays and/or scalars\n\
-of the debugged program.\n\
+or images of the debugged program.\n\
 \n\
 In a 2-D plot, a point at X/Y shows the value Y at the array index X.\n\
 In a 3-D plot, a point at X/Y/Z shows the value Z at the array index X/Y.\n\
@@ -6501,18 +6466,6 @@ You can now enter a Gnuplot command at the `@tt gnuplot>@rm' prompt.\n\
 The plot will automatically be refreshed after execution.\n\
 \n\
 See the Gnuplot documentation for useful commands.
-
-
-! The default Gnuplot window is 640x540 pixels wide.
-@Ddd@*plot*area.width:        640
-@Ddd@*plot*area.height:       450
-@Ddd@*plot*area.background:   grey96
-
-! Ideally, these values would come from the swallowed window.
-! Unfortunately, LessTif has problems with these, so we set them explicitly.
-@Ddd@*plot*swallower.width:        640
-@Ddd@*plot*swallower.height:       450
-@Ddd@*plot*swallower.background:   grey96
 
 @Ddd@*plot*XmScrollBar.borderWidth:		0
 @Ddd@*plot*XmScrollBar.highlightThickness:        0

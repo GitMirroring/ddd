@@ -182,6 +182,7 @@ static MMDesc menubar[] =
     { "scale",    MMMenu,          MMNoCB, scale_menu,       0, 0, 0 },
     { "contour",  MMMenu,          MMNoCB, contour_menu,     0, 0, 0 },
     { "help",     MMMenu | MMHelp, MMNoCB, simple_help_menu, 0, 0, 0 },
+    { "replot",   MMFlatPush,          { ReplotCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
@@ -315,6 +316,15 @@ static void configure_plot(PlotWindowInfo *plot)
 
     int ndim = plot->plotter->dimensions();
 
+    bool image = plot->plotter->isImage();
+
+    Widget plotw = XtNameToWidget(plot->shell, "*plot");
+    Widget scalew = XtNameToWidget(plot->shell, "*scale");
+    Widget contourw = XtNameToWidget(plot->shell, "*contour");
+    XtSetSensitive(plotw, !image);
+    XtSetSensitive(scalew, !image);
+    XtSetSensitive(contourw, !image && ndim >= 3);
+
     // Set up plot menu
     int i;
     for (i = 0; plot_menu[i].name != 0; i++)
@@ -340,10 +350,12 @@ static void configure_plot(PlotWindowInfo *plot)
     XtSetSensitive(logscale, True);
 
     // Axes can be toggled in 2d mode only
+    Widget grid = XtNameToWidget(plot->shell, "*grid");
     Widget xzeroaxis = XtNameToWidget(plot->shell, "*xzeroaxis");
     Widget yzeroaxis = XtNameToWidget(plot->shell, "*yzeroaxis");
-    XtSetSensitive(xzeroaxis, ndim <= 2);
-    XtSetSensitive(yzeroaxis, ndim <= 2);
+    XtSetSensitive(grid, !image);
+    XtSetSensitive(xzeroaxis, ndim <= 2 && !image);
+    XtSetSensitive(yzeroaxis, ndim <= 2 && !image);
 
     // Z Tics are available in 3d mode only
     Widget ztics = XtNameToWidget(plot->shell, "*ztics");
@@ -406,9 +418,6 @@ static void configure_plot(PlotWindowInfo *plot)
 // Start plot
 static void popup_plot_shell(PlotWindowInfo *plot)
 {
-    // Fetch plot settings
-    configure_plot(plot);
-
     // Command and export dialogs are not needed (yet)
     if (plot->command_dialog != 0)
         XtUnmanageChild(plot->command_dialog);
@@ -691,6 +700,9 @@ PlotAgent *new_plotter(const string& name, DispValue *source)
 
     plotter->start_with(init);
     plot->plotter = plotter;
+
+    // Fetch plot settings
+    configure_plot(plot);
 
     return plotter;
 }

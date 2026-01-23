@@ -146,8 +146,6 @@
 #define XtNplot2dSettings        "plot2dSettings"
 #define XtNplot3dSettings        "plot3dSettings"
 #define XtCPlotSettings          "PlotSettings"
-#define XtNplotWindowDelay       "plotWindowDelay"
-#define XtCWindowDelay           "WindowDelay"
 #define XtNtermCommand           "termCommand"
 #define XtCTermCommand           "TermCommand"
 #define XtNtermType              "termType"
@@ -446,7 +444,6 @@ struct AppData {
     Boolean   debugger_console;
     Boolean   auto_close_data_window;
     const _XtString    plot_command;
-    Cardinal  plot_window_delay;
     const _XtString    plot_init_commands;
     const _XtString    plot_2d_settings;
     const _XtString    plot_3d_settings;

@@ -119,9 +119,14 @@ public:
         return 2;
     }
 
-    bool is_any_of_elements(PlotElement::PlotType type)
+    bool is_any_of_elements(PlotElement::PlotType type) const
     {
         return std::any_of(elements.begin(), elements.end(), [&](const PlotElement &elem) { return elem.plottype == type; });
+    }
+
+    bool isImage() const
+    {
+        return (is_any_of_elements(PlotElement::IMAGE) || is_any_of_elements(PlotElement::RGBIMAGE) || is_any_of_elements(PlotElement::BGRIMAGE));
     }
 
     // Print plot to FILENAME

@@ -597,17 +597,7 @@ XtResource ddd_resources[] = {
         sizeof(String),
         XtOffsetOf(AppData, plot_command),
         XtRString,
-        XtPointer("gnuplot -e \"set terminal x11 title '@NAME@'\" -")
-    },
-
-    {
-        XTRESSTR(XtNplotWindowDelay),
-        XTRESSTR(XtCWindowDelay),
-        XtRCardinal,
-        sizeof(Cardinal),
-        XtOffsetOf(AppData, plot_window_delay),
-        XtRImmediate,
-        XtPointer(200)
+        XtPointer("gnuplot -e \"set terminal x11 window '@X_ID@' title '@NAME@'\" -")
     },
 
     {

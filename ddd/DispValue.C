@@ -59,6 +59,7 @@ char DispValue_rcsid[] =
 #include "string-fun.h"
 #include "value-read.h"
 #include "status.h"
+#include "Command.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -1776,6 +1777,9 @@ void DispValue::plot() const
     if (can_plot() == false)
 	return;
 
+    if (!can_do_gdb_command())
+        return;
+
     if (plotter() == 0)
     {
 	string title = make_title(full_name());
@@ -1885,6 +1889,9 @@ bool DispValue::plot2d(PlotAgent *&plotter) const
             // get variable type and dimensions of array
             string gdbtype;
             string answer = gdb_question("whatis " + m_full_name);
+            if (answer==NO_GDB_ANSWER || answer.contains("No symbol"))
+                return false;
+
             gdbtype = answer.after("=");
             strip_space(gdbtype);
             string length = (gdbtype.after('['));
@@ -1974,6 +1981,9 @@ bool DispValue::plot3d(PlotAgent *&plotter) const
         // get variable type and dimensions of array
         string gdbtype;
         string answer = gdb_question("whatis " + m_full_name);
+        if (answer.contains("No symbol"))
+            return false;
+
         gdbtype = answer.after("=");
         strip_space(gdbtype);
         string ydim = gdbtype.after('[');
@@ -2059,6 +2069,9 @@ bool DispValue::plotVector(PlotAgent *&plotter) const
     // get variable type
     string gdbtype;
     string answer = gdb_question("whatis " + m_full_name + "[0]");
+    if (answer.contains("No symbol"))
+        return false;
+
     gdbtype = answer.after("=");
     strip_space(gdbtype);
 
@@ -2133,6 +2146,9 @@ bool DispValue::plotImage(PlotAgent *&plotter) const
     {
         // pixmap is a container -> get addres of first element
         string answer = gdb_question("print /x  &(" + m_full_name + "." + pixmapname + "[0])");
+        if (answer.contains("No symbol"))
+            return false;
+
         address = answer.after("=");
         strip_space(address);
     }
@@ -2340,7 +2356,8 @@ void DispValue::PlotterDiedHP(Agent *source, void *client_data, void *)
     PlotAgent *agent = dv->m_plotter;
 //    assert(source == dv->plotter());
 
-    agent->removeHandler(Died, PlotterDiedHP, (void *)dv);
+    if (agent!=nullptr)
+        agent->removeHandler(Died, PlotterDiedHP, (void *)dv);
     dv->m_plotter = 0;
 }
 

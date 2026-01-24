@@ -606,7 +606,7 @@ static void quicksort(int a[], int size)
 
 static void plot_test()
 {
-    static int ir[100];
+    int ir[200];
 
     int i;
 

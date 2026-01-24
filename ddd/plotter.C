@@ -79,6 +79,7 @@ char plotter_rcsid[] =
 #include <Xm/Text.h>
 #include <Xm/TextF.h>
 #include <Xm/ToggleB.h>
+#include <Xm/CascadeB.h>
 
 static void TraceInputHP (Agent *source, void *, void *call_data);
 static void TraceOutputHP(Agent *source, void *, void *call_data);
@@ -182,7 +183,6 @@ static MMDesc menubar[] =
     { "scale",    MMMenu,          MMNoCB, scale_menu,       0, 0, 0 },
     { "contour",  MMMenu,          MMNoCB, contour_menu,     0, 0, 0 },
     { "help",     MMMenu | MMHelp, MMNoCB, simple_help_menu, 0, 0, 0 },
-    { "replot",   MMFlatPush,          { ReplotCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
@@ -510,6 +510,7 @@ static void DeletePlotterHP(Agent *plotter, void *client_data, void *)
 		    DeletePlotterCB, XtPointer(plotter));
 
     plotter->removeHandler(Died, DeletePlotterHP, client_data);
+    plotter->removeHandler(Died, PlotterNotFoundHP, client_data);
 
     PlotWindowInfo *plot = (PlotWindowInfo *)client_data;
     assert(plot->plotter == 0 || plot->plotter == plotter);
@@ -584,7 +585,13 @@ static PlotWindowInfo *new_decoration(const string& name)
 						args, arg);
 	XtManageChild(main_window);
 
-	MMcreateMenuBar(main_window, "menubar", menubar);
+	Widget menuw = MMcreateMenuBar(main_window, "menubar", menubar);
+
+        // add a replot button
+        Widget replot_button = XmCreateCascadeButton(menuw, (char*)"replot", NULL, 0);
+        XtAddCallback(replot_button, XmNactivateCallback, ReplotCB, XtPointer(plot));
+        XtManageChild(replot_button);
+
 	MMaddCallbacks(file_menu,    XtPointer(plot));
 	MMaddCallbacks(simple_edit_menu);
 	MMaddCallbacks(view_menu,    XtPointer(plot));
@@ -645,7 +652,7 @@ void delete_plotter(PlotAgent *plotter)
 {
     plotter->removeAllHandlers();
     plotter->terminate();
-    delete plotter;
+    // delete plotter;
 }
 
 // Create a new plot window

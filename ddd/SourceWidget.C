@@ -1645,15 +1645,6 @@ static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
     // Existing selection/caret handling
     if (ev->type == ButtonPress && ev->xbutton.button == Button1)
     {
-        // // ensure keyboard focus
-        // XtSetKeyboardFocus(XtParent(ctx->textWidget), ctx->textWidget);
-        // Find the top-level shell and set keyboard focus there
-        Widget shell = ctx->textWidget;
-        while (shell && !XtIsShell(shell))
-            shell = XtParent(shell);
-        if (shell)
-            XtSetKeyboardFocus(shell, ctx->textWidget);
-
         int x = ev->xbutton.x, y = ev->xbutton.y;
         int h = 0, hslider = 0;
         if (ctx->hbar && XtIsManaged(ctx->hbar))

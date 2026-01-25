@@ -320,8 +320,8 @@ static const char *defaultTranslations =
     "~Meta Ctrl<Key>A:         select-all()\n"
     "~Shift ~Ctrl<Btn4Down>:   callpannerpage(0,-.25p)\n"
     "~Shift ~Ctrl<Btn5Down>:   callpannerpage(0,+.25p)\n"
-    "~Shift Ctrl<Btn4Down>:   callpannerpage(-.25p,0)\n"
-    "~Shift Ctrl<Btn5Down>:   callpannerpage(+.25p,0)\n"
+    "Shift ~Ctrl<Btn4Down>:   callpannerpage(-.25p,0)\n"
+    "Shift ~Ctrl<Btn5Down>:   callpannerpage(+.25p,0)\n"
 
     ;
 

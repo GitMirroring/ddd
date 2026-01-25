@@ -1610,6 +1610,25 @@ static void scroll_h_by_px(CtvCtx *ctx, int dx)
     set_hscroll(ctx, h + dx);
 }
 
+static void adjust_font_size(CtvCtx *ctx, double delta)
+{
+    if (!ctx || !ctx->textWidget)
+        return;
+
+    ensure_font(ctx);
+
+    double current = ctx->font_pt > 0.0 ? ctx->font_pt : 11.0;
+    double target = std::clamp(current + delta, 6.0, 72.0);
+
+    target = std::round(target * 10.0) / 10.0;
+
+    if (std::fabs(target - current) < 0.05)
+        return;
+
+    const char *family = (ctx->font_family && *ctx->font_family) ? ctx->font_family : "monospace";
+    XmhColorTextViewSetFont(ctx->textWidget, family, target);
+}
+
 
 /*! \internal Mouse handling for selection and caret. */
 static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
@@ -1626,16 +1645,12 @@ static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
 
         // Default: 3 lines per notch; Ctrl accelerates to 10 lines; Shift scrolls horizontally
         int lines = ctrl ? 10 : 3;
-        if (shift)
-        {
-            // Horizontal scroll step ~ line height for consistency
-            scroll_h_by_px(ctx, dir * lines * (ctx->line_height > 0 ? ctx->line_height : 40));
-        }
+        if (!shift && !ctrl)
+            scroll_v_by_lines(ctx, dir * lines); // Vertical scroll; caret moves only if it leaves viewport
+        else if (shift)
+            scroll_h_by_px(ctx, dir * lines * (ctx->line_height > 0 ? ctx->line_height : 40)); // Horizontal scroll step
         else
-        {
-            // Vertical scroll; caret moves only if it leaves viewport
-            scroll_v_by_lines(ctx, dir * lines);
-        }
+            adjust_font_size(ctx, 1.0 * dir);
 
         if (cont)
             *cont = False; // stop further processing
@@ -1680,26 +1695,6 @@ static void buttonEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
         ctx->dragging = 0;
     }
 }
-
-static void adjust_font_size(CtvCtx *ctx, double delta)
-{
-    if (!ctx || !ctx->textWidget)
-        return;
-
-    ensure_font(ctx);
-
-    double current = ctx->font_pt > 0.0 ? ctx->font_pt : 11.0;
-    double target = std::clamp(current + delta, 6.0, 72.0);
-
-    target = std::round(target * 10.0) / 10.0;
-
-    if (std::fabs(target - current) < 0.05)
-        return;
-
-    const char *family = (ctx->font_family && *ctx->font_family) ? ctx->font_family : "monospace";
-    XmhColorTextViewSetFont(ctx->textWidget, family, target);
-}
-
 
 static void keyEH(Widget, XtPointer client, XEvent *ev, Boolean *cont)
 {

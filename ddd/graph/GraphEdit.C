@@ -34,6 +34,7 @@ char GraphEdit_rcsid[] =
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <Xm/Xm.h>
 #include <Xm/ScrolledW.h>
@@ -57,11 +58,10 @@ char GraphEdit_rcsid[] =
 #include "base/cook.h"
 #include "base/strtoul.h"
 #include "agent/TimeOut.h"
-#include "EdgeAPA.h"
-#include "GraphNPA.h"
 #include "base/casts.h"
 #include "ScrolledGE.h"
-
+#include "box/StringBox.h"
+#include "DataDisp.h"
 
 static BoxRegion EVERYWHERE(BoxPoint(0,0), BoxSize(INT_MAX, INT_MAX));
 
@@ -129,11 +129,6 @@ static XtResource resources[] = {
     { XTRESSTR(XtNselfEdgeDiameter), XTRESSTR(XtCSelfEdgeDiameter), XtRDimension, 
         sizeof(Dimension), offset(selfEdgeDiameter), 
         XtRImmediate, XtPointer(32) },
-
-    { XTRESSTR(XtNextraWidth), XTRESSTR(XtCExtraSize), XtRDimension, sizeof(Dimension),
-	offset(extraWidth), XtRImmediate, XtPointer(0) },
-    { XTRESSTR(XtNextraHeight), XTRESSTR(XtCExtraSize), XtRDimension, sizeof(Dimension),
-	offset(extraHeight), XtRImmediate, XtPointer(0) },
 
     { XTRESSTR(XtNrequestedWidth), XTRESSTR(XtCRequestedSize), XtRDimension, sizeof(Dimension),
 	offset(requestedWidth), XtRImmediate, XtPointer(0) },
@@ -241,6 +236,7 @@ static void _Layout     (Widget, XEvent *, String *, Cardinal *);
 static void Normalize   (Widget, XEvent *, String *, Cardinal *);
 static void _Normalize  (Widget, XEvent *, String *, Cardinal *);
 static void CallPannerPage  (Widget, XEvent *, String *, Cardinal *);
+static void ChangeFontSize  (Widget, XEvent *, String *, Cardinal *);
 
 
 // Actions table
@@ -271,6 +267,7 @@ static XtActionsRec actions[] = {
     { XTARECSTR("normalize"),	Normalize },     // normalize()
     { XTARECSTR("_normalize"),	_Normalize },
     { XTARECSTR("callpannerpage"),	CallPannerPage },
+    { XTARECSTR("change-font-size"), ChangeFontSize },
 };
 
 
@@ -322,6 +319,8 @@ static const char *defaultTranslations =
     "~Shift ~Ctrl<Btn5Down>:   callpannerpage(0,+.25p)\n"
     "Shift ~Ctrl<Btn4Down>:   callpannerpage(-.25p,0)\n"
     "Shift ~Ctrl<Btn5Down>:   callpannerpage(+.25p,0)\n"
+    "~Shift Ctrl<Btn4Down>:   change-font-size(+1)\n"
+    "~Shift Ctrl<Btn5Down>:   change-font-size(-1)\n"
 
     ;
 
@@ -354,6 +353,12 @@ static const char *extraTranslations =
     "~Meta ~Shift ~Ctrl<Key>Right:        select-next()\n"
     "~Meta ~Shift ~Ctrl<Key>Up:           select-prev()\n"
     "~Meta ~Shift ~Ctrl<Key>Down:         select-next()\n"
+    "Ctrl Shift<Key>period:    change-font-size(+1)\n"
+    "Ctrl Shift<Key>comma:     change-font-size(-1)\n"
+    "Ctrl<Key>greater:         change-font-size(+1)\n"
+    "Ctrl<Key>less:            change-font-size(-1)\n"
+    "Shift ~Ctrl<Btn4Down>:   change-font-size(+1)\n"
+    "Shift ~Ctrl<Btn5Down>:   change-font-size(-1)\n"
 ;
 
 // Method function declarations
@@ -474,8 +479,6 @@ void graphEditSizeChanged(Widget w)
     const Dimension highlight_thickness = _w->res_.primitive.highlight_thickness;
     Boolean& sizeChanged                = _w->graphEditP.sizeChanged;
     const GraphGC& graphGC              = _w->graphEditP.graphGC;
-    //const Dimension extraWidth          = _w->res_.graphEdit.extraWidth;
-    //const Dimension extraHeight         = _w->res_.graphEdit.extraHeight;
 
     // Could it be this is invoked without any graph yet?
     if (graph == 0)
@@ -1418,6 +1421,7 @@ static void Initialize(Widget request, Widget w, ArgList, Cardinal *)
     _w->graphEditP.viewport_gc    = 0;
     _w->graphEditP.overview_enabled = False;
     _w->graphEditP.overview_dragging = False;
+    _w->graphEditP.fontScale = 1.0;
 
     // create cursors if not already set
     createCursor(w, moveCursor,              XC_fleur);
@@ -1943,7 +1947,7 @@ static void UnselectAll(Widget w, XEvent *event, String *params,
 }
 
 // Find nodes connected to ROOT
-static void find_connected_nodes(GraphNode *root, GraphNodePointerArray& nodes)
+static void find_connected_nodes(GraphNode *root, std::vector<GraphNode *> &nodes)
 {
     for (int i = 0; i < int(nodes.size()); i++)
 	if (nodes[i] == root)
@@ -1964,7 +1968,7 @@ static void find_connected_nodes(GraphNode *root, GraphNodePointerArray& nodes)
 static Boolean select_graph(Widget w, GraphNode *root, Boolean set = True)
 {
     // Find all connected nodes
-    GraphNodePointerArray nodes;
+    std::vector<GraphNode *> nodes;
     find_connected_nodes(root, nodes);
 
     // Select them
@@ -2947,7 +2951,7 @@ static string node_name(GraphNode *node)
 static void remove_all_hints(Graph *graph)
 {
     // Find all hint nodes
-    GraphNodePointerArray hints;
+    std::vector<GraphNode *> hints;
 
     for (GraphNode *node = graph->firstNode(); 
 	 node != 0;
@@ -3259,6 +3263,207 @@ static void HideEdges(Widget w, XEvent *event, String *params,
     considerEdges(w, event, params, num_params, True);
 }
 
+// ------------------- scaling -------------------------------------------
+
+static void ChangeFontSize(Widget w, XEvent *, String *params, Cardinal *num_params)
+{
+    if (!params || *num_params < 1)
+        return;
+
+    GraphEditWidget _w = GraphEditWidget(w);
+    Graph *graph       = _w->res_.graphEdit.graph;
+    if (!graph)
+        return;
+
+    Display *dpy = XtDisplay(w);
+
+    // Compute new scale and factor
+    double delta = atof(params[0]);   // e.g. "+1" or "-1"
+
+    double &scale   = _w->graphEditP.fontScale;
+    double  old     = scale;
+    double  newScale= old;
+
+    if (delta > 0)
+        newScale *= 1.1;
+    else
+        newScale /= 1.1;
+
+    newScale = std::max(0.3, std::min(newScale, 3.0));  // clamp
+
+    if (newScale == old)
+        return;
+
+    double factor = newScale / old;
+
+    // Anchor point under mouse before zoom
+    Widget scroller = scrollerOfGraphEdit(w);
+    Widget clip     = XtParent(w);
+
+    bool   have_anchor   = false;
+    double anchor_x      = 0.0;  // world coordinates before zoom
+    double anchor_y      = 0.0;
+    int    ptr_x_clip    = 0;
+    int    ptr_y_clip    = 0;
+    Position clip_root_x = 0;
+    Position clip_root_y = 0;
+    Window anchor_root   = 0;   // root window where pointer lives
+
+    Widget hsb = 0, vsb = 0;
+
+    if (clip)
+    {
+        XtTranslateCoords(clip, 0, 0, &clip_root_x, &clip_root_y);
+
+        Window root, child;
+        int root_x=0, root_y=0;
+        int win_x=0,  win_y=0;
+        unsigned int mask=0;
+
+        if (XQueryPointer(dpy, XtWindow(w), &root, &child,
+                          &root_x, &root_y, &win_x, &win_y, &mask))
+        {
+            Dimension ww=0, wh=0;
+            XtVaGetValues(w, XmNwidth, &ww, XmNheight, &wh, NULL);
+
+            if (win_x >= 0 && win_x < (int)ww &&
+                win_y >= 0 && win_y < (int)wh)
+            {
+                int hval=0;
+                int vval=0;
+                ptr_x_clip = root_x - clip_root_x;
+                ptr_y_clip = root_y - clip_root_y;
+
+                if (scroller)
+                {
+                    XtVaGetValues(scroller,
+                                  XmNhorizontalScrollBar, &hsb,
+                                  XmNverticalScrollBar,   &vsb,
+                                  NULL);
+                    if (hsb)
+                        XtVaGetValues(hsb, XmNvalue, &hval, NULL);
+                    if (vsb)
+                        XtVaGetValues(vsb, XmNvalue, &vval, NULL);
+                }
+
+                // world coordinate under cursor before zoom
+                anchor_x = hval + ptr_x_clip;
+                anchor_y = vval + ptr_y_clip;
+
+                anchor_root = root;
+                have_anchor = true;
+            }
+        }
+    }
+
+    // Apply zoom: scale nodes and boxes
+    scale = newScale;
+    StringBox::scale = scale;
+
+    const GraphGC &gc = _w->graphEditP.graphGC;
+    BoxRegion r = graph->region(gc);
+    if (r.isEmpty())
+        return;
+
+    for (GraphNode *node = graph->firstNode();
+         node != 0;
+         node = graph->nextNode(node))
+    {
+        BoxPoint p      = node->pos();
+        BoxPoint origin = node->origin(gc);
+        BoxPoint offset = p - origin;
+        BoxPoint np(int(origin[X] * factor + 0.5),
+                    int(origin[Y] * factor + 0.5));
+        np += offset;
+        node->moveTo(np);
+    }
+
+    DataDisp::rebuild_boxes();
+    graphEditSizeChanged(w);   // updates widget size and scrollbar ranges
+
+    // Restore anchor: per-axis scroll / pointer
+    if (have_anchor && scroller && clip)
+    {
+        int hmin=0, hmax=0, hsize=0, hval=0, hinc=0, hpage=0;
+        int vmin=0, vmax=0, vsize=0, vval=0, vinc=0, vpage=0;
+
+        // Re-read scrollbar state after sizeChanged()
+        XtVaGetValues(scroller,
+                      XmNhorizontalScrollBar, &hsb,
+                      XmNverticalScrollBar,   &vsb,
+                      NULL);
+        if (hsb)
+            XtVaGetValues(hsb,
+                          XmNminimum,       &hmin,
+                          XmNmaximum,       &hmax,
+                          XmNsliderSize,    &hsize,
+                          XmNvalue,         &hval,
+                          XmNincrement,     &hinc,
+                          XmNpageIncrement, &hpage,
+                          NULL);
+        if (vsb)
+            XtVaGetValues(vsb,
+                          XmNminimum,       &vmin,
+                          XmNmaximum,       &vmax,
+                          XmNsliderSize,    &vsize,
+                          XmNvalue,         &vval,
+                          XmNincrement,     &vinc,
+                          XmNpageIncrement, &vpage,
+                          NULL);
+
+        double world_x_new = anchor_x * factor;
+        double world_y_new = anchor_y * factor;
+
+        bool horiz_scrollable = (hsb && (hmax - hmin > hsize));
+        bool vert_scrollable  = (vsb && (vmax - vmin > vsize));
+
+        int new_hval = hval;
+        int new_vval = vval;
+
+        // Adjust scrollbars where possible
+        if (hsb && horiz_scrollable)
+        {
+            new_hval = int(world_x_new - ptr_x_clip + 0.5);
+            int maxv = hmax - hsize;
+            new_hval = std::max(hmin, std::min(new_hval, maxv));
+            XmScrollBarSetValues(hsb, new_hval, hsize, hinc, hpage, True);
+        }
+
+        if (vsb && vert_scrollable)
+        {
+            new_vval = int(world_y_new - ptr_y_clip + 0.5);
+            int maxv = vmax - vsize;
+            new_vval = std::max(vmin, std::min(new_vval, maxv));
+            XmScrollBarSetValues(vsb, new_vval, vsize, vinc, vpage, True);
+        }
+
+        // Screen coords of anchor after zoom and scrolling
+        double screen_x = world_x_new - new_hval;
+        double screen_y = world_y_new - new_vval;
+
+        int new_px_clip = ptr_x_clip;
+        int new_py_clip = ptr_y_clip;
+
+        if (!horiz_scrollable)
+            new_px_clip = int(screen_x + 0.5);
+        if (!vert_scrollable)
+            new_py_clip = int(screen_y + 0.5);
+
+        if ((!horiz_scrollable || !vert_scrollable) &&
+            (new_px_clip != ptr_x_clip || new_py_clip != ptr_y_clip))
+        {
+            int new_root_x = clip_root_x + new_px_clip;
+            int new_root_y = clip_root_y + new_py_clip;
+
+            XWarpPointer(dpy, None, anchor_root,
+                         0, 0, 0, 0,
+                         new_root_x, new_root_y);
+        }
+    }
+
+    graphEditRedraw(w);
+}
+
 // ------------------- Overview window ------------------------------------------
 
 static void ComputeOverviewSize(Widget w,
@@ -3441,6 +3646,7 @@ static void OverviewSetViewFromPoint(Widget ge, int ox, int oy)
         XmScrollBarSetValues(vsb, new_vval, vsize, vinc, vpage, True);
     }
 }
+
 static void OverviewEventHandler(Widget, XtPointer client_data,
                                  XEvent *event, Boolean *)
 {
@@ -3462,6 +3668,24 @@ static void OverviewEventHandler(Widget, XtPointer client_data,
             break;
 
         case ButtonPress:
+            // Redirect Ctrl+wheel to GraphEdit zoom
+            if (event->xbutton.state & ControlMask)
+            {
+                if (event->xbutton.button == Button4 ||
+                    event->xbutton.button == Button5)
+                {
+                    String  params[1];
+                    Cardinal nparams = 1;
+                    params[0] = (char *)(event->xbutton.button == Button4 ? "+1" : "-1");
+                    XtCallActionProc(ge,
+                                     (char *)"change-font-size",
+                                     event, params, nparams);
+
+                    // Swallow event here; do not treat it as a minimap click
+                    break;
+                }
+            }
+
             if (event->xbutton.button == Button1)
             {
                 overview_dragging = True;

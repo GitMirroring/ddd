@@ -113,10 +113,6 @@ typedef struct _GraphEditPart {
     Dimension arrowLength;	// Arrow length (in pixels)
     Dimension selfEdgeDiameter; // Diameter of edge pointing at self
 
-    // Extra size to be added to the graph size; for panner usage only
-    Dimension extraWidth;	// Additional width (in pixels)
-    Dimension extraHeight;	// Additional height (in pixels)
-
     // Requested sizes; for panner and scrollbar creation only
     Dimension requestedWidth;	// Requested width (in pixels)
     Dimension requestedHeight;	// Requested height (in pixels)
@@ -184,6 +180,7 @@ typedef struct _GraphEditPartPrivate {
     GC       viewport_gc;    // GC for drawing outlines
     Boolean  overview_enabled;
     Boolean overview_dragging;
+    double fontScale;      // current font scale, 1.0 = base size
 
     GC nodeGC;			// Graphic context for nodes
     GC edgeGC;			// Graphic context for edges

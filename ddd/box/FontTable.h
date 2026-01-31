@@ -32,55 +32,38 @@
 
 #include <X11/Xft/Xft.h>
 #include <X11/Xlib.h>
+#include <map>
+
 #include "base/strclass.h"
 #include "base/TypeInfo.h"
-#include "base/assert.h"
 
 
 typedef XftFont BoxFont;
-
-#define MAX_FONTS 511 /* Max #Fonts */
-
-struct FontTableHashEntry {
-    BoxFont *font;
-    string name;
-
-    FontTableHashEntry(): font(0), name() {}
-
-private:
-    FontTableHashEntry(const FontTableHashEntry&);
-    FontTableHashEntry& operator = (const FontTableHashEntry&);
-};
 
 class FontTable {
 public:
     DECLARE_TYPE_INFO
 
 private:
-    FontTableHashEntry table[MAX_FONTS];
-    Display *_display;
+    Display* m_display;
+    std::map<string, BoxFont*> table;  // todo: switch to std::unordered_map
 
     FontTable(const FontTable&);
-    FontTable& operator = (const FontTable&);
+    FontTable& operator=(const FontTable&);
 
 public:
-    FontTable(Display *display):
-	_display(display)
+    FontTable(Display* display) : m_display(display) {}
+
+    ~FontTable()
     {
-	for (unsigned i = 0; i < MAX_FONTS; i++)
-	{
-	    table[i].font = 0;
-	    table[i].name = "";
-	}
+        for (auto& kv : table)
+            if (kv.second)
+                XftFontClose(m_display, kv.second);
     }
 
-    virtual ~FontTable()
-    {
-    }
+    BoxFont* operator[](const string& name);
 
-    BoxFont *operator[](const string& name);
-
-    Display *getDisplay() {return _display;}
+    Display* getDisplay() { return m_display; }
 };
 
 #endif

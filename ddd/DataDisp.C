@@ -6858,6 +6858,22 @@ void DataDisp::set_theme_manager(const ThemeManager& t)
 }
 
 
+//----------------------------------------------------------------------------
+// Refresh for Zoom
+//-----------------------------------------------------------------------------
+
+void DataDisp::rebuild_boxes()
+{
+    MapRef ref;
+    for (DispNode* dn = disp_graph->first(ref);
+         dn != 0;
+         dn = disp_graph->next(ref))
+    {
+        dn->reset();              // force VSL re-layout for this node
+    }
+
+    refresh_graph_edit();         // reattach graph to GraphEdit and redraw
+}
 
 //----------------------------------------------------------------------------
 // Constructor

@@ -39,7 +39,6 @@
 #include "agent/HandlerL.h"
 #include "graph/LineGraphE.h"
 #include "graph/PosGraphN.h"
-#include "graph/GraphNPA.h"
 #include "template/Map.h"
 #include "DispNode.h"
 
@@ -201,10 +200,10 @@ private:
 			   const BoxPoint& p1, const BoxPoint& p2) const;
 
     // Find all hints in edges leading to NODE; store them in HINTS
-    static void find_hints_to(GraphNode *node, GraphNodePointerArray& hints);
+    static void find_hints_to(GraphNode *node, std::vector<GraphNode *> &hints);
 
     // Find all hints in edges coming from NODE; store them in HINTS
-    static void find_hints_from(GraphNode *node, GraphNodePointerArray& hints);
+    static void find_hints_from(GraphNode *node, std::vector<GraphNode *> &hints);
 
     // Hide/Unhide all alias edges of NODE according to its status
     void update_alias_edges(DispNode *node);

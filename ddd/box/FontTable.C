@@ -28,8 +28,6 @@
 char FontTable_rcsid[] = 
     "$Id$";
 
-#include "base/assert.h"
-#include "base/hash.h"
 #include "base/strclass.h"
 
 #include <iostream>
@@ -42,36 +40,25 @@ DEFINE_TYPE_INFO_0(FontTable)
 
 // FontTable
 
-// Return hash code
-inline unsigned hash(const char *name)
-{
-    return hashpjw(name) % MAX_FONTS;
-}
-
 // Return XFontStruct for given font name NAME
 BoxFont *FontTable::operator[](const string& name)
 {
-    int i = hash(name.chars());
-    while (table[i].font != 0 && name != table[i].name)
+    auto it = table.find(name);
+    if (it != table.end())
+        return it->second;
+
+    // Insert new font
+    BoxFont* font = XftFontOpenName(m_display, DefaultScreen(m_display), (name + ":antialias=true").chars());
+    if (!font)
     {
-	assert (i < MAX_FONTS);   // Too many fonts
-	i = (i >= MAX_FONTS) ? 0 : i + 1;
+        std::cerr << "Warning: Could not load font \"" << name << "\"";
+
+        // Try default font
+        font = XftFontOpen(m_display, DefaultScreen(m_display), XFT_FAMILY, XftTypeString, "", NULL);
+        std::cerr << ", using default font instead\n";
     }
 
-    if (table[i].font == 0 && name != table[i].name)
-    {
-	// Insert new font
-	table[i].name = name;
- 	table[i].font = XftFontOpenName(_display, DefaultScreen(_display), (name+":antialias=true").chars());
-	if (table[i].font == 0)
-	{
-	    std::cerr << "Warning: Could not load font \"" << name << "\"";
-
-	    // Try default font
-            table[i].font = XftFontOpen(_display, DefaultScreen(_display), XFT_FAMILY, XftTypeString, "", NULL);
-            std::cerr << ", using default font instead\n";
-        }
-    }
-
-    return table[i].font;
+    table[name] = font;
+    return font;
 }
+

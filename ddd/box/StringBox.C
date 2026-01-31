@@ -52,16 +52,17 @@ DEFINE_TYPE_INFO_1(StringBox, PrimitiveBox)
 
 FontTable *StringBox::fontTable = 0;
 bool StringBox::quoted = false;
+float StringBox::scale = 1.0f;
 
 // Recompute size
 Box *StringBox::resize()
 {
-    if (_font != 0)
+    if (m_font != 0)
     {
         XGlyphInfo extents;
-	XftTextExtents8(fontTable->getDisplay(), _font, (const FcChar8*)_string.chars(), _string.length(), &extents);
-        _ascent = _font->ascent;
-        thesize() = BoxSize(extents.width, _font->height);
+	XftTextExtents8(fontTable->getDisplay(), m_font, (const FcChar8*)m_string.chars(), m_string.length(), &extents);
+        m_ascent = m_font->ascent;
+        thesize() = BoxSize(extents.width, m_font->height);
     }
 
     return this;
@@ -91,7 +92,7 @@ void StringBox::_draw(Widget w,
     color.color.green = xcol.green;
     color.color.alpha = 0xFFFF;
 
-    XftDrawStringUtf8(draw, &color, _font, origin[X], origin[Y] + _ascent, (const FcChar8*)_string.chars(), _string.length());
+    XftDrawStringUtf8(draw, &color, m_font, origin[X], origin[Y] + m_ascent, (const FcChar8*)m_string.chars(), m_string.length());
     XftColorFree(XtDisplay(w), visual, cmap, &color);
     XftDrawDestroy(draw);
 }
@@ -104,33 +105,53 @@ void StringBox::dump(std::ostream& s) const
 	quote = "\\\"";
 
     s << quote;
-    for (unsigned i = 0; i < _string.length(); i++)
+    for (unsigned i = 0; i < m_string.length(); i++)
     {
-	if (_string[i] == '\"')
+	if (m_string[i] == '\"')
 	    s << quote;
 	else
-	    s << _string[i];
+	    s << m_string[i];
     }
     s << quote;
 
     if (VSEFlags::include_font_info)
-	s << " (font: \"" << _fontname << "\")";
+	s << " (font: \"" << m_fontname << "\")";
 }
 
 void StringBox::newFont(const string& fontname)
 {
-    _fontname = fontname;
-    newFont();
-}
+    m_fontname = fontname;
 
-void StringBox::newFont()
-{
+    // extract base size
+    string sizestr = m_fontname.after(":size=");
+    if (!sizestr.empty())
+    {
+        if (sizestr.contains(":"))
+            sizestr = sizestr.before(":");
+        m_basefontsize = atof(sizestr.chars());
+    }
+
+    int pos = m_fontname.index(":size=");
+    if (pos>=0)
+    {
+        float target = scale * m_basefontsize;
+        string newfont = m_fontname.at(0, pos+6);
+        char sizebuf[32];
+        snprintf(sizebuf, sizeof(sizebuf), "%.1f", target);
+        newfont += sizebuf;
+
+        int pos2 = m_fontname.index(":", pos+5);
+        if (pos2>0)
+            newfont += m_fontname.after(pos2-1);
+        m_fontname = newfont;
+    }
+
+
     if (fontTable != 0)
-	_newFont((*fontTable)[_fontname]);
+	_newFont((*fontTable)[m_fontname]);
 }
 
 // Print
-
 void StringBox::_print(std::ostream& os,
 		       const BoxRegion& region, 
 		       const PrintGC& gc) const

@@ -34,6 +34,7 @@
 #include "PrimitiveB.h"
 #include "FontTable.h"
 
+#include <stdlib.h>
 
 // StringBox
 
@@ -42,14 +43,13 @@ public:
     DECLARE_TYPE_INFO
 
 private:
-    string _string;
-    string _fontname;
-    BoxFont *_font;
-    BoxCoordinate _ascent;
+    string m_string;
+    string m_fontname;
+    float m_basefontsize = 1.0;
+    BoxFont *m_font = nullptr;
+    BoxCoordinate m_ascent = 0;
 
     StringBox& operator = (const StringBox&);
-
-    void newFont();
 
 protected:
     virtual void _draw(Widget w, 
@@ -59,8 +59,8 @@ protected:
 		       bool context_selected) const;
 
     StringBox(const StringBox& box):
-	PrimitiveBox(box), _string(box._string), _fontname(box._fontname),
-	_font(box._font), _ascent(box._ascent)
+	PrimitiveBox(box), m_string(box.m_string), m_fontname(box.m_fontname),
+	m_font(box.m_font), m_ascent(box.m_ascent)
     {}
 
     void dump(std::ostream& s) const;
@@ -68,33 +68,20 @@ protected:
     bool matches (const Box &b, const Box * = 0) const
     {
 	return PrimitiveBox::matches(b) &&
-	    _string == ((const StringBox *)&b)->_string;  // dirty trick
+	    m_string == ((const StringBox *)&b)->m_string;  // dirty trick
     }
 
 public:
     static FontTable* fontTable;    // Font table
     static bool quoted;          // Flag: insert \ before quotes?
+    static float scale;
 
     // Constructor
     StringBox(const string& s, const char *fontname = "fixed", const char *t = "StringBox"):
-	PrimitiveBox(BoxSize(0,0), BoxExtend(0, 0), t),
-	_string(s), _fontname(fontname), _font(0), _ascent(0)
+	PrimitiveBox(BoxSize(0,0), BoxExtend(0, 0), t), m_string(s), m_fontname(fontname)
     {
-	newFont();
-    }
-
-    StringBox(const char *s = "", const char *fontname = "fixed", const char *t = "StringBox"):
-	PrimitiveBox(BoxSize(0,0), BoxExtend(0, 0), t),
-	_string(s), _fontname(fontname), _font(0), _ascent(0)
-    {
-	newFont();
-    }
-
-    StringBox(const string& s, BoxFont *fnt, const char *t = "StringBox"):
-	PrimitiveBox(BoxSize(0,0), BoxExtend(0, 0), t),
-	_string(s), _fontname("?"), _font(fnt), _ascent(0)
-    {
-	resize();
+        if (fontTable != 0)
+            _newFont((*fontTable)[m_fontname]);
     }
 
     Box *dup() const { return new StringBox(*this); }
@@ -102,9 +89,9 @@ public:
     void _newFont(BoxFont *newfont)
     {
 	// If this is a new font, resize
-	if (newfont != _font)
+	if (newfont != m_font)
 	{
-	    _font = newfont;
+	    m_font = newfont;
 	    resize();
 	}
     }
@@ -117,10 +104,10 @@ public:
 		const PrintGC& gc) const;
 
     // Resources
-    const BoxFont *font() const { return _font; }
-    const string& fontName() const  { return _fontname; }
-    const char *fontName_c() const { return _fontname.chars(); }
-    virtual string str() const { return _string; }
+    const BoxFont *font() const { return m_font; }
+    const string& fontName() const  { return m_fontname; }
+    const char *fontName_c() const { return m_fontname.chars(); }
+    virtual string str() const { return m_string; }
 
     Box *resize();
 

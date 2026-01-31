@@ -444,6 +444,9 @@ public:
     // Set theme manager and refresh display
     static void set_theme_manager(const ThemeManager& t);
 
+    static void rebuild_boxes();
+
+
 private:
     // Call me back again
     static void again_new_displaySQ (XtPointer client_data, XtIntervalId *id);

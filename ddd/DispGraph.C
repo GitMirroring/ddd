@@ -51,7 +51,6 @@ char DispGraph_rcsid[] =
 #include "graph/BoxEdgeA.h"
 #include "annotation.h"
 #include "DispBox.h"
-#include "graph/EdgeAPA.h"
 
 #include <vector>
 
@@ -459,7 +458,7 @@ BoxPoint DispGraph::default_pos(DispNode *new_node,
 }
 
 // Find all hints in edges leading to NODE; store them in HINTS
-void DispGraph::find_hints_to(GraphNode *node, GraphNodePointerArray& hints)
+void DispGraph::find_hints_to(GraphNode *node, std::vector<GraphNode *> &hints)
 {
     for (GraphEdge *edge = node->firstTo();
 	 edge != 0;
@@ -474,7 +473,7 @@ void DispGraph::find_hints_to(GraphNode *node, GraphNodePointerArray& hints)
 }
 
 // Find all hints in edges coming from NODE; store them in HINTS
-void DispGraph::find_hints_from(GraphNode *node, GraphNodePointerArray& hints)
+void DispGraph::find_hints_from(GraphNode *node, std::vector<GraphNode *> &hints)
 {
     for (GraphEdge *edge = node->firstFrom();
 	 edge != 0;
@@ -519,7 +518,7 @@ bool DispGraph::del (int disp_nr)
     unalias(disp_nr);
     DispNode* dn = idMap.get(disp_nr);
 
-    GraphNodePointerArray hints;
+    std::vector<GraphNode *> hints;
 
     find_hints_from(dn, hints);
     find_hints_to(dn, hints);
@@ -752,10 +751,10 @@ bool DispGraph::alias(Widget w, int disp_nr, int alias_disp_nr)
 
     // Hide ordinary hints and insert new alias edges
     GraphEdge *edge;
-    GraphNodePointerArray from_nodes;
-    GraphNodePointerArray to_nodes;
-    EdgeAnnotationPointerArray from_annotations;
-    EdgeAnnotationPointerArray to_annotations;
+    std::vector<GraphNode *> from_nodes;
+    std::vector<GraphNode *> to_nodes;
+    std::vector<EdgeAnnotation *> from_annotations;
+    std::vector<EdgeAnnotation *> to_annotations;
     int i;
 
     for (edge = dn->firstFrom(); edge != 0; edge = dn->nextFrom(edge))

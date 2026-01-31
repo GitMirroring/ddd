@@ -39,12 +39,145 @@ char PlotAgent_rcsid[] =
 
 #include <map>
 #include <algorithm>
+#include <fstream>
+#include <vector>
+#include <cstdio>
 
 
 DEFINE_TYPE_INFO_1(PlotAgent, LiterateAgent)
 
 string PlotAgent::plot_2d_settings = "";
 string PlotAgent::plot_3d_settings = "";
+
+// ------------------- PixelCache -------------------------------------------
+
+bool PixelCache::read_image(string file, int xdim, int ydim,
+                            int cdim, string gdbtype, Layout layout_)
+{
+    // Clear current content
+    width     = 0;
+    height    = 0;
+    channels  = 0;
+    pixel_size = 0;
+    pixmap.clear();
+    layout = layout_;
+
+    if (xdim <= 0 || ydim <= 0 || cdim <= 0)
+        return false;
+
+    std::ifstream is(file.chars(), std::ios::binary | std::ios::ate);
+    if (!is)
+        return false;
+
+    std::streamsize total_bytes_ss = is.tellg();
+    if (total_bytes_ss <= 0)
+        return false;
+
+    const size_t total_bytes = static_cast<size_t>(total_bytes_ss);
+    is.seekg(0, std::ios::beg);
+
+    const size_t num_samples = size_t(xdim) * size_t(ydim) * size_t(cdim);
+
+    if (num_samples == 0)
+        return false;
+
+    if (total_bytes % num_samples != 0)
+        return false;  // inconsistent file size
+
+    const size_t sample_size = total_bytes / num_samples;
+
+    // Read all bytes into pixmap
+    pixmap.resize(total_bytes);
+    if (!is.read(reinterpret_cast<char*>(pixmap.data()), static_cast<std::streamsize>(total_bytes)))
+    {
+        pixmap.clear();
+        return false;
+    }
+
+    // Deduce data type from gdbtype and sample size
+    bool is_float    = gdbtype.contains("float") || gdbtype.contains("double");
+    bool is_unsigned = gdbtype.contains("unsigned");
+
+    if (is_float)
+    {
+        if (sample_size == 4)
+            data_type = DT_FLOAT32;
+        else if (sample_size == 8)
+            data_type = DT_FLOAT64;
+        else
+            return false; // unsupported float size
+    }
+    else
+    {
+        switch (sample_size)
+        {
+        case 1:
+            data_type = is_unsigned ? DT_UINT8  : DT_INT8;
+            break;
+        case 2:
+            data_type = is_unsigned ? DT_UINT16 : DT_INT16;
+            break;
+        case 4:
+            data_type = is_unsigned ? DT_UINT32 : DT_INT32;
+            break;
+        default:
+            return false; // unsupported integer size
+        }
+    }
+
+    width      = xdim;
+    height     = ydim;
+    channels   = cdim;
+    pixel_size = sample_size;
+
+    return true;
+}
+
+bool PixelCache::write_image_interleaved(const string& filename)
+{
+    if (width <= 0 || height <= 0 || channels <= 0 || pixel_size == 0 || pixmap.empty())
+        return false;
+
+    const size_t num_pixels = size_t(width) * size_t(height);
+    const size_t num_samples = num_pixels * size_t(channels);
+    const size_t total_bytes = num_samples * pixel_size;
+
+    if (pixmap.size() < total_bytes)
+        return false;
+
+    FILE* fp = std::fopen(filename.chars(), "wb");
+    if (!fp)
+        return false;
+
+    if (layout==L_PLANAR && channels==3)
+    {
+        uint8_t* red   = pixmap.data();
+        uint8_t* green = red   + num_pixels * pixel_size;
+        uint8_t* blue  = green + num_pixels * pixel_size;
+
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                std::fwrite(red,   pixel_size, 1, fp);
+                red   += pixel_size;
+                std::fwrite(green, pixel_size, 1, fp);
+                green += pixel_size;
+                std::fwrite(blue,  pixel_size, 1, fp);
+                blue  += pixel_size;
+            }
+        }
+    }
+    else
+    {
+        std::fwrite(pixmap.data(), total_bytes, 1, fp);
+    }
+
+    std::fclose(fp);
+    return true;
+}
+
+// ------------------- PlotAgent -------------------------------------------
 
 // Start and initialize
 void PlotAgent::start_with(const string& init)

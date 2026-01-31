@@ -452,7 +452,7 @@ static void array_test()
     // Play with rotate and show/hide buttons
     DayOfWeek days_of_week[7] = {Sun, Mon, Tue, Wed, Thu, Fri, Sat};
 
-    const char *twodim [2][3] = {{ "Pioneering", "women", "in"},
+    char *twodim [2][3] = {{ "Pioneering", "women", "in"},
 			   { "computer", "science", "!"}};
 
     int array[12][12];
@@ -624,7 +624,7 @@ static void plot_test()
 	ir[i] = rnd(100);
     shellsort(ir, numbers(ir));
 
-    static double dr[50][100];
+    static double dr[50][50];
     double pi = 3.14159265358979323846;
 
     int j;

@@ -1802,7 +1802,9 @@ void DispValue::plot() const
 
     if (res==false)
     {
-        delete_plotter(m_plotter);
+        if (m_plotter)
+            m_plotter->terminate(); // triggers Died → DeletePlotterHP → DeletePlotterCB
+
         MUTABLE_THIS(DispValue *)->m_plotter = nullptr;
         return;
     }
@@ -2194,45 +2196,17 @@ bool DispValue::plotImage(PlotAgent *&plotter) const
     eldata.gdbtype = gdbtype;
     eldata.binary = true;
 
-    if (cdim==3)
+    int xdim  = atoi(xdimstr.chars());
+    int ydim  = atoi(ydimstr.chars());
+    eldata.imagedata.read_image(eldata.file, xdim, ydim, cdim, eldata.gdbtype,
+                            PixelCache::L_PLANAR);
+
+    if (cdim == 3)
     {
         eldata.plottype = PlotElement::RGBIMAGE;
-        int size = atoi(sizestr.chars());
-        int xdim  = atoi(xdimstr.chars());
-        int ydim  = atoi(ydimstr.chars());
-        int cdim  = atoi(cdimstr.chars());
-        int num = xdim * ydim * cdim;
-
-        char *filebuffer = new char[size*num];
-        FILE *fp = fopen(eldata.file.chars(), "rb");
-        int read = fread(filebuffer, size, num, fp);
-        fclose(fp);
-
-        if (read!=num)
-        {
-            delete [] filebuffer;
-            return false;
-        }
-
-        fp = fopen(eldata.file.chars(), "wb");
-        char *red = &filebuffer[0];
-        char *green = &filebuffer[xdim*ydim*size];
-        char *blue = &filebuffer[xdim*ydim*size*2];
-        for (int y=0; y<ydim; y++)
-        {
-            for (int x=0; x<xdim; x++)
-            {
-                fwrite(red, size, 1, fp);
-                red += size;
-                fwrite(green, size, 1, fp);
-                green += size;
-                fwrite(blue, size, 1, fp);
-                blue += size;
-            }
-        }
-        fclose(fp);
-        delete [] filebuffer;
+        eldata.imagedata.write_image_interleaved(eldata.file);
     }
+
 
     return true;
 }
@@ -2344,6 +2318,10 @@ bool DispValue::plotCVMat(PlotAgent *&plotter) const
     eldata.gdbtype = gdbtype;
     eldata.binary = true;
 
+    int xdim  = atoi(colsstr.chars());
+    int ydim  = atoi(rowsstr.chars());
+    eldata.imagedata.read_image(eldata.file, xdim, ydim, colorchannels, eldata.gdbtype,
+                            PixelCache::L_INTERLEAVED);
     return true;
 }
 

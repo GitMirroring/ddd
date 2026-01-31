@@ -66,6 +66,8 @@ char plotter_rcsid[] =
 #include <stdio.h>
 #include <fstream>
 #include <vector>
+#include <sstream>
+#include <locale>
 
 #include <Xm/Command.h>
 #include <Xm/MainW.h>
@@ -79,12 +81,17 @@ char plotter_rcsid[] =
 #include <Xm/Text.h>
 #include <Xm/TextF.h>
 #include <Xm/ToggleB.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Label.h>
+#include <Xm/MenuShell.h>
 #include <Xm/CascadeB.h>
+
+#include <stdio.h>
+#include <cmath>
 
 static void TraceInputHP (Agent *source, void *, void *call_data);
 static void TraceOutputHP(Agent *source, void *, void *call_data);
 static void TraceErrorHP (Agent *source, void *, void *call_data);
-static void SetStatusHP  (Agent *source, void *, void *call_data);
 static void PlotterNotFoundHP(Agent *source, void *, void *call_data);
 
 static void CancelPlotCB(Widget, XtPointer, XtPointer);
@@ -113,6 +120,21 @@ struct PlotWindowInfo {
     XtIntervalId settings_timer = 0;        // Wait for settings
     string settings_file = "";              // File to get settings from
     StatusDelay *settings_delay = nullptr;  // Delay while getting settings
+    bool   have_gpval = false;
+    double x_min = 0, x_max = 0;
+    double y_min = 0, y_max = 0;
+    double term_xmin = 0, term_xmax = 0;
+    double term_ymin = 0, term_ymax = 0;
+    double term_xsize = 0, term_ysize = 0;
+    double term_scale = 1;
+    string gnuplot_err_buf;                 // to store incomplete messages from gnuplot
+
+
+    // workaround for the floating graph in the gnuplot window
+    // Calibration offsets in data coordinates
+    bool   have_offset = false;
+    double x_offset = 0.0;
+    double y_offset = 0.0;
 };
 
 
@@ -647,14 +669,6 @@ void clear_plot_window_cache()
     plot_infos.clear();
 }
 
-// Delete plot window
-void delete_plotter(PlotAgent *plotter)
-{
-    plotter->removeAllHandlers();
-    plotter->terminate();
-    // delete plotter;
-}
-
 // Create a new plot window
 PlotAgent *new_plotter(const string& name, DispValue *source)
 {
@@ -691,10 +705,7 @@ PlotAgent *new_plotter(const string& name, DispValue *source)
     // Add trace handlers
     plotter->addHandler(Input,  TraceInputHP);     // Gnuplot => DDD
     plotter->addHandler(Output, TraceOutputHP);    // DDD => Gnuplot
-    plotter->addHandler(Error,  TraceErrorHP);     // Gnuplot Errors => DDD
-
-    // Show Gnuplot Errors in status line
-    plotter->addHandler(Error,  SetStatusHP,       (void *)plot);
+    plotter->addHandler(Error,  TraceErrorHP, plot);     // Gnuplot Errors => DDD
 
     // Handle death
     plotter->addHandler(Died, PlotterNotFoundHP, (void *)plot);
@@ -704,6 +715,15 @@ PlotAgent *new_plotter(const string& name, DispValue *source)
 
     if (!init.empty() && !init.contains('\n', -1))
 	init += '\n';
+   init +=
+        "set mouse\n"
+        "bind Button1 "
+        "'print \"DDDPIX\", "
+        "  MOUSE_X, MOUSE_Y, "
+        "  GPVAL_X_MIN, GPVAL_X_MAX, GPVAL_Y_MIN, GPVAL_Y_MAX, "
+        "  GPVAL_TERM_XMIN, GPVAL_TERM_XMAX, GPVAL_TERM_YMIN, GPVAL_TERM_YMAX, "
+        "  GPVAL_TERM_XSIZE, GPVAL_TERM_YSIZE, GPVAL_TERM_SCALE"
+        "'\n";
 
     plotter->start_with(init);
     plot->plotter = plotter;
@@ -934,39 +954,7 @@ static void SetContourCB(Widget w, XtPointer client_data, XtPointer)
     send_and_replot(plot, cmd);
 }
 
-//-------------------------------------------------------------------------
-// Status line
-//-------------------------------------------------------------------------
 
-// Forward Gnuplot error messages to DDD status line
-static void SetStatusHP(Agent *, void *client_data, void *call_data)
-{
-    PlotWindowInfo *plot = (PlotWindowInfo *)client_data;
-    DataLength* dl = (DataLength *) call_data;
-    string s(dl->data, dl->length);
-
-    if (plot->command != 0)
-    {
-	string msg = s;
-	strip_space(msg);
-	MString xmsg = tb(msg);
-	XmCommandError(plot->command, xmsg.xmstring());
-    }
-
-    while (!s.empty())
-    {
-	string line;
-	if (s.contains('\n'))
-	    line = s.before('\n');
-	else
-	    line = s;
-	s = s.after('\n');
-	strip_space(line);
-
-	if (!line.empty())
-	    set_status(line);
-    }
-}
 
 //-------------------------------------------------------------------------
 // Trace communication
@@ -1007,7 +995,336 @@ static void TraceOutputHP(Agent *, void *, void *call_data)
     trace(">> ", call_data);
 }
 
-static void TraceErrorHP(Agent *, void *, void *call_data)
+// The shell containing the tip label.
+static Widget tip_shell               = 0;
+
+// The tip label.
+static Widget tip_label               = 0;
+
+// The tip row; a RowColumn widget surrounding the label.
+static Widget tip_row                 = 0;
+
+// Timer to auto-popdown the tip
+static XtIntervalId tip_timer         = 0;
+
+// Refresh timer
+static XtIntervalId refresh_timer         = 0;
+
+static void TipPopdownCB(XtPointer, XtIntervalId*)
 {
-    trace("<= ", call_data);
+    if (tip_shell != 0)
+        XtPopdown(tip_shell);
+    tip_timer = 0;
+}
+
+void handle_pixel_pick(PlotWindowInfo *plot, int x, int y);
+
+static bool pointer_to_data(PlotWindowInfo *plot,
+                            int win_x, int win_y,
+                            double &data_x, double &data_y)
+{
+    if (!plot || !plot->plotter || !plot->have_gpval)
+        return false;
+
+    Dimension w, h;
+    XtVaGetValues(plot->gnuplot,
+                  XmNwidth,  &w,
+                  XmNheight, &h,
+                  NULL);
+    if (w <= 1 || h <= 1)
+        return false;
+
+    // window coords -> fractional screen coords (FRAC_X/FRAC_Y)
+    //    FRAC origin in gnuplot is bottom-left, so flip Y.
+    double frac_x = (double)win_x / (double)(w - 1);
+    double frac_y = 1.0 - (double)win_y / (double)(h - 1);
+
+    // FRAC -> gnuplot SCREEN coordinates using GPVAL_TERM_*.
+    double screen_x = frac_x * plot->term_xsize / plot->term_scale;
+    double screen_y = frac_y * plot->term_ysize / plot->term_scale;
+
+    // SCREEN -> GRAPH coordinates [0,1] inside axes box
+    double graph_x = (screen_x - plot->term_xmin) /
+                     (plot->term_xmax - plot->term_xmin);
+    double graph_y = (screen_y - plot->term_ymin) /
+                     (plot->term_ymax - plot->term_ymin);
+
+    graph_x = std::max(0.0, std::min(1.0, graph_x));
+    graph_y = std::max(0.0, std::min(1.0, graph_y));
+
+    // GRAPH -> DATA using GPVAL_X/Y_MIN/MAX
+    data_x = plot->x_min + graph_x * (plot->x_max - plot->x_min);
+    data_y = plot->y_min + graph_y * (plot->y_max - plot->y_min);
+
+    return true;
+}
+
+static bool map_pointer_to_image_pixel(PlotWindowInfo *plot,
+                                       int win_x, int win_y,
+                                       int &ix, int &iy)
+{
+    if (!plot || !plot->plotter || !plot->have_gpval)
+        return false;
+
+    PixelCache *img = plot->plotter->getPixelCache();
+    if (!img)
+        return false;
+
+    double data_x, data_y;
+    if (!pointer_to_data(plot, win_x, win_y, data_x, data_y))
+        return false;
+
+    // Apply calibration offset from DDDPIX click
+    if (plot->have_offset)
+    {
+        data_x += plot->x_offset;
+        data_y += plot->y_offset;
+    }
+
+    ix = std::max(0, std::min(int(std::round(data_x)), img->width  - 1));
+    iy = std::max(0, std::min(int(std::round(data_y)), img->height - 1));
+
+    return true;
+}
+
+static void RefreshCB(XtPointer client_data, XtIntervalId*)
+{
+    PlotWindowInfo *plot = (PlotWindowInfo *)client_data;
+    if (!plot || !plot->plotter || !plot->gnuplot)
+    {
+        refresh_timer = 0;
+        return;
+    }
+
+    Display *dpy = XtDisplay(plot->gnuplot);
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask;
+
+    if (!XQueryPointer(dpy, XtWindow(plot->gnuplot),
+                       &root, &child,
+                       &root_x, &root_y,
+                       &win_x, &win_y, &mask))
+    {
+        refresh_timer = 0;
+        return;
+    }
+
+    if (mask & Button1Mask)
+    {
+        int ix, iy;
+        if (map_pointer_to_image_pixel(plot, win_x, win_y, ix, iy))
+            handle_pixel_pick(plot, ix, iy);
+
+        // continue polling
+        refresh_timer = XtAppAddTimeOut(
+            XtWidgetToApplicationContext(plot->shell),
+            50,
+            RefreshCB,
+            plot);
+    }
+    else
+    {
+        // button released -> stop
+        refresh_timer = 0;
+    }
+}
+
+
+void handle_pixel_pick(PlotWindowInfo *plot, int x, int y)
+{
+    if (plot == nullptr || plot->plotter == nullptr)
+        return;
+
+    if (!plot->plotter->isImage())
+        return;
+
+    if (tip_shell == 0)
+    {
+        Arg args[10];
+        int arg;
+
+        Widget w = plot->shell;
+
+        arg = 0;
+        XtSetArg(args[arg], XmNallowShellResize, True);             arg++;
+        XtSetArg(args[arg], XmNx, WidthOfScreen(XtScreen(w)) + 1);  arg++;
+        XtSetArg(args[arg], XmNy, HeightOfScreen(XtScreen(w)) + 1); arg++;
+        XtSetArg(args[arg], XmNwidth,  10);                         arg++;
+        XtSetArg(args[arg], XmNheight, 10);                         arg++;
+        tip_shell = verify(XmCreateMenuShell(findTheTopLevelShell(w),
+                                             XMST("tipShell"), args, arg));
+
+        arg = 0;
+        XtSetArg(args[arg], XmNmarginWidth, 0);          arg++;
+        XtSetArg(args[arg], XmNmarginHeight, 0);         arg++;
+        XtSetArg(args[arg], XmNresizeWidth, True);       arg++;
+        XtSetArg(args[arg], XmNresizeHeight, True);      arg++;
+        XtSetArg(args[arg], XmNborderWidth, 0);          arg++;
+        XtSetArg(args[arg], XmNshadowThickness, 0);      arg++;
+        tip_row = verify(XmCreateRowColumn(tip_shell, XMST("tipRow"),
+                                           args, arg));
+        XtManageChild(tip_row);
+
+        arg = 0;
+        MString empty("");
+        XtSetArg(args[arg], XmNlabelString, empty.xmstring()); arg++;
+        XtSetArg(args[arg], XmNrecomputeSize, True);                arg++;
+        XtSetArg(args[arg], XmNalignment, XmALIGNMENT_BEGINNING);   arg++;
+        tip_label = XmCreateLabel(tip_row, XMST("tipLabel"), args, arg);
+        XtManageChild(tip_label);
+
+        // Realize once
+        XtPopup(tip_shell, XtGrabNone);
+        XtPopdown(tip_shell);
+    }
+
+    PixelCache *imgdata = plot->plotter->getPixelCache();
+
+    if (x<0 || y<0 || x>imgdata->width || y>imgdata->height)
+        return;
+
+    char buf[64];
+    snprintf(buf, sizeof(buf), "(%d, %d) = ", x, y);
+    string output = buf;
+    if (imgdata != nullptr)
+        output += imgdata->print_pixel_value(x, y);
+
+    MString tip = tt(output);
+    XtVaSetValues(tip_label,
+                  XmNlabelString, tip.xmstring(),
+                  NULL);
+
+    // Position tooltip near mouse cursor (unchanged)
+    Display *dpy = XtDisplay(plot->gnuplot);
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask;
+    if (XQueryPointer(dpy, XtWindow(plot->gnuplot),
+                      &root, &child,
+                      &root_x, &root_y,
+                      &win_x, &win_y, &mask))
+    {
+        XtVaSetValues(tip_shell,
+                      XmNx, (Position)(root_x + 15),
+                      XmNy, (Position)(root_y + 15),
+                      NULL);
+    }
+
+    XtPopup(tip_shell, XtGrabNone);
+
+    // (Re)start 0.5s auto-hide timer
+    if (tip_timer != 0)
+    {
+        XtRemoveTimeOut(tip_timer);
+        tip_timer = 0;
+    }
+
+    tip_timer = XtAppAddTimeOut(
+        XtWidgetToApplicationContext(plot->shell),
+        500,                 // milliseconds
+        TipPopdownCB,
+        nullptr);
+}
+
+
+
+static void TraceErrorHP(Agent *, void *client_data, void *call_data)
+{
+    PlotWindowInfo *plot = (PlotWindowInfo *)client_data;
+    DataLength* dl = (DataLength *) call_data;
+
+    // Append new chunk to our buffer
+    string chunk(dl->data, dl->length);
+    string &gnuplot_err_buf = plot->gnuplot_err_buf;
+    gnuplot_err_buf += chunk;
+
+    // Process complete lines
+    while (gnuplot_err_buf.contains('\n'))
+    {
+        string line = gnuplot_err_buf.before('\n');
+        gnuplot_err_buf = gnuplot_err_buf.after('\n');
+
+        strip_space(line);
+        if (line.empty())
+            continue;
+
+        // Our special line from the bind
+        if (line.contains("DDDPIX", 0))
+        {
+            // Extract everything between DDDSTART and DDDEND
+            string rest = line.after("DDDPIX");
+            strip_space(rest);
+            double x_data, y_data;
+            double x_min, x_max, y_min, y_max;
+            double txmin, txmax, tymin, tymax;
+            double txsize, tysize, tscale;
+
+            std::istringstream iss(rest.chars());
+            static const std::locale c_locale("C");
+            iss.imbue(c_locale);
+
+            iss >> x_data >> y_data
+                >> x_min >> x_max >> y_min >> y_max
+                >> txmin >> txmax >> tymin >> tymax
+                >> txsize >> tysize >> tscale;
+
+            // Store for mapping function
+            plot->x_min      = x_min;
+            plot->x_max      = x_max;
+            plot->y_min      = y_min;
+            plot->y_max      = y_max;
+            plot->term_xmin  = txmin;
+            plot->term_xmax  = txmax;
+            plot->term_ymin  = tymin;
+            plot->term_ymax  = tymax;
+            plot->term_xsize = txsize;
+            plot->term_ysize = tysize;
+            plot->term_scale = tscale;
+            plot->have_gpval = true;
+
+            // Get current pointer position in window coords
+            Display *dpy = XtDisplay(plot->gnuplot);
+            Window root, child;
+            int root_x, root_y, win_x, win_y;
+            unsigned int mask;
+            if (XQueryPointer(dpy, XtWindow(plot->gnuplot),
+                            &root, &child,
+                            &root_x, &root_y,
+                            &win_x, &win_y, &mask))
+            {
+                double est_x, est_y;
+                if (pointer_to_data(plot, win_x, win_y, est_x, est_y))
+                {
+                    // Calibrate offsets: true (MOUSE_*) minus estimated
+                    plot->x_offset   = x_data - est_x;
+                    plot->y_offset   = y_data - est_y;
+                    plot->have_offset = true;
+                }
+            }
+
+            // Draw the initial tooltip using the *true* pixel index
+            handle_pixel_pick(plot, int(std::round(x_data)), int(std::round(y_data)));
+
+            // Start polling if not yet active
+            if (refresh_timer == 0)
+            {
+                refresh_timer = XtAppAddTimeOut(
+                    XtWidgetToApplicationContext(plot->shell),
+                    50,
+                    RefreshCB,
+                    plot);
+            }
+        }
+        else
+        {
+            // Normal gnuplot error/warning
+            set_status(line);
+            if (plot->command != 0)
+            {
+                MString xmsg = tb(line);
+                XmCommandError(plot->command, xmsg.xmstring());
+            }
+        }
+    }
 }

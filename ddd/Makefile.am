@@ -320,7 +320,6 @@ GRAPH_SRC = \
 	graph/BoxGraphN.h  \
 	graph/EdgeA.C      \
 	graph/EdgeA.h      \
-	graph/EdgeAPA.h    \
 	graph/Graph.C      \
 	graph/Graph.h      \
 	graph/GraphEdge.C  \
@@ -333,7 +332,6 @@ GRAPH_SRC = \
 	graph/GraphNode.C  \
 	graph/GraphNode.h  \
 	graph/GraphNodeI.h \
-	graph/GraphNPA.h   \
 	graph/HintGraphN.C \
 	graph/HintGraphN.h \
 	graph/LineGraphE.C \

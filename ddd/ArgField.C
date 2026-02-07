@@ -52,12 +52,6 @@ ArgField::ArgField (Widget parent, const char* name)
     Arg args[10];
     Cardinal arg = 0;
 
-    if (!app_data.button_captions)
-    {
-	// Make argument field a little less high
-	XtSetArg(args[arg], XmNmarginHeight, 2); arg++;
-    }
-
     arg_text_field = CreateComboBox(parent, name, args, arg);
 
     XtAddCallback(arg_text_field, XmNvalueChangedCallback,

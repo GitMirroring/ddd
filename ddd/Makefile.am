@@ -46,7 +46,7 @@ RM   = rm -f
 
 # Suffixes used in this file.
 SUFFIXES = .C .c .Y .L .txt .xbm .xbmxx .xpm .xpmxx \
-	   .xface .fig .jpg .png .gif .pdf $(IMGEXT)
+	   .fig .jpg .png .gif .pdf $(IMGEXT)
 
 # Shared data installation
 dddrootdir    = $(pkgdatadir)-@VERSION@
@@ -182,7 +182,6 @@ XSTUFF_SRC = \
 	x11/OnOff.h      \
 	x11/Sash.h       \
 	x11/Widget.h     \
-	x11/Xpm.h        \
 	x11/XErrorB.C    \
 	x11/XErrorB.h
 
@@ -936,15 +935,15 @@ bug.$(OBJEXT):	$(srcdir)/bug.C
 
 # Icon rules
 #.xpm.xbm:
-$(toolbardir)/%.xbm:  $(srctoolbardir)/%.xpm
-	@$(ECHO) "Creating $@ from $<"
-	@mkdir -p $(toolbardir)
-	@-base=`$(ECHO) $@ | $(SED) 's,.*/,,' | $(SED) 's/[.]x[bp]m.*//'`; \
-	$(SED) 's/[	 ][cg]4*[ 	][#a-zA-Z0-9][#a-zA-Z0-9]*//g' $< | \
-	$(SED) 's/[nN]one/white/g' | \
-	$(XPMTOPPM) | $(PNMDEPTH) 255 | $(PPMTOPGM) | $(PGMTOPBM) | \
-	$(PBMTOXBM) | $(SED) "s/noname/$${base}/g" | \
-	$(SED) "s/static char/static unsigned char/g" > $@
+#$(toolbardir)/%.xbm:  $(srctoolbardir)/%.xpm
+#	@$(ECHO) "Creating $@ from $<"
+#	@mkdir -p $(toolbardir)
+#	@-base=`$(ECHO) $@ | $(SED) 's,.*/,,' | $(SED) 's/[.]x[bp]m.*//'`; \
+#	$(SED) 's/[	 ][cg]4*[ 	][#a-zA-Z0-9][#a-zA-Z0-9]*//g' $< | \
+#	$(SED) 's/[nN]one/white/g' | \
+#	$(XPMTOPPM) | $(PNMDEPTH) 255 | $(PPMTOPGM) | $(PGMTOPBM) | \
+#	$(PBMTOXBM) | $(SED) "s/noname/$${base}/g" | \
+#	$(SED) "s/static char/static unsigned char/g" > $@
 
 #.xbm.xface:
 #	@$(ECHO) "Creating $@"
@@ -978,18 +977,18 @@ $(toolbardir)/%.xbm:  $(srctoolbardir)/%.xpm
 #	@test -s $@~ && $(MV) $@~ $@ || ($(RM) $@~; test -s $@)
 
 #.xpm.xbmxx:
-$(toolbardir)/%.xbmxx:  $(srctoolbardir)/%.xpm
-	@$(ECHO) "Creating $@ from $<"
-	@mkdir -p $(toolbardir)
-	@-base=`$(ECHO) $@ | $(SED) 's,.*/,,' | $(SED) 's/[.]x[bp]m.*//'`; \
-	$(SED) 's/[ 	]c[	 ][#a-zA-Z0-9][#a-zA-Z0-9]*//' $< | \
-	$(SED) 's/ g black  / g grey50 /' | \
-	$(SED) 's/ g white  / g grey75 /' | \
-	$(SED) 's/g \([a-zA-Z0-9]*\) /c \1 g \1 /' | \
-	$(SED) 's/[nN]one/white/g' | \
-	$(XPMTOPPM) | $(PNMDEPTH) 255 | $(PPMTOPGM) | $(PGMTOPBM) | \
-	$(PBMTOXBM) | $(SED) "s/noname/$${base}_xx/" | \
-	$(SED) "s/static char/static unsigned char/g" > $@
+#$(toolbardir)/%.xbmxx:  $(srctoolbardir)/%.xpm
+#	@$(ECHO) "Creating $@ from $<"
+#	@mkdir -p $(toolbardir)
+#	@-base=`$(ECHO) $@ | $(SED) 's,.*/,,' | $(SED) 's/[.]x[bp]m.*//'`; \
+#	$(SED) 's/[ 	]c[	 ][#a-zA-Z0-9][#a-zA-Z0-9]*//' $< | \
+#	$(SED) 's/ g black  / g grey50 /' | \
+#	$(SED) 's/ g white  / g grey75 /' | \
+#	$(SED) 's/g \([a-zA-Z0-9]*\) /c \1 g \1 /' | \
+#	$(SED) 's/[nN]one/white/g' | \
+#	$(XPMTOPPM) | $(PNMDEPTH) 255 | $(PPMTOPGM) | $(PGMTOPBM) | \
+#	$(PBMTOXBM) | $(SED) "s/noname/$${base}_xx/" | \
+#	$(SED) "s/static char/static unsigned char/g" > $@
 
 # Icons and logos.
 
@@ -1009,35 +1008,11 @@ icons:	$(ICONS)
 	@:
 
 # All X bitmaps are derived from the XPM sources.
-
-$(buildicondir)/dddmask.xpm: $(icondir)/ddd.xpm
-	@test -d $(buildicondir) || mkdir $(buildicondir)
-	$(SED) 's/[wW]hite/black/g' $(icondir)/ddd.xpm | $(DELETE_CR) > $@
-
-$(buildicondir)/ddd.xbm: $(icondir)/ddd.xpm
-
-#$(buildicondir)/ddd.xface: $(buildicondir)/ddd.xbm
-
-$(buildicondir)/dddmask.xbm: $(icondir)/dddmask.xpm
-
-# Original filter for dddsplash to extract g4 info
-# $(SED) 's/[	 ][cmg][ 	][#a-zA-Z0-9][#a-zA-Z0-9]*//g' | \
 #
-
-$(buildicondir)/dddsplash.xbm: $(icondir)/dddsplash.xpm
-	@test -d $(buildicondir) || mkdir $(buildicondir)
-	@$(ECHO) "Creating $@"
-	@-$(CAT) $(icondir)/dddsplash.xpm | \
-	$(XPMTOPPM) | $(PNMDEPTH) 255 | $(PNMGAMMA) 0.4 | $(PPMTOPGM) | \
-	$(PGMENHANCE) -7 | \
-	$(PGMTOPBM) | $(PBMTOXBM) | $(SED) 's/noname/dddsplash/g' | \
-	$(SED) "s/static char/static unsigned char/g" | $(DELETE_CR) > $@~
-	@test -s $@~ && $(MV) $@~ $@ || ($(RM) $@~; test -s $@)
-
-$(buildicondir)/dddlogo.xpm: $(icondir)/dddsplash.xpm
-	@test -d $(buildicondir) || mkdir $(buildicondir)
-	$(CONVERT) -fill white \
-	-draw 'rectangle 0,138 409,139' -draw 'rectangle 408,0 409,139' $< $@
+# $(buildicondir)/dddlogo.xpm: $(icondir)/dddsplash.xpm
+# 	@test -d $(buildicondir) || mkdir $(buildicondir)
+# 	$(CONVERT) -fill white \
+# 	-draw 'rectangle 0,138 409,139' -draw 'rectangle 408,0 409,139' $< $@
 
 
 XBM_GLYPH_ICONS = \
@@ -1097,35 +1072,6 @@ XPM_ICONS = \
 	$(srctoolbardir)/unwatch.xpm \
 	$(srctoolbardir)/watch.xpm 
 
-# XBM icons are derived from XPM sources
-XBM_ICONS = \
-	$(toolbardir)/breakat.xbm \
-	$(toolbardir)/clearat.xbm \
-	$(toolbardir)/cluster.xbm \
-	$(toolbardir)/delete.xbm \
-	$(toolbardir)/deref.xbm \
-	$(toolbardir)/disable.xbm \
-	$(toolbardir)/display.xbm \
-	$(toolbardir)/findbwd.xbm \
-	$(toolbardir)/findfwd.xbm \
-	$(toolbardir)/enable.xbm \
-	$(toolbardir)/hide.xbm \
-	$(toolbardir)/lookup.xbm \
-	$(toolbardir)/maketemp.xbm \
-	$(toolbardir)/newbreak.xbm \
-	$(toolbardir)/newdisplay.xbm \
-	$(toolbardir)/newwatch.xbm \
-	$(toolbardir)/plot.xbm \
-	$(toolbardir)/print.xbm \
-	$(toolbardir)/properties.xbm \
-	$(toolbardir)/rotate.xbm \
-	$(toolbardir)/set.xbm \
-	$(toolbardir)/show.xbm \
-	$(toolbardir)/uncluster.xbm \
-	$(toolbardir)/undisplay.xbm \
-	$(toolbardir)/unwatch.xbm \
-	$(toolbardir)/watch.xbm 
-
 # XPMXX icons (insensitive XPM icons) are derived from XBM sources
 XPM_XX_ICONS = \
 	$(toolbardir)/breakat.xpmxx \
@@ -1156,52 +1102,17 @@ XPM_XX_ICONS = \
 	$(toolbardir)/watch.xpmxx 
 
 
-# XBMXX icons (insensitive XBM icons) are derived from XPM sources
-XBM_XX_ICONS = \
-	$(toolbardir)/breakat.xbmxx \
-	$(toolbardir)/clearat.xbmxx \
-	$(toolbardir)/cluster.xbmxx \
-	$(toolbardir)/delete.xbmxx \
-	$(toolbardir)/deref.xbmxx \
-	$(toolbardir)/disable.xbmxx \
-	$(toolbardir)/display.xbmxx \
-	$(toolbardir)/findbwd.xbmxx \
-	$(toolbardir)/findfwd.xbmxx \
-	$(toolbardir)/enable.xbmxx \
-	$(toolbardir)/hide.xbmxx \
-	$(toolbardir)/lookup.xbmxx \
-	$(toolbardir)/maketemp.xbmxx \
-	$(toolbardir)/newbreak.xbmxx \
-	$(toolbardir)/newdisplay.xbmxx \
-	$(toolbardir)/newwatch.xbmxx \
-	$(toolbardir)/plot.xbmxx \
-	$(toolbardir)/print.xbmxx \
-	$(toolbardir)/properties.xbmxx \
-	$(toolbardir)/rotate.xbmxx \
-	$(toolbardir)/set.xbmxx \
-	$(toolbardir)/show.xbmxx \
-	$(toolbardir)/uncluster.xbmxx \
-	$(toolbardir)/undisplay.xbmxx \
-	$(toolbardir)/unwatch.xbmxx \
-	$(toolbardir)/watch.xbmxx
-
 # All icons
 # Order is significant here!  First sources, then derived files.
 ICONS = \
 	$(icondir)/ddd.xpm \
-	$(icondir)/ddd.xbm \
 	$(icondir)/dddback.xpm \
-	$(icondir)/dddmask.xpm \
-	$(icondir)/dddmask.xbm \
 	$(icondir)/dddsplash.xpm \
-	$(buildicondir)/dddsplash.xbm \
 	$(XPM_ICONS) \
 	$(XBM_CURSORS_ICONS) \
 	$(XBM_GLYPH_ICONS) \
 	$(XBM_TICTACTOE_ICONS) \
-	$(XBM_ICONS) \
-	$(XPM_XX_ICONS) \
-	$(XBM_XX_ICONS)
+	$(XPM_XX_ICONS)
 
 # -----------------------------------------------------------------------------
 # DDD Manual.
@@ -1570,7 +1481,6 @@ MAINTAINERCLEANFILES = x11/Ddd.in ddd.vsl.h gfdl.texinfo \
 	ddd/PICS/*.gif \
 	ddd/PICS/*.jpg \
 	ddd/PICS/*.pdf \
-	$(buildicondir)/ddd.xface $(buildicondir)/dddsplash.xbm \
 	$(vsldir)/ddd.vsl
 
 # `make diststuff' creates all files required for a distribution.

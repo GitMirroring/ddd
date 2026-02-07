@@ -1661,26 +1661,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNbuttonCaptions),
-        XTRESSTR(XtCButtonCaptions),
-        XmRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, button_captions),
-        XmRImmediate,
-        XtPointer(True)
-    },
-
-    {
-        XTRESSTR(XtNbuttonImages),
-        XTRESSTR(XtCButtonImages),
-        XmRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, button_images),
-        XmRImmediate,
-        XtPointer(True)
-    },
-
-    {
         XTRESSTR(XtNscaleToolbar),
         XTRESSTR(XtCScaleToolbar),
         XmRBoolean,
@@ -1796,16 +1776,6 @@ XtResource ddd_resources[] = {
         XmRBoolean,
         sizeof(Boolean),
         XtOffsetOf(AppData, splash_screen),
-        XmRImmediate,
-        XtPointer(True)
-    },
-
-    {
-        XTRESSTR(XtNcolorWMIcons),
-        XTRESSTR(XtCColorWMIcons),
-        XmRBoolean,
-        sizeof(Boolean),
-        XtOffsetOf(AppData, color_wm_icons),
         XmRImmediate,
         XtPointer(True)
     },

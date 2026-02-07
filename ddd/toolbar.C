@@ -200,29 +200,6 @@ static void ResetLabelEH(Widget w, XtPointer, XEvent *, Boolean *)
 			 ResetLabelEH, XtPointer(0));
 }
 
-static void center_buttons(const MMDesc items[], Dimension offset)
-{
-    for (const MMDesc *item = items; item != 0 && item->name != 0; item++)
-    {
-	Widget w = item->widget;
-	if (w == 0)
-	    continue;
-
-	XtVaSetValues(w,
-		      XmNtopOffset, offset / 2,
-		      XmNbottomOffset, (offset + 1) / 2,
-		      XtPointer(0));
-
-	// In OSF/Motif, setting both labelString and labelPixmap
-	// causes the button to ignore the labelString extent, giving
-	// a bad alignment of the labelString.  This goes away as soon
-	// as the label string is reset.  Hence, reset it upon creation.
-	XtAddEventHandler(w, ExposureMask, False, 
-			  ResetLabelEH, XtPointer(0));
-    }
-}
-
-
 //-----------------------------------------------------------------------
 // Toolbar creation
 //-----------------------------------------------------------------------
@@ -231,11 +208,8 @@ static void center_buttons(const MMDesc items[], Dimension offset)
 // the buttons ITEMS.  Return LABEL and ARGFIELD.
 Widget create_toolbar(Widget parent, const string& /* name */,
 		      MMDesc *items1, MMDesc *items2,
-		      Widget& label, ArgField*& argfield,
-		      unsigned char label_type)
+		      Widget& label, ArgField*& argfield)
 {
-    assert(label_type == XmPIXMAP || label_type == XmSTRING);
-
     Arg args[10];
     Cardinal arg = 0;
 
@@ -265,7 +239,7 @@ Widget create_toolbar(Widget parent, const string& /* name */,
 		  app_data.button_color_key,
 		  app_data.active_button_color_key);
 
-    if (label_type == XmPIXMAP && !app_data.retro_style)
+    if (!app_data.retro_style)
     {
 	// Use flat buttons
 	flatten_buttons(items1);
@@ -276,14 +250,14 @@ Widget create_toolbar(Widget parent, const string& /* name */,
     MMaddItems(toolbar, items1);
     MMaddCallbacks(items1);
     MMaddHelpCallback(items1, ImmediateHelpCB);
-    set_label_type(items1, label_type);
+    set_label_type(items1, XmPIXMAP);
 
     if (items2 != 0)
     {
 	MMaddItems(toolbar, items2);
 	MMaddCallbacks(items2);
 	MMaddHelpCallback(items2, ImmediateHelpCB);
-	set_label_type(items2, label_type);
+	set_label_type(items2, XmPIXMAP);
     }
 
     Widget first_button = align_buttons(items1, items2);
@@ -324,17 +298,6 @@ Widget create_toolbar(Widget parent, const string& /* name */,
 		      XmNpaneMaximum, toolbar_height,
 		      XmNpaneMinimum, toolbar_height,
 		      XtPointer(0));
-
-	if (label_type == XmSTRING)
-	{
-	    Dimension offset = max(arg_height - button_height, 0);
-
-	    // Center all labels.  This must also be done if offset is
-	    // zero, since OSF/Motif 2.0 has trouble centering the
-	    // labels.
-	    center_buttons(items1, offset);
-	    center_buttons(items2, offset);
-	}
 
 	if (button_height > arg_height)
 	{

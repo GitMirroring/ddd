@@ -104,11 +104,6 @@ extern void dddToggleValueTipsCB            (Widget, XtPointer, XtPointer);
 extern void dddToggleButtonDocsCB           (Widget, XtPointer, XtPointer);
 extern void dddToggleValueDocsCB            (Widget, XtPointer, XtPointer);
 
-extern void dddToggleButtonCaptionsCB       (Widget, XtPointer, XtPointer);
-extern void dddToggleButtonImagesCB         (Widget, XtPointer, XtPointer);
-extern void dddToggleFlatButtonsCB          (Widget, XtPointer, XtPointer);
-extern void dddToggleColorButtonsCB         (Widget, XtPointer, XtPointer);
-
 extern void dddSetCrashCB                   (Widget, XtPointer, XtPointer);
 extern void dddClearMaintenanceCB           (Widget, XtPointer, XtPointer);
 

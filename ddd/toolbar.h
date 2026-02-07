@@ -36,8 +36,7 @@
 // the buttons ITEMS.  Return LABEL and ARGFIELD.
 extern Widget create_toolbar(Widget parent, const string& name, 
 			     MMDesc *items1, MMDesc *items2,
-			     Widget& label, ArgField*& argfield,
-			     unsigned char label_type);
+			     Widget& label, ArgField*& argfield);
 
 #endif // _DDD_toolbar_h
 // DON'T ADD ANYTHING BEHIND THIS #endif

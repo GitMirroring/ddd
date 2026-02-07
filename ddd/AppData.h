@@ -339,14 +339,10 @@
 #define XtNtoolRightOffset       "toolRightOffset"
 #define XtNtoolTopOffset         "toolTopOffset"
 #define XtCToolOffset            "ToolOffset"
-#define XtNbuttonImages          "buttonImages"
-#define XtCButtonImages          "ButtonImages"
 #define XtNscaleToolbar          "scaleToolbar"
 #define XtCScaleToolbar          "ScaleToolbar"
 #define XtNscaleGlyphs           "scaleGlyphs"
 #define XtCScaleGlyphs           "ScaleGlyphs"
-#define XtNbuttonCaptions        "buttonCaptions"
-#define XtCButtonCaptions        "ButtonCaptions"
 #define XtNbuttonCaptionGeometry "buttonCaptionGeometry"
 #define XtCButtonCaptionGeometry "ButtonCaptionGeometry"
 #define XtNbuttonImageGeometry   "buttonImageGeometry"
@@ -364,8 +360,6 @@
 #define XtCMaxNumber             "MaxNumber"
 #define XtNsplashScreen          "splashScreen"
 #define XtCSplashScreen          "SplashScreen"
-#define XtNcolorWMIcons          "colorWMIcons"
-#define XtCColorWMIcons          "ColorWMIcons"
 #define XtNcutCopyPasteBindings  "cutCopyPasteBindings"
 #define XtNselectAllBindings     "selectAllBindings"
 #define XtCBindingStyle          "BindingStyle"
@@ -550,8 +544,6 @@ struct AppData {
     Boolean   sticky_tool;
     Position  tool_right_offset;
     Position  tool_top_offset;
-    Boolean   button_captions;
-    Boolean   button_images;
     Boolean   scale_toolbar;
     Boolean   scale_glyphs;
     const _XtString    button_caption_geometry;
@@ -564,7 +556,6 @@ struct AppData {
     int       max_breakpoint_number;
     int       max_display_number;
     Boolean   splash_screen;
-    Boolean   color_wm_icons;
     BindingStyle cut_copy_paste_bindings;
     BindingStyle select_all_bindings;
     int       max_undo_depth;

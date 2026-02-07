@@ -6903,16 +6903,11 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     disp_graph->addHandler(DispGraph_Empty, no_displaysHP);
 
     // Create graph toolbar
-    unsigned char label_type = XmSTRING;
-    if (app_data.button_captions || app_data.button_images)
-	label_type = XmPIXMAP;
-
     Widget arg_label = 0;
     if (graph_cmd_w == 0)
     {
 	graph_cmd_w = create_toolbar(parent, "graph", 
-				     graph_cmd_area, 0, arg_label, graph_arg,
-				     label_type);
+				     graph_cmd_area, 0, arg_label, graph_arg);
     }
 
     // Add buttons

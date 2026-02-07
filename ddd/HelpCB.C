@@ -570,7 +570,6 @@ static void _MStringHelpCB(Widget widget,
                                          XMST("help"), args, arg));
 
 
-#ifdef LOGO3_5
         // cheat transparency by setting background of icon to background of dialog
         Display *display = XtDisplay(shell);
         Pixmap logo = iconlogo(shell);
@@ -606,7 +605,6 @@ static void _MStringHelpCB(Widget widget,
             XFreeGC(display, gc);
             XtVaSetValues(help_dialog, XmNsymbolPixmap, dst, NULL);
         }
-#endif
 	Delay::register_shell(help_dialog);
 	XtAddCallback(help_dialog, XmNhelpCallback,
 		      HelpOnHelpCB, 0);
@@ -1175,8 +1173,7 @@ void ManualStringHelpCB(Widget widget, const MString& title,
 
     Widget arg_label;
     ArgField *arg_field;
-    Widget toolbar = create_toolbar(area, "toolbar", items, 0, arg_label,
-				    arg_field, XmPIXMAP);
+    Widget toolbar = create_toolbar(area, "toolbar", items, 0, arg_label, arg_field);
     fi->key = arg_field->text();
     XtAddCallback(arg_label, XmNactivateCallback, 
 		  ClearTextFieldCB, fi->key);
@@ -1492,8 +1489,7 @@ void TextHelpCB(Widget widget, XtPointer client_data, XtPointer)
 
     Widget arg_label;
     ArgField *arg_field;
-    Widget toolbar = create_toolbar(area, "toolbar", items, 0, arg_label,
-				    arg_field, XmPIXMAP);
+    Widget toolbar = create_toolbar(area, "toolbar", items, 0, arg_label, arg_field);
     fi->key = arg_field->text();
     XtAddCallback(arg_label, XmNactivateCallback, 
 		  ClearTextFieldCB, fi->key);

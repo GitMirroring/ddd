@@ -35,13 +35,9 @@
 
 // DDD logos
 
-// use new icon ans splash screen
-#define LOGO3_5
-
-
 // Return a pixmap suitable for icons on the root window
-extern Pixmap iconlogo(Widget shell);
-extern Pixmap iconmask(Widget shell);
+Pixmap iconlogo(Widget shell);
+Pixmap iconmask(Widget shell);
 
 // Return the DDD splash screen.  COLOR_KEY indicates the XPM visual type.
 extern Pixmap dddsplash(Widget shell, 

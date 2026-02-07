@@ -1075,90 +1075,6 @@ void dddClearUndoBufferCB(Widget, XtPointer, XtPointer)
     undo_buffer.clear();
 }
 
-static void toggle_button_appearance(Widget w, Boolean& data, 
-                                     XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-    data = info->set;
-    
-    string msg = next_ddd_will_start_with;
-    if (app_data.button_images && app_data.button_captions)
-    {
-        msg += " captioned images";
-    }
-    else if (app_data.button_images && !app_data.button_captions)
-    {
-        msg += " images only";
-    }
-    else if (!app_data.button_images && app_data.button_captions)
-    {
-        msg += " captions only";
-    }
-    else if (!app_data.button_images && !app_data.button_captions)
-    {
-        msg += " ordinary labels";
-    }
-
-    update_options();
-    post_startup_warning(w);
-}
-
-void dddToggleButtonCaptionsCB(Widget w, XtPointer, XtPointer call_data)
-{
-    toggle_button_appearance(w, app_data.button_captions, call_data);
-}
-
-void dddToggleButtonImagesCB(Widget w, XtPointer, XtPointer call_data)
-{
-    toggle_button_appearance(w, app_data.button_images, call_data);
-}
-
-void dddToggleColorButtonsCB(Widget w, XtPointer, XtPointer call_data)
-{
-    XmToggleButtonCallbackStruct *info = 
-        (XmToggleButtonCallbackStruct *)call_data;
-
-#if XmVersion >= 2000
-    switch (info->set)
-    {
-    case XmSET:
-        app_data.button_color_key        = "c";
-        app_data.active_button_color_key = "c";
-        break;
-
-    case XmUNSET:
-        app_data.button_color_key        = "g";
-        app_data.active_button_color_key = "g";
-        break;
-
-    case XmINDETERMINATE:
-        app_data.button_color_key        = "g";
-        app_data.active_button_color_key = "c";
-        break;
-    }
-#else
-    if (info->set)
-        app_data.button_color_key = "c";
-    else
-        app_data.button_color_key = "g";
-#endif
-
-    string button_color_key        = app_data.button_color_key;
-    string active_button_color_key = app_data.active_button_color_key;
-
-    if (button_color_key == 'c' && active_button_color_key == 'c')
-        set_status(next_ddd_will_start_with + "color buttons.");
-    else if (button_color_key == active_button_color_key)
-        set_status(next_ddd_will_start_with + "grey buttons.");
-    else                        // indeterminate
-        set_status(next_ddd_will_start_with + "grey/color buttons.");
-
-    update_options();
-    post_startup_warning(w);
-}
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -2566,11 +2482,6 @@ static bool save_options_init(unsigned long flags)
     os << bool_app_value(XtNcommonToolBar,
                          app_data.common_toolbar)  << '\n';
 #endif
-
-    os << bool_app_value(XtNbuttonImages,
-                         app_data.button_images)   << '\n';
-    os << bool_app_value(XtNbuttonCaptions,
-                         app_data.button_captions) << '\n';
 
     os << string_app_value(XtNbuttonColorKey,
                            app_data.button_color_key) << '\n';

@@ -184,7 +184,6 @@ void TipOfTheDayCB(Widget w, XtPointer, XtPointer)
 					     XMST("tip_dialog"), 
 					     args, arg));
 
-#ifdef  LOGO3_5
         // cheat transparency by setting background of icon to background of dialog
         Widget shell = findTopLevelShellParent(w);
         Pixmap logo = iconlogo(shell);
@@ -224,7 +223,6 @@ void TipOfTheDayCB(Widget w, XtPointer, XtPointer)
             XFreeGC(display, gc);
             XtVaSetValues(tip_dialog, XmNsymbolPixmap, dst, NULL);
         }
-#endif
 
 	arg = 0;
 	XtSetArg(args[arg], XmNset, app_data.startup_tips); arg++;

@@ -1555,21 +1555,6 @@ static MMDesc gui_style_menu [] =
     MMEnd
 };
 
-
-static Widget set_button_images_w;
-static Widget set_button_captions_w;
-static Widget set_color_buttons_w;
-static MMDesc button_appearance_menu [] =
-{
-    { "images",   MMToggle, { dddToggleButtonImagesCB, 0 },
-      0, &set_button_images_w, 0, 0 },
-    { "captions", MMToggle, { dddToggleButtonCaptionsCB, 0 },
-      0, &set_button_captions_w, 0, 0 },
-    { "color", MMToggle, { dddToggleColorButtonsCB, 0 },
-      0, &set_color_buttons_w, 0, 0 },
-    MMEnd
-};
-
 static Widget toolbar_scaling_w;
 static Widget glyph_scaling_w;
 
@@ -1590,7 +1575,6 @@ static MMDesc appearance_menu [] =
     { "data",            MMPanel,  MMNoCB, data_font_menu, 0, 0, 0 },
     { "colortheme",     MMRadioPanel,  MMNoCB, color_theme_menu, 0, 0, 0 },
     { "guistyle",     MMRadioPanel,  MMNoCB, gui_style_menu, 0, 0, 0 },
-    { "buttons",         MMButtonPanel, MMNoCB, button_appearance_menu, 0, 0, 0 },
     { "iconscaling",  MMButtonPanel, MMNoCB, iconscaling_menu, 0, 0, 0 },
 
     MMEnd
@@ -2614,15 +2598,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtManageChild(right_paned_work_w);
     }
 
-    // Toolbar label type
-    unsigned char label_type = XmSTRING;
-    if (app_data.button_captions || app_data.button_images)
-        label_type = XmPIXMAP;
-
-    // Common toolbar
-    if (!app_data.button_captions && !app_data.button_images)
-        app_data.common_toolbar = false;
-
     Widget arg_label = 0;
     if (!app_data.separate_source_window &&
         !app_data.separate_data_window &&
@@ -2631,7 +2606,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         arg_cmd_area[ArgItems::Display].type |= MMUnmanaged;
         arg_cmd_w = create_toolbar(left_paned_work_w, "common",
                                    arg_cmd_area, DataDisp::graph_cmd_area,
-                                   arg_label, source_arg, XmPIXMAP);
+                                   arg_label, source_arg);
 
         DataDisp::graph_cmd_w = arg_cmd_w;
 
@@ -2753,8 +2728,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     if (arg_cmd_w == 0)
     {
         arg_cmd_w = create_toolbar(source_view_parent, "source",
-                                   arg_cmd_area, 0, arg_label, source_arg,
-                                   label_type);
+                                   arg_cmd_area, 0, arg_label, source_arg);
     }
 
     if (command_toolbar_w == 0)
@@ -3927,20 +3901,6 @@ void update_options()
     set_toggle(set_focus_pointer_w,        policy == XmPOINTER);
     set_toggle(set_focus_explicit_w,       policy == XmEXPLICIT);
 
-    set_toggle(set_button_images_w,        app_data.button_images);
-    set_toggle(set_button_captions_w,      app_data.button_captions);
-
-    string button_color_key        = app_data.button_color_key;
-    string active_button_color_key = app_data.active_button_color_key;
-    if (button_color_key == 'c' && active_button_color_key == 'c')
-        set_toggle(set_color_buttons_w, XmSET);
-    else if (button_color_key == active_button_color_key)
-        set_toggle(set_color_buttons_w, XmUNSET);
-    else
-        set_toggle(set_color_buttons_w, XmINDETERMINATE);
-
-    set_sensitive(set_color_buttons_w, app_data.button_images);
-
     Boolean separate = 
         app_data.separate_data_window || app_data.separate_source_window;
 
@@ -4473,18 +4433,6 @@ static void ResetStartupPreferencesCB(Widget, XtPointer, XtPointer)
     notify_set_toggle(set_separate_windows_w, separate);
     notify_set_toggle(set_attached_windows_w, !separate);
 
-    notify_set_toggle(set_button_captions_w, initial_app_data.button_captions);
-    notify_set_toggle(set_button_images_w,   initial_app_data.button_images);
-
-    string button_color_key        = initial_app_data.button_color_key;
-    string active_button_color_key = initial_app_data.active_button_color_key;
-    if (button_color_key == 'c' && active_button_color_key == 'c')
-        notify_set_toggle(set_color_buttons_w, XmSET);
-    else if (button_color_key == active_button_color_key)
-        notify_set_toggle(set_color_buttons_w, XmUNSET);
-    else
-        notify_set_toggle(set_color_buttons_w, XmINDETERMINATE);
-
     notify_set_toggle(set_focus_pointer_w, 
                       initial_focus_policy == XmPOINTER);
     notify_set_toggle(set_focus_explicit_w,
@@ -4563,12 +4511,6 @@ static bool startup_preferences_changed()
         return true;
 
     if (app_data.scale_glyphs != initial_app_data.scale_glyphs)
-        return true;
-
-    if (app_data.button_images != initial_app_data.button_images)
-        return true;
-
-    if (app_data.button_captions != initial_app_data.button_captions)
         return true;
 
     if (string(app_data.button_color_key) !=

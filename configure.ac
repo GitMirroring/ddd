@@ -601,19 +601,30 @@ AC_CHECK_LIB([Xmu],[XmuCvtStringToOrientation],[XMU_LIBS="-lXmu"],[],
 AC_SUBST(XMU_LIBS)
 dnl
 dnl
-dnl
-dnl Check for Xpm library and headers
+dnl Check for Xpm library and headers (mandatory)
 dnl
 XPM_LIBS=""
 if test "$xpm_includes" != "no" && test "$xpm_libraries" != "no"
 then
 AC_CHECK_LIB([Xpm],[XpmCreatePixmapFromXpmImage],
-	[XPM_LIBS="-lXpm"
-	AC_DEFINE([HAVE_XPM],1,[Define if you have the XPM library.])],[],
-        [${X_PRE_LIBS} ${X11_LIBS} ${X_EXTRA_LIBS}])
-if test "$XPM_LIBS" != ""; then
-AC_CHECK_HEADERS(X11/xpm.h xpm.h)
-fi
+  [XPM_LIBS="-lXpm"
+   AC_DEFINE([HAVE_XPM],1,[Define if you have the XPM library.])],
+  [AC_MSG_ERROR([The Xpm library '-lXpm' could not be found.
+                  Please install the Xpm development package and/or
+                  use CPPFLAGS/LDFLAGS to specify its location.])],
+  [${X_PRE_LIBS} ${X11_LIBS} ${X_EXTRA_LIBS}])
+
+  if test "$XPM_LIBS" != ""; then
+    have_xpm_header=no
+    AC_CHECK_HEADER([X11/xpm.h],[have_xpm_header=yes],[have_xpm_header=no])
+    if test "$have_xpm_header" != yes; then
+      AC_CHECK_HEADER([xpm.h],[have_xpm_header=yes],[have_xpm_header=no])
+    fi
+    if test "$have_xpm_header" != yes; then
+      AC_MSG_ERROR([The Xpm header file 'xpm.h' (or 'X11/xpm.h') could not be found.
+                  Please install the Xpm development package.])
+    fi
+  fi
 fi
 AC_SUBST(XPM_LIBS)
 dnl

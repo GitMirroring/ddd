@@ -219,6 +219,42 @@ AC_PROG_CC
 AC_PROG_CXX
 dnl
 dnl
+dnl Require a C++17 compiler
+dnl
+dnl
+AC_LANG([C++])
+AC_MSG_CHECKING([whether $CXX supports C++17 (-std=c++17)])
+
+save_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -std=c++17"
+
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM(
+     [[#include <memory>
+       #include <optional>
+       int f() {
+         std::optional<int> x = 1;
+         auto p = std::make_unique<int>(41);
+         return *p + x.value();
+       }]],
+     [[return f();]])],
+  [have_cxx17=yes],
+  [have_cxx17=no])
+
+CXXFLAGS="$save_CXXFLAGS"
+AC_MSG_RESULT([$have_cxx17])
+
+if test "x$have_cxx17" != "xyes"; then
+  AC_MSG_ERROR([DDD now requires a C++17 compiler (e.g. g++ 7 or newer).])
+fi
+
+dnl Only add -std=c++17 if the user did not select a standard already.
+case " $CXXFLAGS " in
+  *" -std="*) ;;
+  *) CXXFLAGS="$CXXFLAGS -std=c++17" ;;
+esac
+dnl
+dnl
 dnl Find and check C/C++/F77 preprocessors
 dnl
 AC_PROG_CPP
@@ -227,24 +263,11 @@ dnl
 dnl
 dnl Check for compiler characteristics
 dnl
-ICE_CXX_PROBLEMATIC_VERSION
 dnl ICE_CXX_INCLUDE_DIR
 dnl ICE_CXX_LIB_DIR
 ICE_CXX_OPTIONS
-ICE_CXX_BOOL
-ICE_CXX_EXPLICIT
-ICE_CXX_MUTABLE
-ICE_CXX_EXCEPTIONS
-ICE_CXX_STD_EXCEPTIONS
-ICE_CXX_NAMESPACE
-ICE_CXX_TYPEINFO
-ICE_CXX_LONG_LONG
 ICE_CXX_PRETTY_FUNCTION
-ICE_CXX_ARRAY_OPERATOR_NEW
-ICE_CXX_PLACEMENT_NEW
-dnl ICE_CXX_LIFETIME_OF_TEMPORARIES
 ICE_CXX_ISYSTEM
-ICE_CXX_NEW_CASTS
 ICE_CXX_ATTRIBUTE_NORETURN
 ICE_CXX_BUILTIN_EXPECT
 ICE_PROG_CPP_TRADITIONAL
@@ -480,8 +503,8 @@ AC_SUBST([DDD_XDG_DATADIR])
 dnl
 dnl
 dnl `streampos' and `iostate' types
-ICE_STREAMPOS
-ICE_STD_STREAMPOS
+dnl ICE_STREAMPOS
+dnl ICE_STD_STREAMPOS
 dnl ICE_IOSTATE
 dnl
 dnl
@@ -1079,7 +1102,6 @@ AC_MSG_CHECKING([fixes needed for Mac OS X])
 case "$host_os" in
 Darwin*|darwin*)
 LDFLAGS="-bind_at_load ${LDFLAGS}"
-CXXOPT="-std=c++17 $CXXOPT"
   AC_DEFINE(GDB_ABI_OPTIONS,1,
 [Define if you want any inferior debugger abi (e.g. "cp-abi", "osabi" in gdb for Mac OS X) settings to have their own settings buttons (rather than entering the abi as text) in DDD.])
   AC_DEFINE(GDB_AMBIGUOUS_SHOW_PATH,1,

@@ -40,8 +40,6 @@ char cxxtest_rcsid[] =
 #include "config.h"
 #endif
 
-#include "base/bool.h"
-
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
@@ -289,7 +287,6 @@ public:
 //--------------------------------------------------------------------------
 // Namespaces.
 
-#if HAVE_NAMESPACE
 namespace X {
   int i = 10, j = 10, k = 10;
 }
@@ -319,10 +316,6 @@ void namespace_test()
     // properly resolve k.
     X::k++;
 }
-#else
-void namespace_test() {}
-#endif
-
 
 //--------------------------------------------------------------------------
 // Inheritance.

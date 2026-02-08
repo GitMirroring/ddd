@@ -29,7 +29,6 @@
 #define _DDD_VSLBuiltin_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "box/ListBox.h"
 
 typedef Box * (*BuiltinFunc)(ListBox *);

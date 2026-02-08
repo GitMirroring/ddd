@@ -37,7 +37,6 @@
 
 // DDD includes
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "x11/charsets.h"
 
 #include <vector>

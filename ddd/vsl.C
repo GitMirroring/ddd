@@ -68,7 +68,6 @@ int main(void)
 #include <X11/Xaw/Cardinals.h>  // Definition ZERO
 #include "DocSpace.h"           // DocSpace Widget
 
-#include "base/bool.h"
 #include "vslsrc/ThemeVSLL.h"
 #include "vslsrc/VSLDef.h"
 #include "vslsrc/VSEFlags.h"

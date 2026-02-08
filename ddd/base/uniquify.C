@@ -31,7 +31,6 @@ char uniquify_rcsid[] =
 #include "uniquify.h"
 #include "SmartC.h"
 #include "basename.h"
-#include "bool.h"
 
 // FULL_PATH is /X/Y/Z/NAME; expand NAME to Z/NAME.
 static bool expand_label(string& name, const string& full_path, char sep)

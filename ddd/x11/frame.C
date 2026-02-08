@@ -29,7 +29,6 @@ char frame_rcsid[] =
     "$Id$";
 
 #include "frame.h"
-#include "base/bool.h"
 #include "XErrorB.h"
 
 // Find the WM frame surrounding WINDOW.

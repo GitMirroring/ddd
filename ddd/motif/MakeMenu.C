@@ -56,7 +56,6 @@ char MakeMenu_rcsid[] =
 #include <Xm/MenuShell.h>
 #include <X11/Xutil.h>
 
-#include "base/bool.h"
 #include "x11/verify.h"
 #include "x11/findParent.h"
 #include "x11/frame.h"

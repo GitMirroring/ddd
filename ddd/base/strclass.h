@@ -409,7 +409,6 @@ License along with this library; if not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include "rxclass.h"
 #include "config.h"
-#include "bool.h"
 #include "assert.h"
 #include "casts.h"
 #include "attribute.h"

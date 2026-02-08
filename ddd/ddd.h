@@ -34,8 +34,6 @@
 #include <X11/Intrinsic.h>
 #include <Xm/Xm.h>
 
-#include "base/bool.h"
-
 // main window
 extern Widget main_window;
 extern XtAppContext app_context;

@@ -29,7 +29,6 @@
 #define _DDD_resolvePath_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 
 // Return full path of FILE, searching in a number of predefined places.
 // If not found, return "".

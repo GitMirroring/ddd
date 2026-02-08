@@ -165,11 +165,7 @@ inline static strRep* string_Snew(int newsiz)
     }
 #endif
 
-#if HAVE_PLACEMENT_NEW
     strRep* rep = new (operator new (allocsiz)) strRep;
-#else
-    strRep* rep = (strRep *) new char[allocsiz];
-#endif
     rep->allocated = allocsiz - sizeof(strRep);
     rep->s  = &rep->mem[0];
     return rep;

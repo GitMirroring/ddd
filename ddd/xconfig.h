@@ -29,7 +29,6 @@
 #define _DDD_xconfig_h
 
 #include <X11/Intrinsic.h>
-#include "base/bool.h"
 
 extern int check_x_configuration(Widget toplevel, bool verbose);
 

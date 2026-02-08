@@ -28,7 +28,6 @@
 #ifndef _DDD_UndoBuffer_h
 #define _DDD_UndoBuffer_h
 
-#include "base/bool.h"
 #include "UndoBE.h"
 #include "string-fun.h"		// itostring()
 

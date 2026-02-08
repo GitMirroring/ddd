@@ -34,7 +34,6 @@
 #include "base/misc.h"
 #include "BoxPoint.h"
 #include "BoxSize.h"
-#include "base/bool.h"
 #include "BoxD.h"
 #include "BoxC.h"
 

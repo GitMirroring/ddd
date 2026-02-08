@@ -30,7 +30,6 @@
 
 #include "template/StringSA.h"
 #include <vector>
-#include "base/bool.h"
 
 // Special value keys
 #define UB_POS           "pos"	        // Current source position

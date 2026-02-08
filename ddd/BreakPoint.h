@@ -39,7 +39,6 @@
 
 // Misc includes
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "GDBAgent.h"
 
 // Breakpoint type, respectively:

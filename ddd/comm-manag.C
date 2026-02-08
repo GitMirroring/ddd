@@ -52,7 +52,6 @@ char comm_manager_rcsid[] =
 #include "SourceView.h"
 #include "agent/TimeOut.h"
 #include "template/VoidArray.h"
-#include "base/bool.h"
 #include "buttons.h"
 #include "cmdtty.h"
 #include "base/cook.h"

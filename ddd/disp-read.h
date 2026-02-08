@@ -31,7 +31,6 @@
 
 // Misc includes
 #include "base/strclass.h"
-#include "base/bool.h"
 
 // DDD includes
 #include "GDBAgent.h"

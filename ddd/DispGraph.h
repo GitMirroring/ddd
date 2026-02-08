@@ -34,7 +34,6 @@
 
 // Misc includes
 #include "base/strclass.h"
-#include "base/bool.h" 
 #include "graph/Graph.h" 
 #include "agent/HandlerL.h"
 #include "graph/LineGraphE.h"

@@ -28,7 +28,6 @@
 #ifndef _DDD_HistoryFilter_h
 #define _DDD_HistoryFilter_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 #include "template/Assoc.h"
 

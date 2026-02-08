@@ -29,7 +29,6 @@
 #define _DDD_ColorBox_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "Box.h"
 #include "THatBox.h"
 #include "base/TypeInfo.h"

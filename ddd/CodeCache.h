@@ -29,7 +29,6 @@
 #define _DDD_CodeCache_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include <ctype.h>
 #include <vector>
 

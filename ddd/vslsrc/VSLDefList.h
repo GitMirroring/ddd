@@ -34,7 +34,6 @@
 #include <limits.h>
 #include <iostream>
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/TypeInfo.h"
 
 class VSLLib;

@@ -52,7 +52,6 @@ char tictactoe_rcsid[] =
 #include "x11/InitImage.h"
 #include "agent/TimeOut.h"
 #include "base/assert.h"
-#include "base/bool.h"
 #include "base/cook.h"
 #include "x11/verify.h"
 #include "wm.h"

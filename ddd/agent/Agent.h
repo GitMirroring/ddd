@@ -102,7 +102,6 @@ extern "C" char *strerror(int);
 
 #include "base/casts.h"
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "AgentM.h"
 #include "HandlerL.h"
 #include "base/UniqueId.h"

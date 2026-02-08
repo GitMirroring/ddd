@@ -32,7 +32,6 @@ char TimeOut_rcsid[] =
 #include "TimeOut.h"
 #include "base/strclass.h"
 #include "base/assert.h"
-#include "base/bool.h"
 
 #include <iostream>
 #include <stdlib.h>		// abort()

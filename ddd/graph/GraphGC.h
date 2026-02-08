@@ -32,7 +32,6 @@
 #include "box/BoxPoint.h"
 #include "box/Box.h"
 #include "base/TypeInfo.h"
-#include "base/explicit.h"
 
 // Where to attach edges
 enum EdgeAttachMode {

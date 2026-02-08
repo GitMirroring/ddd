@@ -42,7 +42,6 @@ char converters_rcsid[] =
 #include <X11/CoreP.h>
 
 #include "base/assert.h"
-#include "base/bool.h"
 #include "base/cook.h"
 #include "base/home.h"
 #include "base/isid.h"

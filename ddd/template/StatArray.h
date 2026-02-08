@@ -31,7 +31,6 @@
 #include <vector>
 
 #include "config.h"
-#include "base/bool.h"
 
 extern "C" {
 #include <sys/types.h>

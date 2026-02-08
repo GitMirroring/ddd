@@ -34,7 +34,6 @@
 
 #include "BoxC.h"
 #include "BoxD.h"
-#include "base/bool.h"
 #include <iostream>
 class BoxRegion;
 

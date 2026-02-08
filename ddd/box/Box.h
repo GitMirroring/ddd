@@ -46,7 +46,6 @@
 #include "BoxExtend.h"
 #include "base/PrintGC.h"
 #include "x11/Widget.h"
-#include "base/bool.h"
 #include "base/UniqueId.h"
 #include "DataLink.h"
 #include "base/TypeInfo.h"

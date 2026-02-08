@@ -33,7 +33,6 @@
 //-----------------------------------------------------------------------------
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/mutable.h"
 #include "DispValueT.h"
 #include "template/StringSA.h"

@@ -29,7 +29,6 @@
 #ifndef _DDD_isid_h
 #define _DDD_isid_h
 
-#include "bool.h"
 #include <ctype.h>
 
 // True if C is an identifier character

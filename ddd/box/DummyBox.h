@@ -35,7 +35,6 @@
 
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "Box.h"
 #include "x11/Widget.h"
 

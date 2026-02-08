@@ -29,7 +29,6 @@
 #define _DDD_HandlerList_h
 
 #include "base/compare.h"
-#include "base/bool.h"
 #include "base/assert.h"
 
 typedef void (*HandlerProc)(void *source,	// handler source

@@ -44,7 +44,6 @@ char LiterateAgent_rcsid[] =
 extern "C" int fcntl(int fd, int command, ...);
 #endif
 
-#include "base/bool.h"
 #include "LiterateA.h"
 #include "base/SignalB.h"
 #include "ChunkQueue.h"

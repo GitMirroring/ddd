@@ -29,7 +29,6 @@
 #define _DDD_WhatNextCB_h
 
 #include <X11/Intrinsic.h>
-#include "base/bool.h"
 #include "base/strclass.h"
 
 // Give a help dependent on current DDD state.

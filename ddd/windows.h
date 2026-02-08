@@ -29,7 +29,6 @@
 #define _DDD_windows_h
 
 #include <X11/Intrinsic.h>
-#include "base/bool.h"
 
 // Shells (only used if separate windows are used)
 extern Widget command_shell;

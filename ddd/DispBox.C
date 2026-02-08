@@ -43,7 +43,6 @@ char DispBox_rcsid[] =
 #include "GDBAgent.h"
 #include "vslsrc/VSEFlags.h"
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/cook.h"
 #include "ddd.h"
 #include "post.h"

@@ -37,7 +37,6 @@
 
 // Misc includes
 #include "agent/HandlerL.h"
-#include "base/bool.h"
 #include "base/strclass.h"
 #include "base/assert.h"
 

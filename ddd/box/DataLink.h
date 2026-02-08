@@ -29,7 +29,6 @@
 #define _DDD_DataLink_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 
 struct Data;			 // Opaque type
 

@@ -29,7 +29,6 @@ char environ_rcsid[] =
     "$Id$";
 
 #include "environ.h"
-#include "base/bool.h"
 #include "shell.h"
 #include "base/strclass.h"
 

@@ -28,7 +28,6 @@
 #ifndef _DDD_expired_h
 #define _DDD_expired_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 
 // Return true iff this DDD version has expired

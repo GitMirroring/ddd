@@ -29,7 +29,6 @@ char UniqueId_rcsid[] =
     "$Id$";
 
 #include "UniqueId.h"
-#include "bool.h"
 
 unsigned long UniqueId::tics = 1;
 unsigned long UniqueId::ids  = 0;

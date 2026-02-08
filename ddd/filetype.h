@@ -29,7 +29,6 @@
 #ifndef _DDD_filetype_h
 #define _DDD_filetype_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 #include <time.h>		// time_t
 

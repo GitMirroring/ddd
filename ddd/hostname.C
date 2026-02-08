@@ -30,7 +30,6 @@ char hostname_rcsid[] =
 
 #include "hostname.h"
 #include "config.h"
-#include "base/bool.h"
 
 #include <stdio.h>
 #include <string.h>

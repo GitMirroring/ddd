@@ -28,7 +28,6 @@
 #ifndef _DDD_cwd_h
 #define _DDD_cwd_h
 
-#include "bool.h"
 #include "strclass.h"
 
 // Return current working directory

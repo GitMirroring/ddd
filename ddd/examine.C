@@ -31,7 +31,6 @@ char examine_rcsid[] =
 
 #include "examine.h"
 
-#include "base/bool.h"
 #include "ddd.h"
 #include "disp-read.h"
 #include "history.h"

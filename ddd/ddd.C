@@ -168,7 +168,6 @@ char ddd_rcsid[] =
 #include <X11/Xaw/XawInit.h>
 #endif
 
-#include <X11/IntrinsicP.h>        // LessTif hacks
 #include "x11/Sash.h"
 
 // ANSI C++ doesn't like the XtIsRealized() macro
@@ -203,7 +202,6 @@ char ddd_rcsid[] =
 #include "args.h"
 #include "assert.h"
 #include "base/basename.h"
-#include "base/bool.h"
 #include "buttons.h"
 #include "x11/charsets.h"
 #include "cmdtty.h"
@@ -289,9 +287,7 @@ char ddd_rcsid[] =
 #define ARG_MAX 4096
 #endif
 
-#if HAVE_EXCEPTIONS && HAVE_EXCEPTION
 #include <exception>
-#endif
 
 #if WITH_READLINE
 extern "C" {
@@ -3132,9 +3128,7 @@ int main(int argc, char *argv[])
 
 void process_next_event()
 {
-#if HAVE_EXCEPTIONS
     try {
-#endif
 
     if (app_data.poll_child_status)
     {
@@ -3193,21 +3187,17 @@ void process_next_event()
     // Update tear-off menus.
     gdbUpdateAllMenus();
 
-#if HAVE_EXCEPTIONS
     }
-#if HAVE_EXCEPTION && HAVE_STD_EXCEPTIONS && HAVE_TYPEINFO
     // Standard library exception: get its type and diagnostics.
     catch (const std::exception& err)
     {
         ddd_show_exception(typeid(err).name(), err.what());
     }
-#endif // HAVE_EXCEPTION && HAVE_STD_EXCEPTIONS && HAVE_TYPEINFO
     catch (...)
     {
         // Handle non-standard C++ exceptions
         ddd_show_exception();
     }
-#endif // HAVE_EXCEPTIONS
 }
 
 void process_pending_events()

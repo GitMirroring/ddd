@@ -33,7 +33,6 @@
 //-----------------------------------------------------------------------------
 
 // Misc includes
-#include "base/bool.h"
 #include "base/strclass.h"
 
 class DispBuffer {

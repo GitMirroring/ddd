@@ -44,7 +44,6 @@ char buttons_rcsid[] =
 #include "agent/TimeOut.h"
 #include "UndoBuffer.h"
 #include "args.h"
-#include "base/bool.h"
 #include "x11/charsets.h"
 #include "comm-manag.h"
 #include "base/cook.h"

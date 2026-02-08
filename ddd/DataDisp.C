@@ -89,7 +89,6 @@ char DataDisp_rcsid[] =
 #include "vslsrc/VSLLib.h"
 #include "template/VoidArray.h"
 #include "assert.h"
-#include "base/bool.h"
 #include "buttons.h"
 #include "x11/charsets.h"
 #include "cmdtty.h"

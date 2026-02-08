@@ -28,7 +28,6 @@
 #ifndef _DDD_PrintGC_h
 #define _DDD_PrintGC_h
 
-#include "bool.h"
 #include "TypeInfo.h"
 
 // Printing environment

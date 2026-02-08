@@ -30,7 +30,6 @@
 
 #include "base/UniqueId.h"
 #include "box/Box.h"
-#include "base/bool.h"
 #include "GraphGC.h"
 #include "base/TypeInfo.h"
 #include "base/assert.h"

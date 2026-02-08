@@ -31,7 +31,6 @@
 // UniqueId manages unique identifiers
 
 #include <iostream>
-#include "bool.h"
 
 class UniqueId {
 private:

@@ -36,7 +36,6 @@ char VSLBuiltin_rcsid[] =
 #include <math.h>
 #include <iostream>
 
-#include "base/bool.h"
 #include "VSLLib.h"
 
 // Zillions of boxes...

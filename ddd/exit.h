@@ -32,7 +32,6 @@
 #include <X11/Intrinsic.h>
 #include <iostream>
 
-#include "base/bool.h"
 #include "x11/ExitCB.h"
 
 // Cleanup and signal handling

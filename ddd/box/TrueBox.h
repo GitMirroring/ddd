@@ -28,7 +28,6 @@
 #ifndef _DDD_TrueBox_h
 #define _DDD_TrueBox_h
 
-#include "base/bool.h"
 #include "Box.h"
 #include "PrimitiveB.h"
 

@@ -30,7 +30,6 @@
 
 #include "box/BoxRegion.h"
 #include "GraphGC.h"
-#include "base/explicit.h"
 
 // Where to draw `self' edges
 struct LineGraphEdgeSelfInfo {

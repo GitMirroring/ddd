@@ -29,7 +29,6 @@
 #define _DDD_source_h
 
 #include <X11/Intrinsic.h>
-#include "base/bool.h"
 #include "SourceView.h"
 
 extern void gdbBreakAtCB      (Widget, XtPointer, XtPointer);

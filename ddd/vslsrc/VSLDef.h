@@ -32,7 +32,6 @@
 #include <limits.h>
 #include <iostream>
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/mutable.h"
 #include "VSLNode.h"
 #include "base/TypeInfo.h"

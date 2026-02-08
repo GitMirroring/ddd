@@ -29,7 +29,6 @@ char regex_rcsid[] =
     "$Id$";
 
 #include "config.h"
-#include "bool.h"
 #include "strclass.h"
 #include "assert.h"
 #include "misc.h"

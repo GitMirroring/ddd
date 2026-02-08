@@ -29,7 +29,6 @@
 #define _DDD_cook_h
 
 #include "strclass.h"
-#include "bool.h"
 
 extern string _cook(const string& raw, bool for_postscript);
 

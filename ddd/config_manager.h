@@ -27,7 +27,6 @@
 #ifndef _DDD_config_manager_h
 #define _DDD_config_manager_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 
 #include <tinyxml2.h>

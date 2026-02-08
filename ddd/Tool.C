@@ -41,7 +41,6 @@ char Tool_rcsid[] =
 #include "x11/Delay.h"
 #include "x11/DeleteWCB.h"
 #include "x11/DestroyCB.h"
-#include "base/bool.h"
 #include "base/casts.h"
 #include "buttons.h"
 #include "decoration.h"

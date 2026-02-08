@@ -29,7 +29,6 @@
 #define _DDD_history_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "HistoryF.h"
 
 #include <X11/Intrinsic.h>

@@ -28,7 +28,6 @@
 #ifndef _DDD_ProgressMeter_h
 #define _DDD_ProgressMeter_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 #include "status.h"
 

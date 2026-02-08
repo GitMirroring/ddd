@@ -31,7 +31,6 @@ char xconfig_rcsid[] =
 
 #include "xconfig.h"
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/cook.h"
 #include "filetype.h"
 #include "shell.h"
@@ -248,142 +247,6 @@ static int check_xkeysymdb(Display *display, bool verbose)
     return 1;
 }
 
-#if XlibSpecificationRelease == 5 && !__hpux__
-static string dirname(const string& file)
-{
-    if (file.contains('/'))
-	return file.before('/', -1);
-    else
-	return ".";
-}
-
-static const _XtString resolve_dirname(Display *display, const _XtString type, const _XtString name)
-{
-    String ret = XtResolvePathname(display, type, name, "", 
-				   (String)0, Substitution(0), 0, 
-				   XtFilePredicate(0));
-
-    if (ret != 0)
-    {
-	static string dir;
-	dir = dirname(ret);
-	XtFree(ret);
-	return dir.chars();
-    }
-    return 0;
-}
-#endif
-
-static int check_xnlspath(Display *display, bool verbose)
-{
-#if XlibSpecificationRelease == 5
-    if (verbose)
-    {
-	(void) xlibdir(display, verbose);
-    }
-
-    if (verbose)
-    {
-	std::cout << "Checking for nls directory... ";
-	std::cout.flush();
-    }
-
-    String me, my_class;
-    XtGetApplicationNameAndClass(display, &me, &my_class);
-
-    const _XtString xnlspath = 0;
-
-    if (xnlspath == 0)
-	xnlspath = getenv("XNLSPATH");
-
-#if __hpux__
-    // On HP-UX, checking for nonexistent files (notably,
-    // `nls/nls.dir') causes `illegal instruction' crashes.  The
-    // following call, however, works on HP-UX.  Reported by
-    // Tobias Mangold <mangold@hft.e-technik.tu-muenchen.de>.
-    if (xnlspath == 0)
-	xnlspath = XtResolvePathname(display, "nls", "", "", 
-				     (String)0, Substitution(0), 0, 
-				     XtFilePredicate(0));
-#else
-    // Check for `nls/C' or `nls/nls.dir'
-    if (xnlspath == 0)
-	xnlspath = resolve_dirname(display, "nls", "C");
-    if (xnlspath == 0)
-	xnlspath = resolve_dirname(display, "nls", "nls.dir");
-#endif
-
-    if (xnlspath)
-    {
-	if (verbose)
-	{
-	    std::cout << xnlspath << "\n";
-	    std::cout.flush();
-	}
-
-	// Fix it now
-	static string env;
-	env = string("XNLSPATH=") + xnlspath;
-	putenv(CONST_CAST(char*,env.chars()));
-	return 0;		// Okay
-    }
-
-    if (xlibdir(display, verbose) != 0)
-    {
-	string path = string(xlibdir(display, verbose)) + "/nls";
-	if (!is_directory(path))
-	{
-	    if (verbose)
-	    {
-		std::cout << path << "\n"
-		     << "Note: this is not the default path compiled into " 
-		     << me << ".\n"
-		     << "    To avoid having " << me 
-		     << " determine this setting each time it is started,\n"
-		     << "    please set the XNLSPATH "
-		     << "environment variable to\n"
-		     << "    " << quote(path) << ".\n\n";
-		std::cout.flush();
-	    }
-
-	    // Fix it now
-	    static string env;
-	    env = "XNLSPATH=" + path;
-	    putenv(CONST_CAST(char*,env.chars()));
-	    return 0;
-	}
-    }
-
-    if (verbose)
-    {
-	std::cout << "Warning: cannot locate the X11 `nls' directory!\n"
-	     << "    If " << me << " was not compiled on this machine, "
-	     << me << "\n"
-	     << "    may not run properly (`cut and paste' fails).\n";
-
-	if (xlibdir(display) != 0)
-	    std::cout << "    and install it into `" << xlibdir(display) << "'\n";
-	else
-	    std::cout << "    and install it into your X project root "
-		 << "(typically `/usr/lib/X11')\n";
-	std::cout << "    or have the XNLSPATH environment variable "
-	     << "point at it.\n\n";
-	std::cout.flush();
-    }
-
-    return 1;
-#else // XlibSpecificationRelease != 5
-
-    (void) display;		// Use it
-    (void) verbose;
-
-    // In X11R4, there was no nls directory; X11R6 has a `locale' dir instead.
-    return 0;
-
-#endif // XlibSpecificationRelease != 5
-}
-
-
 // Set up the X11 library directory
 int check_x_configuration(Widget toplevel, bool verbose)
 {
@@ -393,9 +256,6 @@ int check_x_configuration(Widget toplevel, bool verbose)
 
     // This is required for all Motif programs.
     ret = check_xkeysymdb(display, verbose) || ret;
-
-    // This is required for executables linked against X11R5 or later.
-    ret = check_xnlspath(display, verbose) || ret;
 
     if (verbose)
     {

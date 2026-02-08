@@ -33,7 +33,6 @@ char findParent_rcsid[] =
 
 #include "findParent.h"
 #include "longName.h"
-#include "base/bool.h"
 
 // ANSI C++ doesn't like the XtIsRealized() macro
 #ifdef XtIsRealized

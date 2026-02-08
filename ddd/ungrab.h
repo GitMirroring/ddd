@@ -28,8 +28,6 @@
 #ifndef _DDD_ungrab_h
 #define _DDD_ungrab_h
 
-#include "base/bool.h"
-
 // If START is true, initiate grab check.  If START is false, stop it.
 void check_grabs(bool start);
 

@@ -31,15 +31,9 @@
 
 #include "config.h"
 
-#if HAVE_NEW_CASTS
 #  define CONST_CAST(TYPE,OBJ) (const_cast<TYPE>(OBJ))
 #  define STATIC_CAST(TYPE,OBJ) (static_cast<TYPE>(OBJ))
 #  define REINTERPRET_CAST(TYPE,OBJ) (reinterpret_cast<TYPE>(OBJ))
-#else
-#  define CONST_CAST(TYPE,OBJ) ((TYPE)(OBJ))
-#  define STATIC_CAST(TYPE,OBJ) ((TYPE)(OBJ))
-#  define REINTERPRET_CAST(TYPE,OBJ) ((TYPE)(OBJ))
-#endif
 
 // Motif does not use "const _XtString" and this leads to many const_cast.
 #define XMST(OBJ) CONST_CAST(char *,OBJ)

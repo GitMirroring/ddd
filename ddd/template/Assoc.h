@@ -29,7 +29,6 @@
 #ifndef _DDD_Assoc_h
 #define _DDD_Assoc_h
 
-#include "base/bool.h"
 #include "base/assert.h"
 
 #include <stdlib.h>		// abort()

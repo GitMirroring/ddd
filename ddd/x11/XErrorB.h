@@ -31,7 +31,6 @@
 extern "C" {
 #include <X11/Intrinsic.h>
 }
-#include "base/bool.h"
 #include "base/assert.h"
  
 extern "C" {

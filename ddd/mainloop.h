@@ -28,8 +28,6 @@
 #ifndef _DDD_mainloop_h
 #define _DDD_mainloop_h
 
-#include "base/bool.h"
-
 // True if we have reached the main event loop
 extern bool main_loop_entered;
 

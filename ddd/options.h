@@ -29,7 +29,6 @@
 #define _DDD_options_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include <X11/Intrinsic.h>
 
 // Options

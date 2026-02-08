@@ -29,7 +29,6 @@ char selection_rcsid[] =
     "$Id$";
 
 #include "selection.h"
-#include "base/bool.h"
 #include "base/casts.h"
 
 #include <Xm/CutPaste.h>

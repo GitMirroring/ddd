@@ -68,7 +68,6 @@ BASE_SRC = \
 	base/attribute.h  \
 	base/basename.C   \
 	base/basename.h   \
-	base/bool.h       \
 	base/casts.h      \
 	base/compare.C    \
 	base/compare.h    \
@@ -98,7 +97,6 @@ BASE_SRC = \
 	base/sigName.h    \
 	base/strclass.C   \
 	base/strclass.h   \
-	base/streampos.h  \
 	base/strtoul.h    \
 	base/tabs.C       \
 	base/tabs.h       \
@@ -108,7 +106,6 @@ BASE_SRC = \
 	base/PrintGC.h    \
 	base/SignalB.C    \
 	base/SignalB.h    \
-	base/TypeInfo.C   \
 	base/TypeInfo.h   \
 	base/UniqueId.C   \
 	base/UniqueId.h

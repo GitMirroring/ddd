@@ -32,7 +32,6 @@
 #include <iostream>
 #include "base/strclass.h"
 
-#include "base/bool.h"
 #include "VSEFlags.h"
 #include "base/TypeInfo.h"
 #include "box/StringBox.h"

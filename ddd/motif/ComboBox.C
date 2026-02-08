@@ -35,7 +35,6 @@ char ComboBox_rcsid[] =
 #include "ComboBox.h"
 
 #include "AppData.h"
-#include "base/bool.h"
 #include "x11/frame.h"
 #include "x11/charsets.h"
 #include "x11/verify.h"

@@ -32,11 +32,9 @@ char logplayer_rcsid[] =
 #include "logplayer.h"
 
 #include "assert.h"
-#include "base/bool.h"
 #include "base/strclass.h"
 #include "base/cook.h"
 #include "config.h"
-#include "base/streampos.h"
 
 #include <iostream>
 #include <fstream>
@@ -141,7 +139,7 @@ void logplayer(const string& logname)
     static bool out_seen = false;
     static bool wrapped = false;
     static bool echoing = false;
-    static STREAMPOS scan_start, last_input;
+    static std::streampos scan_start, last_input;
     static string expecting;
     static int command_no = 0;
     static int command_no_start = 0;
@@ -164,7 +162,7 @@ void logplayer(const string& logname)
 
     for (;;)
     {
-	STREAMPOS current = log.tellg();
+	std::streampos current = log.tellg();
 	if (!scanning)
 	{
 	    scan_start = current;

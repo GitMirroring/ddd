@@ -29,7 +29,6 @@
 #define _DDD_TagBox_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "Box.h"
 #include "x11/Widget.h"
 #include "MarkBox.h"

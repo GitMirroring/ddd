@@ -29,7 +29,6 @@
 #define _ICE_rxclass_h
 
 #include "config.h"
-#include "bool.h"
 
 #ifndef WITH_RUNTIME_REGEX
 #define WITH_RUNTIME_REGEX 1

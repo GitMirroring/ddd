@@ -36,7 +36,6 @@
 #include <signal.h>
 #include "config.h"
 #include "base/TypeInfo.h"
-#include "base/bool.h"
 #include "base/assert.h"
 
 #if !defined(SIGCHLD) && defined(SIGCLD)

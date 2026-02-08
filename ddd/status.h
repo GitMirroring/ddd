@@ -29,7 +29,6 @@
 #define _DDD_status_h
 
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "x11/Delay.h"
 #include "motif/MString.h"
 #include <X11/Intrinsic.h>

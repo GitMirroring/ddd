@@ -29,7 +29,6 @@
 #define _DDD_MakeMenu_h
 
 #include <X11/Intrinsic.h>
-#include "base/bool.h"
 
 // Main types
 typedef int MMType;

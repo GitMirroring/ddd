@@ -45,7 +45,6 @@
 #include "agent/TTYAgent.h"
 #include "agent/HandlerL.h"
 #include "base/strclass.h"
-#include "base/bool.h"
 #include "base/assert.h"
 #include "template/VoidArray.h"
 

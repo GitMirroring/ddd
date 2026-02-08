@@ -37,22 +37,21 @@ char test_graph_rcsid[] =
 #include <Xm/ScrolledW.h>
 #include <Xm/RowColumn.h>
 #include <X11/Shell.h>
-#include "ScrolledGE.h"
-#include "PannedGE.h"
-#include "GraphEdit.h"
+#include "graph/ScrolledGE.h"
+#include "graph/GraphEdit.h"
 
-#include "converters.h"
-#include "MakeMenu.h"
-#include "longName.h"
+#include "x11/converters.h"
+#include "motif/MakeMenu.h"
+#include "x11/longName.h"
 
-#include "StringBox.h"
-#include "AlignBox.h"
+#include "box/StringBox.h"
+#include "box/AlignBox.h"
 
-#include "Graph.h"
-#include "BoxGraphN.h"
-#include "HintGraphN.h"
-#include "ArcGraphE.h"
-#include "BoxEdgeA.h"
+#include "graph/Graph.h"
+#include "graph/BoxGraphN.h"
+#include "graph/HintGraphN.h"
+#include "graph/ArcGraphE.h"
+#include "graph/BoxEdgeA.h"
 
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0

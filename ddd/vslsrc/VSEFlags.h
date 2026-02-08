@@ -28,7 +28,6 @@
 #ifndef _DDD_VSEFlags_h
 #define _DDD_VSEFlags_h
 
-#include "base/bool.h"
 #include "base/strclass.h"
 
 // GCC 2.5.x wants this to be global

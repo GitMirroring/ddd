@@ -32,7 +32,6 @@ char cook_rcsid[] =
 #include <sstream>
 #include <stdio.h>
 
-#include "bool.h"
 #include "cook.h"
 
 // Transform RAW into C string

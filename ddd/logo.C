@@ -4,7 +4,8 @@
 // Copyright (C) 1996-1998 Technische Universitaet Braunschweig, Germany.
 // Copyright (C) 2000 Universitaet Passau, Germany.
 // Copyright (C) 2003 Free Software Foundation, Inc.
-// Written by Andreas Zeller <zeller@gnu.org>.
+// Written by Andreas Zeller <zeller@gnu.org> 
+//        and Stefan Eickeler <eickeler@gnu.org>.
 // 
 // This file is part of DDD.
 // 
@@ -57,6 +58,8 @@ char logo_rcsid[] =
 #include <Xm/Xm.h>
 #include <Xm/Label.h>
 
+#include <vector>
+
 // ANSI C++ doesn't like the XtIsRealized() macro
 #ifdef XtIsRealized
 #undef XtIsRealized
@@ -65,6 +68,9 @@ char logo_rcsid[] =
 //-----------------------------------------------------------------------------
 // DDD logo
 //-----------------------------------------------------------------------------
+
+void install_modern_icons(Widget shell, const string& color_key);
+
 
 static int xpm(const _XtString name, int ret)
 {
@@ -149,7 +155,7 @@ static void create_logo_pixmaps(Widget w, Pixmap &icon, Pixmap &mask)
     attr.depth     = root_attr.depth;
     add_closeness(attr);
 
-    int ret = xpm("ddd3_5.xpm",
+    int ret = xpm("ddd.xpm",
                   XpmCreatePixmapFromData(dpy, root,
                                           (char**)ddd_xpm,
                                           &icon, &mask, &attr));
@@ -181,6 +187,10 @@ Pixmap iconmask(Widget w)
     return iconlogo_mask;
 }
 
+//-----------------------------------------------------------------------------
+// DDD Splash Screen
+//-----------------------------------------------------------------------------
+
 // Return the DDD splash screen
 Pixmap dddsplash(Widget w, const string& color_key,
 		 Dimension& width, Dimension& height)
@@ -206,7 +216,7 @@ Pixmap dddsplash(Widget w, const string& color_key,
     add_color_key(attr, color_key);
     add_closeness(attr);
 
-    int ret = xpm("splash3_5.xpm",
+    int ret = xpm("splash.xpm",
                     XpmCreatePixmapFromData(XtDisplay(w), window,
                                             (char **)dddsplash_xpm, &logo,
                                             (Pixmap *)0, &attr));
@@ -233,7 +243,7 @@ Pixmap dddsplash(Widget w, const string& color_key,
 }
 
 //-----------------------------------------------------------------------
-// Toolbar icons
+// Retro Toolbar Icons
 //-----------------------------------------------------------------------
 
 
@@ -298,6 +308,8 @@ typedef char oRiGiNaL_char;
 #include "icons/toolbar/unwatch.xpmxx"
 #include "icons/toolbar/watch.xpmxx"
 
+// single modern toolbar sprite sheet (1400 x 800, 7 x 4 grid of 200x200 cells)
+#include "icons/toolbar/modern_iconset.xpm"
 #undef char
 
 void invert_colors(XImage *image, Pixel background)
@@ -438,7 +450,7 @@ static void install_button_icon(Widget w, const _XtString name,
 // Install toolbar icons in Motif cache.  COLOR_KEY indicates the XPM
 // visual type for inactive buttons.  ACTIVE_COLOR_KEY is the XPM visual
 // type for active buttons (entered or armed).
-void install_icons(Widget shell, 
+void install_retro_icons(Widget shell,
 		   const string& color_key,
 		   const string& active_color_key)
 {
@@ -603,6 +615,15 @@ void install_icons(Widget shell,
 			background, arm_background, win_attr);
 }
 
+void install_icons(Widget shell,
+		   const string& color_key,
+		   const string& active_color_key)
+{
+    if (app_data.retro_style)
+        install_retro_icons(shell, color_key, active_color_key);
+    else
+        install_modern_icons(shell, color_key);
+}
 
 
 //-----------------------------------------------------------------------
@@ -677,4 +698,464 @@ void set_label(Widget w, const MString& new_label, const char *image)
 	XtSetValues(w, args, arg);
     }
     XmStringFree(old_label);
+}
+
+//-----------------------------------------------------------------------
+// Modern Toolbar Icons
+//-----------------------------------------------------------------------
+
+template <class PIXTYPE>
+class Image
+{
+public:
+    int xdim = 0;  // Width  (pixels)
+    int ydim = 0;  // Height (pixels)
+    int cdim = 0;  // Number of colour planes (RGB ⇒ 3, Gray ⇒ 1, ...)
+    std::vector<PIXTYPE> pixmap; // Contiguous planar image buffer (size = cdim·xdim·ydim)
+
+    Image() = default;
+
+    Image(int width, int height, int channels)
+        : xdim(width), ydim(height), cdim(channels),
+          pixmap(width * height * channels)
+    {  }
+
+    // Rule-of-zero (vector handles copy/move/destruct)
+    Image(const Image&) = default;
+    Image(Image&&) noexcept = default;
+    Image& operator=(const Image&) = default;
+    Image& operator=(Image&&) noexcept = default;
+    ~Image() = default;
+
+    void clear()
+    {
+        std::fill(pixmap.begin(), pixmap.end(), PIXTYPE{});
+    }
+
+    PIXTYPE& at(int x, int y, int c = 0)
+    {
+        return pixmap[(c * ydim + y) * xdim + x];
+    }
+
+    const PIXTYPE& at(int x, int y, int c = 0) const
+    {
+        return pixmap[(c * ydim + y) * xdim + x];
+    }
+
+    PIXTYPE* data() noexcept { return pixmap.data(); }
+    const PIXTYPE* data() const noexcept { return pixmap.data(); }
+};
+
+using IconPix   = uint8_t;
+using IconImage = Image<IconPix>;
+
+
+// Fixed‑point box sampling scaler on one planar channel of Image<uint8_t>.
+// inimg/outimg must have the same cdim.
+void ScaleImage(const Image<uint8_t> *inimg, Image<uint8_t> *outimg)
+{
+    assert(inimg  != nullptr);
+    assert(outimg != nullptr);
+
+    const uint32_t oneq10 = 1024; // 1.0 as Q.10
+
+    int inxdim  = inimg->xdim;
+    int inydim  = inimg->ydim;
+    int outxdim = outimg->xdim;
+    int outydim = outimg->ydim;
+
+    if (inxdim <= 0 || inydim <= 0 || outxdim <= 0 || outydim <= 0)
+        return;
+
+    int64_t *intermediateline = new int64_t[inxdim]; // as  Q.10
+    int64_t *acculine         = new int64_t[inxdim]; // accumulators as Q.10
+
+    int64_t sxscale = (int64_t)outxdim * oneq10 / inxdim;
+    int64_t syscale = (int64_t)outydim * oneq10 / inydim;
+
+    for (int color=0; color<inimg->cdim; color++)
+    {
+        int64_t rowsourceweight = syscale;
+        for (int x = 0; x < inxdim; ++x)
+            acculine[x] = oneq10 / 2;
+
+        int iny = 0;
+        for (int y = 0; y < outydim; ++y)
+        {
+            // 1) scale Y from inimg into intermediateline
+            if (outydim == inydim)
+            {
+                // No vertical scaling: copy row
+                const uint8_t *inputline = &inimg->at(0, y, color);
+                for (int x = 0; x < inxdim; ++x)
+                    intermediateline[x] = inputline[x] * oneq10;
+            }
+            else
+            {
+                int64_t rowdestweight = oneq10;
+                while (rowsourceweight <= rowdestweight)
+                {
+                    const uint8_t *inputline = &inimg->at(0, iny, color);
+                    for (int x = 0; x < inxdim; ++x)
+                        acculine[x] += rowsourceweight * (int64_t)inputline[x];
+
+                    rowdestweight -= rowsourceweight;
+                    rowsourceweight = syscale;
+                    if (iny < inydim - 1)
+                        ++iny;
+                }
+
+                const uint8_t *inputline = &inimg->at(0, iny, color);
+                for (int x = 0; x < inxdim; ++x)
+                {
+                    int64_t g = acculine[x] + rowdestweight * (int64_t)inputline[x];
+                    intermediateline[x] = g;
+                    acculine[x] = oneq10 / 2;
+                }
+
+                rowsourceweight -= rowdestweight;
+            }
+
+            // 2) scale X from intermediateline into outimg
+            if (outxdim == inxdim)
+            {
+                // No horizontal scaling: copy row
+                uint8_t *outline = &outimg->at(0, y, color);
+                for (int x = 0; x < outxdim; ++x)
+                    outline[x] = uint8_t(intermediateline[x] / oneq10);
+            }
+            else
+            {
+                int64_t g = oneq10 / 2;
+                int64_t colsourceweight = sxscale;
+                int incol = 0;
+
+                uint8_t *outline = &outimg->at(0, y, color);
+
+                for (int x = 0; x < outxdim; ++x)
+                {
+                    int64_t coldestweight = oneq10;
+                    while (colsourceweight <= coldestweight)
+                    {
+                        g += colsourceweight * (int64_t)intermediateline[incol];
+
+                        coldestweight -= colsourceweight;
+                        colsourceweight = sxscale;
+                        if (incol < inxdim - 1)
+                            ++incol;
+                    }
+
+                    g += coldestweight * (int64_t)intermediateline[incol];
+                    outline[x] = uint8_t(g / oneq10 / oneq10);
+                    g = oneq10 / 2;
+
+                    colsourceweight -= coldestweight;
+                }
+            }
+        }
+    }
+
+    delete [] acculine;
+    delete [] intermediateline;
+}
+
+
+// Convert an XImage (24‑bit RGB) to a 1‑channel grayscale IconImage.
+// The modern toolbar sheet is already grayscale, so we just take red.
+static IconImage ximage_to_gray_image(const XImage *src)
+{
+    IconImage img(src->width, src->height, 1);
+
+    for (int y = 0; y < src->height; ++y)
+    {
+        for (int x = 0; x < src->width; ++x)
+        {
+            unsigned long p = XGetPixel(const_cast<XImage*>(src), x, y);
+            unsigned char r = (p >> 16) & 0xFF;
+            img.at(x, y) = (IconPix)r;
+        }
+    }
+
+    return img;
+}
+
+// Convert a 1‑channel grayscale IconImage to an XImage, blending onto
+// BACKGROUND by treating white as fully transparent and black as opaque ink.
+//
+// It takes both a FOREGROUND and BACKGROUND pixel and blends the
+// grayscale icon as:
+//
+//   gray g in [0,255]  -> intensity I = g / 255
+//   alpha = 1 - I      (coverage of foreground)
+//   C = (1 - alpha)*BG + alpha*FG = BG * I + FG * (1 - I)
+//
+// So:
+//   g = 255 (white) -> pixel = BACKGROUND
+//   g =   0 (black) -> pixel = FOREGROUND
+//
+static XImage *blend_to_ximage(Widget w, Visual *visual, const IconImage &img,
+                               Pixel foreground, Pixel background)
+{
+    Display *dpy = XtDisplay(w);
+
+    XImage *dst = XCreateImage(dpy, visual,
+                               24, ZPixmap, 0, 0,
+                               img.xdim, img.ydim,
+                               32, 0);
+    if (!dst)
+        return nullptr;
+
+    dst->data = (char *)malloc(dst->bytes_per_line * dst->height);
+    if (!dst->data)
+    {
+        XDestroyImage(dst);
+        return nullptr;
+    }
+
+    uint8_t fg_r = (foreground >> 16) & 0xFF;
+    uint8_t fg_g = (foreground >> 8)  & 0xFF;
+    uint8_t fg_b =  foreground        & 0xFF;
+
+    uint8_t bg_r = (background >> 16) & 0xFF;
+    uint8_t bg_g = (background >> 8)  & 0xFF;
+    uint8_t bg_b =  background        & 0xFF;
+
+    for (int y = 0; y < img.ydim; ++y)
+    {
+        for (int x = 0; x < img.xdim; ++x)
+        {
+            uint8_t g = img.at(x, y); // 0=black .. 255=white
+
+            unsigned int inv = 255u - g;
+
+            unsigned long out_r = (bg_r * g + fg_r * inv) / 255u;
+            unsigned long out_g = (bg_g * g + fg_g * inv) / 255u;
+            unsigned long out_b = (bg_b * g + fg_b * inv) / 255u;
+
+            unsigned long out_p = (out_r << 16) | (out_g << 8) | out_b;
+
+            XPutPixel(dst, x, y, out_p);
+        }
+    }
+
+    return dst;
+}
+
+// Sprite‑sheet geometry: 1400 x 800, 200 x 200 grid => 7 x 4
+static const int MODERN_ICON_CELL = 200;
+static const int MODERN_ICON_COLS = 7;
+static const int MODERN_ICON_ROWS = 4;
+
+static IconImage modern_toolbar_sheet;
+static bool modern_toolbar_sheet_loaded = false;
+
+struct SheetEntry {
+    int         gridx;
+    int         gridy;
+    const char *name;
+};
+
+static const SheetEntry icon_sheet[] = {
+    { 2, 0, BREAK_AT_ICON },
+    { 2, 1, CLEAR_AT_ICON },
+    { 6, 2, CLUSTER_ICON },
+    { 5, 3, DELETE_ICON },
+    { 5, 0, DISPREF_ICON },
+    { 3, 3, DISABLE_ICON },
+    { 5, 0, DISPLAY_ICON },
+    { 2, 3, ENABLE_ICON },
+    { 5, 1, FIND_BACKWARD_ICON },
+    { 1, 0, FIND_FORWARD_ICON },
+    { 0, 3, HIDE_ICON },
+    { 0, 0, LOOKUP_ICON },
+    { 4, 3, MAKETEMP_ICON },
+    { 2, 0, NEW_BREAK_ICON },
+    { 4, 0, NEW_DISPLAY_ICON },
+    { 3, 0, NEW_WATCH_ICON },
+    { 6, 0, PLOT_ICON },
+    { 4, 0, PRINT_ICON },
+    { 1, 3, PROPERTIES_ICON },
+    { 1, 2, ROTATE_ICON },
+    { 2, 2, SET_ICON },
+    { 0, 2, SHOW_ICON },
+    { 6, 1, UNCLUSTER_ICON },
+    { 3, 2, UNDISPLAY_ICON },
+    { 3, 1, UNWATCH_ICON },
+    { 3, 0, WATCH_ICON }
+};
+
+static const size_t icon_sheet_count =
+    sizeof(icon_sheet) / sizeof(icon_sheet[0]);
+
+// Load the modern toolbar sheet (modern_iconset.xpm) into IconImage once.
+static bool load_modern_toolbar_sheet_image(Widget w,
+                                            const string &color_key,
+                                            const XWindowAttributes &win_attr)
+{
+    if (modern_toolbar_sheet_loaded)
+        return modern_toolbar_sheet.xdim > 0;
+
+    XpmAttributes attr{};
+    attr.valuemask = XpmVisual | XpmColormap | XpmDepth;
+    attr.visual    = win_attr.visual;
+    attr.colormap  = win_attr.colormap;
+    attr.depth     = win_attr.depth;
+    add_color_key(attr, color_key);
+    add_closeness(attr);
+
+    XImage *sheet_ximage = nullptr;
+    XImage *shape        = nullptr;
+
+    int ret = xpm("modern_iconset.xpm",
+                  XpmCreateImageFromData(XtDisplay(w),
+                                         (char **)modern_iconset_xpm,
+                                         &sheet_ximage,
+                                         &shape,
+                                         &attr));
+    XpmFreeAttributes(&attr);
+    if (shape)
+        XDestroyImage(shape);
+
+    modern_toolbar_sheet_loaded = true;
+
+    if (ret != XpmSuccess || !sheet_ximage)
+    {
+        if (sheet_ximage)
+            XDestroyImage(sheet_ximage);
+        modern_toolbar_sheet = IconImage(); // empty
+        return false;
+    }
+
+    modern_toolbar_sheet = ximage_to_gray_image(sheet_ximage);
+    XDestroyImage(sheet_ximage);
+
+    return modern_toolbar_sheet.xdim > 0;
+}
+
+static IconImage extract_patch(const IconImage &sheet,
+                                    int grid_x, int grid_y,
+                                    int cell_size)
+{
+    IconImage patch(cell_size, cell_size, 1);
+
+    int src_x0 = grid_x * cell_size;
+    int src_y0 = grid_y * cell_size;
+
+    for (int y = 0; y < cell_size; ++y)
+    {
+        int sy = src_y0 + y;
+        for (int x = 0; x < cell_size; ++x)
+        {
+            int sx = src_x0 + x;
+            IconPix v = 255; // default white
+            if (sx >= 0 && sy >= 0 &&
+                sx < sheet.xdim && sy < sheet.ydim)
+            {
+                v = sheet.at(sx, sy, 0);
+            }
+            patch.at(x, y, 0) = v;
+        }
+    }
+
+    return patch;
+}
+
+static void install_modern_button_icon(Widget shell, const _XtString name,
+                                       int gridx, int gridy,
+                                       const string& color_key,
+                                       Pixel foreground,
+                                       Pixel insensitive_foreground,
+                                       Pixel background,
+                                       Pixel arm_background,
+                                       const XWindowAttributes& win_attr)
+{
+    int dst_size = 4 * app_data.variable_width_font_size;
+
+    if (!load_modern_toolbar_sheet_image(shell, color_key, win_attr))
+        return;
+
+   IconImage src = extract_patch(modern_toolbar_sheet,
+                                       gridx, gridy,
+                                       MODERN_ICON_CELL);
+
+    IconImage dst(dst_size, dst_size, src.cdim);
+    ScaleImage(&src, &dst);
+
+    // Normal icon
+    XImage *img = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
+    if (img)
+        XmInstallImage(img, XMST(name));
+    else
+        XDestroyImage(img);
+
+    // Insensitive icon: same grayscale, but dark-gray foreground
+    string insensitive_name = string(name) + "-xx";
+    XImage *imgxx = blend_to_ximage(shell, win_attr.visual, dst, insensitive_foreground, background);
+    if (imgxx)
+        XmInstallImage(imgxx, XMST(insensitive_name.chars()));
+    else
+        XDestroyImage(imgxx);
+
+    // Armed icon: active color key, arm background
+    string armed_name = string(name) + "-arm";
+    XImage *imgarm = blend_to_ximage(shell, win_attr.visual, dst, foreground, arm_background);
+    if (imgarm)
+        XmInstallImage(imgarm, XMST(armed_name.chars()));
+    else
+        XDestroyImage(imgarm);
+
+    // Highlight icon: active color key, normal background
+    string hi_name = string(name) + "-hi";
+    XImage *imghi = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
+    if (imghi)
+        XmInstallImage(imghi, XMST(hi_name.chars()));
+    else
+        XDestroyImage(imghi);
+}
+
+void install_modern_icons(Widget shell, const string& color_key)
+{
+    static bool installed = false;
+    if (installed)
+        return;
+
+    installed = true;
+
+    // Determine attributes
+    XWindowAttributes win_attr;
+    XGetWindowAttributes(XtDisplay(shell),
+                         RootWindowOfScreen(XtScreen(shell)),
+                         &win_attr);
+
+    Pixel background;
+    XtVaGetValues(shell, XmNbackground, &background, XtPointer(0));
+
+    if (app_data.dark_mode)
+        background ^= 0x00ffffff; // invert color in dark mode
+
+    // Determine default arm background
+    Pixel foreground, top_shadow, bottom_shadow, select;
+    XmGetColors(XtScreen(shell), win_attr.colormap, background,
+                &foreground, &top_shadow, &bottom_shadow, &select);
+
+    // LessTif 0.87 and earlier does not return a suitable select color
+    Pixel arm_background = select;
+
+    // Choose a darker foreground for insensitive icons
+    Pixel insensitive_foreground = bottom_shadow;
+
+    // DDD icon (always in color, keep old implementation)
+    install_icon(shell, DDD_ICON,
+                 ddd_xpm,
+                 "best", background, win_attr, false);
+
+    // Toolbar icons from modern sprite sheet
+    for (size_t i = 0; i < icon_sheet_count; ++i)
+    {
+        const SheetEntry &entry = icon_sheet[i];
+        install_modern_button_icon(shell, entry.name, entry.gridx, entry.gridy, color_key,
+                                   foreground, insensitive_foreground,
+                                   background, arm_background,
+                                   win_attr);
+    }
 }

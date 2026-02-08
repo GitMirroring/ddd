@@ -61,7 +61,6 @@
 #include "ArgField.h"
 #include "GDBAgent.h"
 #include "template/Map.h"
-#include "BreakPoint.h"
 #include "CodeCache.h"
 #include "x11/Delay.h"
 #include "template/StringSA.h"
@@ -297,30 +296,9 @@ class SourceView {
 
     static WatchMode selected_watch_mode;     // Last selected watch mode
 
-    // The breakpoint map
-    static Map<int, BreakPoint> bp_map;
-
     // File attributes
     static IntIntArrayAssoc bps_in_line;  // non-glyph breakpoints in current source
     static std::vector<string> bp_addresses; // breakpoint addresses in current code
-
-    // True iff breakpoint BP is in current file (at LINE, if given)
-    static bool bp_matches(BreakPoint *bp, int line = 0);
-
-    // True iff breakpoint BP is in FILE (at LINE, if given)
-    static bool bp_matches(BreakPoint *bp, const string& file, int line = 0);
-
-    // True iff breakpoint location locn is in current file (at LINE, if given)
-    static bool bp_matches(BreakPointLocn &locn, int line = 0);
-
-    // True iff breakpoint location locn is in FILE (at LINE, if given)
-    static bool bp_matches(BreakPointLocn &locn, const string& file, int line = 0);
-
-    // True iff FILE1 is equal to FILE2
-    static bool file_matches(const string& file1, const string& file2);
-
-    // True iff the base names of FILE1 and FILE2 are equal
-    static bool base_matches(const string& file1, const string& file2);
 
     // True iff FILE is the currently loaded file
     static bool is_current_file(const string& file);
@@ -512,8 +490,6 @@ private:
     // Callback when state has been reset
     static void reset_done(const string& answer, void *data);
 
-    static int max_breakpoint_number_seen;
-
     // Return breakpoint number of BP_INFO; 0 if new; -1 if none
     static int breakpoint_number(const string& bp_info, string& file);
 
@@ -683,12 +659,6 @@ public:
     // The next breakpoint number (the highest last seen + 1)
     static int next_breakpoint_number();
 
-    // Create or clear a breakpoint at position A.  If SET, create a
-    // breakpoint; if not SET, delete it.  If TEMP, make the
-    // breakpoint temporary.  If COND is given, break only iff COND
-    // evals to true.  ORIGIN is the origin.
-    static void set_bp(const string& a, bool set, bool temp, const char *cond = "");
-
     // Custom calls
     static void create_bp(const string& a);
     static void create_temp_bp(const string& a);
@@ -748,11 +718,6 @@ public:
     // Move PC to ADDRESS; return true if changed.
     static bool move_pc(const string& address);
 
-    // Return `clear ARG' command.  If CLEAR_NEXT is set, attempt to
-    // guess the next event number and clear this one as well.
-    // Consider only breakpoints whose number is >= FIRST_BP.
-    static string clear_command(string arg, bool clear_next = false,
-                                int first_bp = 0);
     // Return `delete N' command.
     static std::vector<string> delete_commands(int bp_nr);
 
@@ -767,6 +732,8 @@ public:
 
     // Return current source file name
     static string name_of_source() { return sourcecode.current_source_name(); }
+
+    static string name_of_file() { return sourcecode.get_filename(); }
 
     // Return source text and machine code widget (read-only)
     static Widget source() { return source_text_w; }
@@ -851,21 +818,27 @@ public:
 
     // Set or unset showing earlier state
     static void showing_earlier_state(bool set);
+
+    // True iff FILE1 is equal to FILE2
+    static bool file_matches(const string& file1, const string& file2);
+
+    // True iff the base names of FILE1 and FILE2 are equal
+    static bool base_matches(const string& file1, const string& file2);
 };
 
 inline void SourceView::create_bp(const string& a)
 {
-    set_bp(a, true, false, "");
+    gdb->set_bp(a, true, false, "");
 }
 
 inline void SourceView::create_temp_bp(const string& a)
 {
-    set_bp(a, true, true, "");
+    gdb->set_bp(a, true, true, "");
 }
 
 inline void SourceView::clear_bp(const string& a)
 {
-    set_bp(a, false, false, "");
+    gdb->set_bp(a, false, false, "");
 }
 
 #endif // _DDD_SourceView_h

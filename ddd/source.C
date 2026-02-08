@@ -48,6 +48,7 @@ char source_rcsid[] =
 #include "shell.h"
 #include "status.h"
 #include "fortranize.h"
+#include "BreakPoint.h"
 
 #include <iostream>
 #include <Xm/Xm.h>
@@ -171,8 +172,8 @@ void gdbClearAtCB(Widget, XtPointer, XtPointer)
 
 void gdbToggleBreakCB(Widget, XtPointer, XtPointer)
 {
-    source_view->set_bp(current_arg(true), 
-		       !have_breakpoint_at_arg(), false, "");
+    gdb->set_bp(current_arg(true), !have_breakpoint_at_arg(), 
+                false, "");
 }
 
 void gdbContUntilCB(Widget, XtPointer, XtPointer)

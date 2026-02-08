@@ -445,7 +445,7 @@ static void array_test()
     // Play with rotate and show/hide buttons
     DayOfWeek days_of_week[7] = {Sun, Mon, Tue, Wed, Thu, Fri, Sat};
 
-    char *twodim [2][3] = {{ "Pioneering", "women", "in"},
+    const char *twodim [2][3] = {{ "Pioneering", "women", "in"},
 			   { "computer", "science", "!"}};
 
     int array[12][12];

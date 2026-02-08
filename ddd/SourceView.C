@@ -4,8 +4,9 @@
 // Copyright (C) 1995-1998 Technische Universitaet Braunschweig, Germany.
 // Copyright (C) 2000 Universitaet Passau, Germany.
 // Copyright (C) 2001-2006, 2008 Free Software Foundation, Inc.
-// Written by Dorothea Luetkehaus <luetke@ips.cs.tu-bs.de>
-// and Andreas Zeller <zeller@gnu.org>.
+// Written by Dorothea Luetkehaus <luetke@ips.cs.tu-bs.de>,
+//            Andreas Zeller <zeller@gnu.org>, and
+//            Stefan Eickeler <eickeler@gnu.org>.
 // 
 // This file is part of DDD.
 // 
@@ -297,18 +298,18 @@ MMDesc SourceView::text_popup[] =
 //-----------------------------------------------------------------------
 
 #include "icons/glyphs/arrow.xbm"
-#include "icons/glyphs/greyarrow.xbm"
+//#include "icons/glyphs/greyarrow.xbm"
 #include "icons/glyphs/pastarrow.xbm"
 #include "icons/glyphs/signalarrow.xbm"
 #include "icons/glyphs/dragarrow.xbm"
 #include "icons/glyphs/stop.xbm"
-#include "icons/glyphs/greystop.xbm"
+//#include "icons/glyphs/greystop.xbm"
 #include "icons/glyphs/dragstop.xbm"
 #include "icons/glyphs/cond.xbm"
-#include "icons/glyphs/greycond.xbm"
+//#include "icons/glyphs/greycond.xbm"
 #include "icons/glyphs/dragcond.xbm"
 #include "icons/glyphs/temp.xbm"
-#include "icons/glyphs/greytemp.xbm"
+//#include "icons/glyphs/greytemp.xbm"
 #include "icons/glyphs/dragtemp.xbm"
 
 
@@ -2623,7 +2624,7 @@ SourceView::SourceView(Widget parent)
     // Install glyph images
     InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
                          glyph_scalefactor, "plain_arrow");
-    InstallBitmapAsImage(parent, grey_arrow_bits, grey_arrow_width, grey_arrow_height,
+    InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
                          glyph_scalefactor, "grey_arrow");
     InstallBitmapAsImage(parent, past_arrow_bits, past_arrow_width, past_arrow_height,
                          glyph_scalefactor, "past_arrow");
@@ -2647,11 +2648,11 @@ SourceView::SourceView(Widget parent)
     InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
                          glyph_scalefactor, "multi_temp");
 
-    InstallBitmapAsImage(parent, grey_stop_bits, grey_stop_width, grey_stop_height,
+    InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
                          glyph_scalefactor, "grey_stop");
-    InstallBitmapAsImage(parent, grey_cond_bits, grey_cond_width, grey_cond_height,
+    InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
                          glyph_scalefactor, "grey_cond");
-    InstallBitmapAsImage(parent, grey_temp_bits, grey_temp_width, grey_temp_height,
+    InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
                          glyph_scalefactor, "grey_temp");
 
     InstallBitmapAsImage(parent, drag_stop_bits, drag_stop_width, drag_stop_height,

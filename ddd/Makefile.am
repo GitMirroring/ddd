@@ -1019,11 +1019,6 @@ XBM_GLYPH_ICONS = \
 	$(glyphsdir)/dragcond.xbm \
 	$(glyphsdir)/dragstop.xbm \
 	$(glyphsdir)/dragtemp.xbm \
-	$(glyphsdir)/greyarrow.xbm \
-	$(glyphsdir)/greycond.xbm \
-	$(glyphsdir)/greysignal.xbm \
-	$(glyphsdir)/greystop.xbm \
-	$(glyphsdir)/greytemp.xbm \
 	$(glyphsdir)/pastarrow.xbm \
 	$(glyphsdir)/signalarrow.xbm \
 	$(glyphsdir)/stop.xbm \

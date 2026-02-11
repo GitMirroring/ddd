@@ -755,9 +755,6 @@ Ddd*maxGlyphs: 10
 ! The time (in ms) to wait before updating glyph positions while scrolling
 Ddd*glyphUpdateDelay: 5
 
-! Shall we cache glyph images?  (Reported to fail with Motif 2.1 on XFree86)
-! Ddd*cacheGlyphImages: on
-
 ! Do we wish to display line numbers? (Default in DDD 2.1.1 and earlier)
 Ddd*displayLineNumbers: on
 
@@ -1076,9 +1073,9 @@ Ddd*grey_temp.foreground:    DISABLED_COLOR
 ! Note: In Motif 1.2 and later, colors of dragged glyphs 
 ! (drag_...) are copied from the drag source.
 Ddd*drag_arrow.foreground:   RUN_COLOR
-Ddd*drag_stop.foreground:    STOP_COLOR
-Ddd*drag_cond.foreground:    STOP_COLOR
-Ddd*drag_temp.foreground:    STOP_COLOR
+Ddd*drag_stop.foreground:    DISABLED_COLOR
+Ddd*drag_cond.foreground:    DISABLED_COLOR
+Ddd*drag_temp.foreground:    DISABLED_COLOR
 
 ! Graph colors
 Ddd*graph_edit.nodeColor:	FOREGROUND_COLOR
@@ -1098,7 +1095,6 @@ Ddd*graph_edit.outlineColor:	DISABLED_COLOR
 !-----------------------------------------------------------------------------
 
 ! These bitmap names are predefined by DDD.  Feel free to use others.
-! Note: if `cacheGlyphImages' is set, these bitmap names are ignored.
 
 Ddd*plain_arrow.labelPixmap:	plain_arrow
 Ddd*grey_arrow.labelPixmap:	grey_arrow
@@ -1113,6 +1109,7 @@ Ddd*plain_temp.labelPixmap:	plain_temp
 Ddd*drag_stop.labelPixmap:	drag_stop
 Ddd*drag_cond.labelPixmap:	drag_cond
 Ddd*drag_temp.labelPixmap:	drag_temp
+Ddd*drag_arrow.labelPixmap:     drag_arrow
 
 Ddd*grey_stop.labelPixmap:	grey_stop
 Ddd*grey_cond.labelPixmap:	grey_cond

@@ -1556,7 +1556,7 @@ void SourceView::read_file(string file_name,
 
     Utf8Pos initial_pos = 0;
     if (initial_line > 0 && initial_line <= sourcecode.get_num_lines())
-        initial_pos = sourcecode.getBytePosOfLine(initial_line) + sourcecode.calculate_indent();
+        initial_pos = sourcecode.getBytePosOfLine(initial_line) + sourcecode.calculate_indent(initial_line);
 
     SetInsertionPosition(source_text_w, initial_pos, true);
 
@@ -2635,7 +2635,7 @@ void SourceView::_show_execution_position(const string& file, int line,
     add_position_to_history(file, line, stopped);
 
     Utf8Pos pos = sourcecode.getBytePosOfLine(line);
-    int indent = sourcecode.calculate_indent();
+    int indent = sourcecode.calculate_indent(line);
     SetInsertionPosition(source_text_w, pos + indent, false);
 
     update_glyphs();
@@ -3703,6 +3703,30 @@ void SourceView::srcpopupAct (Widget w, XEvent* e, String *, Cardinal *)
 {
     if (e->type != ButtonPress && e->type != ButtonRelease)
         return;
+
+    // Abort any ongoing glyph drag
+    if (current_drag_origin)
+    {
+        // Restore cursor
+        XUndefineCursor(XtDisplay(current_drag_origin),
+                        XtWindow(current_drag_origin));
+
+        // Unmap temporary drag glyphs in the appropriate text widget
+        Widget text_w = nullptr;
+        if (is_source_widget(current_drag_origin))
+            text_w = source_text_w;
+        else if (is_code_widget(current_drag_origin))
+            text_w = code_text_w;
+
+        if (text_w)
+        {
+            unmap_drag_stop(text_w);
+            unmap_drag_arrow(text_w);
+        }
+
+        current_drag_origin     = 0;
+        current_drag_breakpoint = 0;
+    }
 
     Widget text_w;
     if (is_source_widget(w))
@@ -6336,31 +6360,22 @@ void SourceView::map_glyph(Widget& glyph, Position x, Position y)
         text_w = code_text_w;
 
     XtPointer user_data;
-    Dimension height              = 0;
-    Dimension border_width        = 0;
-    Dimension margin_height       = 0;
-    Dimension shadow_thickness    = 0;
-    Dimension highlight_thickness = 0;
+    Dimension glyph_height        = 0;
+    Dimension glyph_width         = 0;
     int old_x                     = 0;
     int old_y                     = 0; 
     XtVaGetValues(glyph,
-                  XmNheight,             &height,
-                  XmNborderWidth,        &border_width,
-                  XmNmarginHeight,       &margin_height,
-                  XmNshadowThickness,    &shadow_thickness,
-                  XmNhighlightThickness, &highlight_thickness,
+                  XmNheight,             &glyph_height,
+                  XmNwidth,              &glyph_width,
                   XmNuserData,           &user_data,
                   XmNleftOffset,         &old_x,
                   XmNtopOffset,          &old_y,
                   XtPointer(0));
-    Dimension glyph_height = 
-        height + border_width + margin_height
-        + shadow_thickness + highlight_thickness;
 
     y += (line_height(text_w) - glyph_height) / 2;
 
     if (text_w == code_text_w)
-        x += 16;
+        x += glyph_width;
 
     if (x != old_x || y != old_y)
     {
@@ -6625,19 +6640,13 @@ Boolean SourceView::CreateGlyphsWorkProc(XtPointer)
 }
 
 // Return position POS of glyph GLYPH in X/Y.  Return true iff displayed.
-bool SourceView::glyph_pos_to_xy(Widget glyph, Utf8Pos pos,
+bool SourceView::pos_to_xy(Widget text_w, Utf8Pos pos,
                                  Position& x, Position& y)
 {
-    assert (is_source_widget(glyph) || is_code_widget(glyph));
+    assert (is_source_widget(text_w) || is_code_widget(text_w));
 
     if (pos == Utf8Pos(-1))
         return false;                // Not displayed
-
-    Widget text_w;
-    if (is_source_widget(glyph))
-        text_w = source_text_w;
-    else
-        text_w = code_text_w;
 
     Boolean pos_displayed = XmhColorTextViewPosToXY(text_w, pos, &x, &y);
     Dimension width, height;
@@ -6655,12 +6664,12 @@ bool SourceView::glyph_pos_to_xy(Widget glyph, Utf8Pos pos,
 
 // Map stop sign GLYPH at position POS.  Get widget from STOPS[COUNT];
 // store location in POSITIONS.  Return mapped widget (0 if none)
-Widget SourceView::map_stop_at(Widget glyph, Utf8Pos pos,
+Widget SourceView::map_stop_at(Widget text_w, Utf8Pos pos,
                                WidgetArray& stops, int& count,
                                std::vector<Utf8Pos>& positions)
 {
     Position x, y;
-    bool pos_displayed = glyph_pos_to_xy(glyph, pos, x, y);
+    bool pos_displayed = pos_to_xy(text_w, pos, x, y);
 
     if (pos_displayed)
     {
@@ -6705,14 +6714,14 @@ Widget SourceView::map_stop_at(Widget glyph, Utf8Pos pos,
 }
 
 // Map arrow in GLYPH at POS.  Return mapped arrow widget (0 if none)
-Widget SourceView::map_arrow_at(Widget glyph, Utf8Pos pos)
+Widget SourceView::map_arrow_at(Widget text_w, Utf8Pos pos)
 {
-    assert (is_source_widget(glyph) || is_code_widget(glyph));
+    assert (is_source_widget(text_w) || is_code_widget(text_w));
 
     Position x, y;
-    bool pos_displayed = glyph_pos_to_xy(glyph, pos, x, y);
+    bool pos_displayed = pos_to_xy(text_w, pos, x, y);
 
-    int k = int(is_code_widget(glyph));
+    int k = int(is_code_widget(text_w));
 
     Widget& signal_arrow = signal_arrows[k];
     Widget& plain_arrow  = plain_arrows[k];
@@ -6771,41 +6780,17 @@ Widget SourceView::map_arrow_at(Widget glyph, Utf8Pos pos)
     return 0;
 }
 
-// Copy glyph foreground and background colors from ORIGIN to GLYPH
-void SourceView::copy_colors(Widget glyph, Widget origin)
-{
-    if (origin == 0)
-        return;
-
-    Pixel background, foreground;
-    XtVaGetValues(origin,
-                  XmNforeground, &foreground,
-                  XmNbackground, &background,
-                  XtPointer(0));
-
-    Pixmap pixmap = 
-        XmGetPixmap(XtScreen(glyph), XtName(glyph), foreground, background);
-    if (pixmap != XmUNSPECIFIED_PIXMAP)
-    {
-        Pixmap old_pixmap;
-        XtVaGetValues(glyph, XmNlabelPixmap, &old_pixmap, XtPointer(0));
-        XmDestroyPixmap(XtScreen(glyph), old_pixmap);
-
-        XtVaSetValues(glyph, XmNlabelPixmap, pixmap, XtPointer(0));
-    }
-}
-
 // Map temporary stop sign at position POS.  If ORIGIN is given, use
 // colors from ORIGIN.
-Widget SourceView::map_drag_stop_at(Widget glyph, Utf8Pos pos, 
+Widget SourceView::map_drag_stop_at(Widget text_w, Utf8Pos pos,
                                     Widget origin)
 {
-    assert (is_source_widget(glyph) || is_code_widget(glyph));
+    assert (is_source_widget(text_w) || is_code_widget(text_w));
 
     Position x, y;
-    bool pos_displayed = glyph_pos_to_xy(glyph, pos, x, y);
+    bool pos_displayed = pos_to_xy(text_w, pos, x, y);
 
-    int k = int(is_code_widget(glyph));
+    int k = int(is_code_widget(text_w));
 
     if (pos_displayed)
     {
@@ -6822,8 +6807,6 @@ Widget SourceView::map_drag_stop_at(Widget glyph, Utf8Pos pos,
             if (CreateGlyphsWorkProc(0))
                 break;
         }
-
-        copy_colors(drag_stop, origin);
 
         if (origin != 0)
         {
@@ -6878,17 +6861,16 @@ Widget SourceView::map_drag_stop_at(Widget glyph, Utf8Pos pos,
 
 // Map temporary arrow at position POS.  If ORIGIN is given, use
 // colors from ORIGIN.
-Widget SourceView::map_drag_arrow_at(Widget glyph, Utf8Pos pos, 
-                                     Widget origin)
+Widget SourceView::map_drag_arrow_at(Widget text_w, Utf8Pos pos)
 {
 //    assert (is_source_widget(glyph) || is_code_widget(glyph));
-    if (!is_source_widget(glyph) && !is_code_widget(glyph))
+    if (!is_source_widget(text_w) && !is_code_widget(text_w))
         return nullptr;
 
     Position x, y;
-    bool pos_displayed = glyph_pos_to_xy(glyph, pos, x, y);
+    bool pos_displayed = pos_to_xy(text_w, pos, x, y);
 
-    int k = int(is_code_widget(glyph));
+    int k = int(is_code_widget(text_w));
 
     Widget& drag_arrow = drag_arrows[k];
 
@@ -6897,8 +6879,6 @@ Widget SourceView::map_drag_arrow_at(Widget glyph, Utf8Pos pos,
         if (CreateGlyphsWorkProc(0))
             break;
     }
-
-    copy_colors(drag_arrow, origin);
 
     if (pos_displayed)
         map_glyph(drag_arrow, x + arrow_x_offset, y);
@@ -7408,7 +7388,7 @@ void SourceView::followGlyphAct(Widget glyph, XEvent *e, String *, Cardinal *)
     if (current_drag_breakpoint)
         map_drag_stop_at(text_w, pos, glyph);
     else
-        map_drag_arrow_at(text_w, pos, glyph);
+        map_drag_arrow_at(text_w, pos);
 }
 
 void SourceView::dropGlyphAct (Widget glyph, XEvent *e, 

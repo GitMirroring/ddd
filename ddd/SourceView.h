@@ -443,7 +443,7 @@ private:
     static Widget drag_temps[2];
 
     // Return position POS of glyph GLYPH in X/Y.  Return true iff displayed.
-    static bool glyph_pos_to_xy(Widget glyph, Utf8Pos pos,
+    static bool pos_to_xy(Widget glyph, Utf8Pos pos,
                                 Position& x, Position& y);
 
     // Map stop sign in W at position POS.  Get widget from STOPS[COUNT];
@@ -455,8 +455,7 @@ private:
     // Map arrow/drag arrow/drag stop in W at POS.  If ORIGIN is
     // given, use colors from ORIGIN.
     static Widget map_arrow_at     (Widget w, Utf8Pos pos);
-    static Widget map_drag_arrow_at(Widget w, Utf8Pos pos,
-                                    Widget origin = 0);
+    static Widget map_drag_arrow_at(Widget w, Utf8Pos pos);
     static inline void unmap_drag_arrow(Widget w)
     {
         map_drag_arrow_at(w, Utf8Pos(-1));

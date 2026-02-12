@@ -3,8 +3,9 @@
 
 // Copyright (C) 1995-1998 Technische Universitaet Braunschweig, Germany.
 // Copyright (C) 2001, 2003, 2004 Free Software Foundation, Inc.
-// Written by Andreas Zeller <zeller@gnu.org>.
-// 
+// Written by Andreas Zeller <zeller@gnu.org>
+//        and Stefan Eickeler <eickeler@gnu.org>.
+//
 // This file is part of DDD.
 // 
 // DDD is free software; you can redistribute it and/or
@@ -357,8 +358,6 @@ static const char *extraTranslations =
     "Ctrl Shift<Key>comma:     change-font-size(-1)\n"
     "Ctrl<Key>greater:         change-font-size(+1)\n"
     "Ctrl<Key>less:            change-font-size(-1)\n"
-    "Shift ~Ctrl<Btn4Down>:   change-font-size(+1)\n"
-    "Shift ~Ctrl<Btn5Down>:   change-font-size(-1)\n"
 ;
 
 // Method function declarations
@@ -597,15 +596,18 @@ static void setGrid(Widget w, Boolean reset = False)
 
     if (reset && gridPixmap != None)
     {
-	// delete old pixmap
-	XSetWindowBackgroundPixmap(XtDisplay(w), XtWindow(w), ParentRelative);
-	XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
+       if (XtIsRealized(w))
+       {
+            // delete old pixmap
+            XSetWindowBackgroundPixmap(XtDisplay(w), XtWindow(w), ParentRelative);
+            XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, False);
+        }
 
 	XFreePixmap(XtDisplay(w), gridPixmap);
 	gridPixmap = None;
     }
 
-    if (gridPixmap == None)
+    if (gridPixmap == None && XtIsRealized(w))
     {
 	// Create grid pixmap
 	int gridDataSize = ((gridWidth + 7) / 8) * gridHeight + 1;
@@ -625,7 +627,7 @@ static void setGrid(Widget w, Boolean reset = False)
 					depth);
 
  	XSetWindowBackgroundPixmap(XtDisplay(w), XtWindow(w), gridPixmap);
-	XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
+	XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, False);
 
 	delete[] gridData;
     }
@@ -712,18 +714,20 @@ static void RedrawCB(XtPointer client_data, XtIntervalId *id)
     graphEditRedrawOverview(w);
 }
 
+static const unsigned long REDRAW_DELAY_MS = 30;
 // Launch redrawing procedure
 static void StartRedraw(Widget w)
 {
-    const GraphEditWidget _w  = GraphEditWidget(w);
+    const GraphEditWidget _w = GraphEditWidget(w);
     XtIntervalId& redrawTimer = _w->graphEditP.redrawTimer;
 
+    // If a redraw is already pending, do nothing.
     if (redrawTimer != 0)
-	return;			// Redraw pending
+	return;
 
     // Redraw after we are back in the event loop
-    redrawTimer = XtAppAddTimeOut(XtWidgetToApplicationContext(w),
-				  0, RedrawCB, XtPointer(w));
+    XtAppContext app = XtWidgetToApplicationContext(w);
+    redrawTimer = XtAppAddTimeOut(app, REDRAW_DELAY_MS, RedrawCB, XtPointer(w));
 }
 
 // Redraw entire graph
@@ -766,13 +770,16 @@ Boolean graphEditEnableRedisplay(Widget w, Boolean state)
     redisplayEnabled = state;
 
     if (redisplayEnabled)
-	StartRedraw(w);
+    {
+        Graph *graph = _w->res_.graphEdit.graph;
+        if (graph)
+            graphEditRedraw(w); // Mark all visible nodes for redraw and schedule RedrawCB()
+        else
+            setGrid(w);
+    }
 
     return old_state;
 }
-
-
-
 
 // Converters
 
@@ -1469,40 +1476,28 @@ static void Realize(Widget w,
     defineCursor(w, defaultCursor);
 
     graphEditSizeChanged(w);
+
+    // draw empty grid
+    setGrid(w);
 }
 
-
-// Redisplay widget
-static void Redisplay(Widget w, XEvent *event, Region)
+static void Redisplay(Widget w, XEvent *, Region)
 {
-    const GraphEditWidget _w       = GraphEditWidget(w);
-    const Graph* graph             = _w->res_.graphEdit.graph;
-    const GraphGC& graphGC         = _w->graphEditP.graphGC;
-    const Boolean sizeChanged      = _w->graphEditP.sizeChanged;
-    const Boolean redisplayEnabled = _w->graphEditP.redisplayEnabled;
-    const Boolean highlight_drawn  = _w->res_.primitive.highlight_drawn;
-
-    if (!redisplayEnabled)
-    {
-	graphEditRedraw(w);
-	return;
-    }
-
-    if (sizeChanged)
-	graphEditSizeChanged(w);
+    GraphEditWidget _w = GraphEditWidget(w);
+    Graph *graph       = _w->res_.graphEdit.graph;
 
     setGrid(w);
 
-    // Redraw XmPrimitive border
-    if (highlight_drawn)
-	graphEditClassRec.primitive_class.border_highlight(w);
+    if (!graph)
+        return;
 
-    graph->draw(w, BoxRegion(point(event), size(event)), graphGC);
+    // respect redisplayEnabled
+    if (!_w->graphEditP.redisplayEnabled)
+        return;
 
     // Update overview for expose-driven redraws
-    graphEditRedrawOverview(w);
+    graphEditRedraw(w);
 }
-
 
 // Set widget values
 static Boolean SetValues(Widget old, Widget, Widget new_w, 
@@ -2420,33 +2415,27 @@ static void move_selected_nodes(Widget w, const BoxPoint& offset)
 {
     const GraphEditWidget _w   = GraphEditWidget(w);
     const Graph* graph         = _w->res_.graphEdit.graph;
-    const GraphGC& graphGC     = _w->graphEditP.graphGC;
 
-    if (offset == BoxPoint(0, 0))
-	return;
-
-    // Clear graph area
-    BoxRegion r = graph->region(graphGC);
-    XClearArea(XtDisplay(w), XtWindow(w), r.origin(X), r.origin(Y),
-	       r.space(X), r.space(Y), False);
+    if (offset == BoxPoint(0, 0) || !graph)
+        return;
 
     // Move selected nodes
     GraphNode *lastNode = 0;
-    for (GraphNode *node = graph->firstVisibleNode(); 
-	 node != 0;
-	 node = graph->nextVisibleNode(node))
+    for (GraphNode *node = graph->firstVisibleNode();
+         node != 0;
+         node = graph->nextVisibleNode(node))
     {
-	if (node->selected())
-	{
-	    if (lastNode)
-		moveTo(w, lastNode, lastNode->pos() + offset, False);
-	    lastNode = node;
-	}
+        if (node->selected())
+        {
+            if (lastNode)
+                moveTo(w, lastNode, lastNode->pos() + offset, False);
+            lastNode = node;
+        }
     }
     if (lastNode)
-	moveTo(w, lastNode, lastNode->pos() + offset, True);
+        moveTo(w, lastNode, lastNode->pos() + offset, True);
 
-    // resize widget to graph size and redraw graph
+    // Resize widget to graph size and redraw graph
     graphEditSizeChanged(w);
     graphEditRedraw(w);
 }
@@ -3815,7 +3804,7 @@ static void graphEditRedrawOverview(Widget w)
     if (ow <= 0 || oh <= 0)
         return;
 
-    XClearWindow(dpy, overview_win);
+    XClearArea(dpy, overview_win, 0, 0, 0, 0, False);
 
     // Full graph region in widget coordinates
     BoxRegion world = graph->region(graphGC);

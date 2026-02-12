@@ -50,8 +50,8 @@ extern Pixmap dddsplash(Widget shell,
 extern void install_icons(Widget shell, 
 			  const string& color_key,
 			  const string& active_color_key);
-inline void install_icons(Widget shell, 
-			  const string& color_key = 'c')
+
+inline void install_icons(Widget shell, const string& color_key = 'c')
 {
     install_icons(shell, color_key, color_key);
 }

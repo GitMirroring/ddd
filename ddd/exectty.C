@@ -151,7 +151,13 @@ static void launch_separate_tty(string& ttyname, pid_t& pid, string& term,
         dialog = verify(XmCreateWorkingDialog(find_shell(origin), 
                                               XMST("launch_tty_dialog"), 
                                               args, arg));
-        XtUnmanageChild(XmMessageBoxGetChild(dialog, 
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"properties", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+        }
+        XtUnmanageChild(XmMessageBoxGetChild(dialog,
                                              XmDIALOG_OK_BUTTON));
         XtUnmanageChild(XmMessageBoxGetChild(dialog, 
                                              XmDIALOG_HELP_BUTTON));

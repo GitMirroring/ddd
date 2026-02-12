@@ -3252,6 +3252,12 @@ static void ddd_check_version()
             verify(XmCreateWarningDialog(command_shell, 
                                          XMST("bad_version_warning"),
                                          args, arg));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(warning), (char *)"exclamationmark", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(warning, XmNsymbolPixmap, pm, NULL);
+        }
         Delay::register_shell(warning);
         XtUnmanageChild(XmMessageBoxGetChild(warning, XmDIALOG_CANCEL_BUTTON));
         XtAddCallback(warning, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));
@@ -4776,6 +4782,13 @@ static void OfferRestartCB(Widget dialog, XtPointer, XtPointer)
                           DDDRestartCB, 0);
             XtAddCallback(restart_dialog, XmNhelpCallback,
                           ImmediateHelpCB, 0);
+            if (!app_data.retro_style)
+            {
+                Pixmap pm = XmGetPixmap(XtScreen(restart_dialog),
+                                        (char *)"questionmark", 0, 0);
+                if (pm != XmUNSPECIFIED_PIXMAP)
+                    XtVaSetValues(restart_dialog, XmNsymbolPixmap, pm, NULL);
+            }
         }
         manage_and_raise(restart_dialog);
     }
@@ -6592,9 +6605,14 @@ static void vsl_echo(const string& msg)
         dialog = verify(XmCreateWarningDialog(find_shell(gdb_w), 
                                               XMST("vsl_message"), 
                                               args, arg));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"exclamationmark", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+        }
 
-        XtUnmanageChild(XmMessageBoxGetChild(dialog, 
-                                             XmDIALOG_CANCEL_BUTTON));
+        XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON));
 
         Delay::register_shell(dialog);
         XtAddCallback(dialog, XmNokCallback,      DestroyShellCB, 0);

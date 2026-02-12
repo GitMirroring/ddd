@@ -72,6 +72,13 @@ ProgressMeter::ProgressMeter(const char *_msg)
 	    XmCreateWorkingDialog(find_shell(), 
 				  XMST("update_displays_dialog"), 
 				  args, arg));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"properties", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+        }
+
 	XtUnmanageChild(XmMessageBoxGetChild(dialog, 
 					     XmDIALOG_OK_BUTTON));
 	XtUnmanageChild(XmMessageBoxGetChild(dialog, 

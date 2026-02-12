@@ -236,9 +236,25 @@ Widget post_gdb_died(string reason, int state, Widget w)
 	arg = 0;
 	XtSetArg(args[arg], XmNmessageString, msg.xmstring()); arg++;
 	if (exited)
+        {
 	    dialog = verify(XmCreateWarningDialog(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+            {
+                Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"exclamationmark", 0, 0);
+                if (pm != XmUNSPECIFIED_PIXMAP)
+                    XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+            }
+        }
 	else
+        {
 	    dialog = verify(XmCreateErrorDialog(shell, XMST(name), args, arg));
+            if (!app_data.retro_style)
+            {
+                Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"break_at", 0, 0);
+                if (pm != XmUNSPECIFIED_PIXMAP)
+                    XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+            }
+        }
 
 	XtAddCallback(dialog, XmNhelpCallback,
 		      ImmediateHelpCB, XtPointer(0));
@@ -255,6 +271,12 @@ Widget post_gdb_died(string reason, int state, Widget w)
 	dialog = verify(XmCreateErrorDialog(shell, 
 					    XMST("no_debugger_dialog"), 
 					    args, arg));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"break_at", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+        }
 	XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_CANCEL_BUTTON));
 	XtAddCallback(dialog, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));
 	XtAddCallback(dialog, XmNokCallback, DDDExitCB, XtPointer(intptr_t(exit_state)));
@@ -328,10 +350,15 @@ Widget post_gdb_message(string text, bool prompt, Widget w)
     static Widget gdb_message_dialog = 0;
     if (gdb_message_dialog == 0)
     {
-	gdb_message_dialog = 
-	    verify(XmCreateWarningDialog(find_shell(w),
+	gdb_message_dialog =  verify(XmCreateWarningDialog(find_shell(w),
 					 XMST("gdb_message_dialog"),
 					 args, arg));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(gdb_message_dialog), (char *)"exclamationmark", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(gdb_message_dialog, XmNsymbolPixmap, pm, NULL);
+        }
 	Delay::register_shell(gdb_message_dialog);
 	XtUnmanageChild(XmMessageBoxGetChild(gdb_message_dialog, 
 					     XmDIALOG_CANCEL_BUTTON));
@@ -386,6 +413,12 @@ Widget post_error(string text, const _XtString name, Widget w)
 
     Widget ddd_error = 
 	verify(XmCreateErrorDialog(find_shell(w), XMST(name), args, arg));
+    if (!app_data.retro_style)
+    {
+        Pixmap pm = XmGetPixmap(XtScreen(ddd_error), (char *)"break_at", 0, 0);
+        if (pm != XmUNSPECIFIED_PIXMAP)
+            XtVaSetValues(ddd_error, XmNsymbolPixmap, pm, NULL);
+    }
     Delay::register_shell(ddd_error);
     XtUnmanageChild(XmMessageBoxGetChild(ddd_error, XmDIALOG_CANCEL_BUTTON));
     XtAddCallback(ddd_error, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));
@@ -431,6 +464,12 @@ Widget post_warning(string text, const _XtString name, Widget w)
 
     Widget ddd_warning = 
 	verify(XmCreateWarningDialog(find_shell(w), XMST(name), args, arg));
+    if (!app_data.retro_style)
+    {
+        Pixmap pm = XmGetPixmap(XtScreen(ddd_warning), (char *)"exclamationmark", 0, 0);
+        if (pm != XmUNSPECIFIED_PIXMAP)
+            XtVaSetValues(ddd_warning, XmNsymbolPixmap, pm, NULL);
+    }
     Delay::register_shell(ddd_warning);
     XtUnmanageChild(XmMessageBoxGetChild(ddd_warning, XmDIALOG_CANCEL_BUTTON));
     XtAddCallback(ddd_warning, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));

@@ -159,6 +159,12 @@ static void CheckUngrabCB(XtPointer client_data, XtIntervalId *)
 	    verify(XmCreateWorkingDialog(find_shell(gdb_w), 
 					 XMST("grab_warning"),
 					 ArgList(0), 0));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"properties", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+        }
 	Delay::register_shell(dialog);
 	XtUnmanageChild(XmMessageBoxGetChild(dialog, XmDIALOG_OK_BUTTON));
 	XtAddCallback(dialog, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));

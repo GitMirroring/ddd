@@ -3,7 +3,8 @@
 
 // Copyright (C) 1998 Technische Universitaet Braunschweig, Germany.
 // Copyright (C) 2001, 2003 Free Software Foundation, Inc.
-// Written by Andreas Zeller <zeller@gnu.org>.
+// Written by Andreas Zeller <zeller@gnu.org>
+//        and Stefan Eickeler <eickeler@gnu.org>.
 // 
 // This file is part of DDD.
 // 
@@ -560,6 +561,12 @@ static void PlotterNotFoundHP(Agent *plotter, void *client_data, void *)
     Widget dialog = 
 	verify(XmCreateErrorDialog(find_shell(),
 				   XMST("no_plotter_dialog"), args, arg));
+    if (!app_data.retro_style)
+    {
+        Pixmap pm = XmGetPixmap(XtScreen(dialog), (char *)"break_at", 0, 0);
+        if (pm != XmUNSPECIFIED_PIXMAP)
+            XtVaSetValues(dialog, XmNsymbolPixmap, pm, NULL);
+    }
     XtUnmanageChild(XmMessageBoxGetChild
 		    (dialog, XmDIALOG_CANCEL_BUTTON));
     XtAddCallback(dialog, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));

@@ -981,7 +981,9 @@ static const SheetEntry icon_sheet[] = {
     { 6, 1, UNCLUSTER_ICON },
     { 3, 2, UNDISPLAY_ICON },
     { 3, 1, UNWATCH_ICON },
-    { 3, 0, WATCH_ICON }
+    { 3, 0, WATCH_ICON },
+    { 0, 1, "questionmark", },
+    { 1, 1, "exclamationmark", }
 };
 
 static const size_t icon_sheet_count =
@@ -1085,32 +1087,24 @@ static void install_modern_button_icon(Widget shell, const _XtString name,
     XImage *img = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
     if (img)
         XmInstallImage(img, XMST(name));
-    else
-        XDestroyImage(img);
 
     // Insensitive icon: same grayscale, but dark-gray foreground
     string insensitive_name = string(name) + "-xx";
     XImage *imgxx = blend_to_ximage(shell, win_attr.visual, dst, insensitive_foreground, background);
     if (imgxx)
         XmInstallImage(imgxx, XMST(insensitive_name.chars()));
-    else
-        XDestroyImage(imgxx);
 
     // Armed icon: active color key, arm background
     string armed_name = string(name) + "-arm";
     XImage *imgarm = blend_to_ximage(shell, win_attr.visual, dst, foreground, arm_background);
     if (imgarm)
         XmInstallImage(imgarm, XMST(armed_name.chars()));
-    else
-        XDestroyImage(imgarm);
 
     // Highlight icon: active color key, normal background
     string hi_name = string(name) + "-hi";
     XImage *imghi = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
     if (imghi)
         XmInstallImage(imghi, XMST(hi_name.chars()));
-    else
-        XDestroyImage(imghi);
 }
 
 void install_modern_icons(Widget shell, const string& color_key)

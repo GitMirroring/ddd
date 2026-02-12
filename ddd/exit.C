@@ -322,6 +322,12 @@ static void post_fatal(const string& title, const string& cause,
 	fatal_dialog = verify(XmCreateErrorDialog (find_shell(),
 						   XMST("fatal_dialog"), 
 						   0, 0));
+        if (!app_data.retro_style)
+        {
+            Pixmap pm = XmGetPixmap(XtScreen(fatal_dialog), (char *)"break_at", 0, 0);
+            if (pm != XmUNSPECIFIED_PIXMAP)
+                XtVaSetValues(fatal_dialog, XmNsymbolPixmap, pm, NULL);
+        }
 	Delay::register_shell(fatal_dialog);
 
 	XtAddCallback(fatal_dialog, XmNhelpCallback, ImmediateHelpCB, 0);

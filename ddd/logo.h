@@ -56,6 +56,12 @@ inline void install_icons(Widget shell, const string& color_key = 'c')
     install_icons(shell, color_key, color_key);
 }
 
+
+void install_glyphs(Widget shell);
+
+int get_stop_width();
+int get_arrow_width();
+
 // Set label of W to NEW_LABEL (and its pixmap to IMAGE_NAME, if given)
 extern void set_label(Widget w, const MString& new_label, 
 		      const char *image_name = 0);

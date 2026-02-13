@@ -3912,6 +3912,7 @@ void update_options()
     set_toggle(set_modern_style_w, !app_data.retro_style);
     set_toggle(set_retro_style_w, app_data.retro_style);
     set_sensitive(toolbar_scaling_w, app_data.retro_style);
+    set_sensitive(glyph_scaling_w, app_data.retro_style);
     set_toggle(toolbar_scaling_w, app_data.scale_toolbar);
     set_toggle(glyph_scaling_w, app_data.scale_glyphs);
 

@@ -2136,7 +2136,7 @@ SourceView::SourceView(Widget parent)
     while (toplevel_w != 0 && !XtIsWMShell(toplevel_w))
         toplevel_w = XtParent(toplevel_w);
 
-    if (app_data.scale_glyphs)
+    if (app_data.retro_style && app_data.scale_glyphs)
     {
         glyph_scalefactor = 2;
         arrow_x_offset *= 2;
@@ -2145,45 +2145,56 @@ SourceView::SourceView(Widget parent)
     }
 
     // Install glyph images
-    InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
-                         glyph_scalefactor, "plain_arrow");
-    InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
-                         glyph_scalefactor, "grey_arrow");
-    InstallBitmapAsImage(parent, past_arrow_bits, past_arrow_width, past_arrow_height,
-                         glyph_scalefactor, "past_arrow");
-    InstallBitmapAsImage(parent, signal_arrow_bits, signal_arrow_width,
-                         signal_arrow_height, glyph_scalefactor, "signal_arrow");
-    InstallBitmapAsImage(parent, drag_arrow_bits, drag_arrow_width, drag_arrow_height,
-                         glyph_scalefactor, "drag_arrow");
+    if (app_data.retro_style)
+    {
+        InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
+                            glyph_scalefactor, "plain_arrow");
+        InstallBitmapAsImage(parent, arrow_bits, arrow_width, arrow_height,
+                            glyph_scalefactor, "grey_arrow");
+        InstallBitmapAsImage(parent, past_arrow_bits, past_arrow_width, past_arrow_height,
+                            glyph_scalefactor, "past_arrow");
+        InstallBitmapAsImage(parent, signal_arrow_bits, signal_arrow_width,
+                            signal_arrow_height, glyph_scalefactor, "signal_arrow");
+        InstallBitmapAsImage(parent, drag_arrow_bits, drag_arrow_width, drag_arrow_height,
+                            glyph_scalefactor, "drag_arrow");
 
-    InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
-                         glyph_scalefactor, "plain_stop");
-    InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
-                         glyph_scalefactor, "plain_cond");
-    InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
-                         glyph_scalefactor, "plain_temp");
+        InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
+                            glyph_scalefactor, "plain_stop");
+        InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
+                            glyph_scalefactor, "plain_cond");
+        InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
+                            glyph_scalefactor, "plain_temp");
 
-    // use the same bitmaps for multi_stops
-    InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
-                         glyph_scalefactor, "multi_stop");
-    InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
-                         glyph_scalefactor, "multi_cond");
-    InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
-                         glyph_scalefactor, "multi_temp");
+        // use the same bitmaps for multi_stops
+        InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
+                            glyph_scalefactor, "multi_stop");
+        InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
+                            glyph_scalefactor, "multi_cond");
+        InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
+                            glyph_scalefactor, "multi_temp");
 
-    InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
-                         glyph_scalefactor, "grey_stop");
-    InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
-                         glyph_scalefactor, "grey_cond");
-    InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
-                         glyph_scalefactor, "grey_temp");
+        InstallBitmapAsImage(parent, stop_bits, stop_width, stop_height,
+                            glyph_scalefactor, "grey_stop");
+        InstallBitmapAsImage(parent, cond_bits, cond_width, cond_height,
+                            glyph_scalefactor, "grey_cond");
+        InstallBitmapAsImage(parent, temp_bits, temp_width, temp_height,
+                            glyph_scalefactor, "grey_temp");
 
-    InstallBitmapAsImage(parent, drag_stop_bits, drag_stop_width, drag_stop_height,
-                         glyph_scalefactor, "drag_stop");
-    InstallBitmapAsImage(parent, drag_cond_bits, drag_cond_width, drag_cond_height,
-                         glyph_scalefactor, "drag_cond");
-    InstallBitmapAsImage(parent, drag_temp_bits, drag_temp_width, drag_temp_height,
-                         glyph_scalefactor, "drag_temp");
+        InstallBitmapAsImage(parent, drag_stop_bits, drag_stop_width, drag_stop_height,
+                            glyph_scalefactor, "drag_stop");
+        InstallBitmapAsImage(parent, drag_cond_bits, drag_cond_width, drag_cond_height,
+                            glyph_scalefactor, "drag_cond");
+        InstallBitmapAsImage(parent, drag_temp_bits, drag_temp_width, drag_temp_height,
+                            glyph_scalefactor, "drag_temp");
+    }
+    else
+    {
+        install_glyphs(parent);
+
+        arrow_x_offset =  - 0.4*get_arrow_width();
+        stop_x_offset =  get_stop_width() / 3;
+        multiple_stop_x_offset = get_stop_width();
+    }
 
     // Setup actions
     XtAppAddActions (app_context, actions, XtNumber (actions));
@@ -6375,7 +6386,7 @@ void SourceView::map_glyph(Widget& glyph, Position x, Position y)
     y += (line_height(text_w) - glyph_height) / 2;
 
     if (text_w == code_text_w)
-        x += glyph_width;
+        x += multiple_stop_x_offset;
 
     if (x != old_x || y != old_y)
     {

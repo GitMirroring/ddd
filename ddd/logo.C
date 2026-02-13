@@ -36,6 +36,7 @@ char logo_rcsid[] =
 
 #include "logo.h"
 #include "config.h"
+#include "ddd.h"
 
 #include <X11/xpm.h>
 
@@ -310,6 +311,9 @@ typedef char oRiGiNaL_char;
 
 // single modern toolbar sprite sheet (1400 x 800, 7 x 4 grid of 200x200 cells)
 #include "icons/toolbar/modern_iconset.xpm"
+
+// single modern glyphs sprite sheet (1000 x 400, 5 x 2 grid of 200x200 cells)
+#include "icons/glyphs/modern_glyphset.xpm"
 #undef char
 
 void invert_colors(XImage *image, Pixel background)
@@ -941,13 +945,74 @@ static XImage *blend_to_ximage(Widget w, Visual *visual, const IconImage &img,
     return dst;
 }
 
+static XImage *image_to_mask(Widget w, Visual *visual, const IconImage &img)
+{
+    Display *dpy = XtDisplay(w);
+
+    XImage *mask = XCreateImage(dpy, visual,
+                               1, XYBitmap, 0, 0,
+                               img.xdim, img.ydim,
+                               8, 0);
+    if (!mask)
+        return nullptr;
+
+
+    mask->data = (char *)malloc(mask->height * mask->bytes_per_line);
+
+    if (!mask->data)
+    {
+        XDestroyImage(mask);
+        return nullptr;
+    }
+
+    memset(mask->data, 0, mask->height * mask->bytes_per_line);
+
+    for (int y = 0; y < img.ydim; ++y)
+    {
+        // determine the first and last foreground pixel and use it as mask
+        int firstpixel = img.xdim;
+        int lastpixel = -1;
+
+        for (int x = 0; x < img.xdim; ++x)
+        {
+            uint8_t g = img.at(x, y); // 0=black .. 255=white
+            if (g<128)
+            {
+                firstpixel = std::min(firstpixel, x);
+                lastpixel = std::max(lastpixel, x);
+            }
+        }
+
+        if (lastpixel>0)
+        {
+            for (int x = firstpixel; x <=lastpixel; x++)
+                XPutPixel(mask, x, y, 1);
+        }
+    }
+
+    return mask;
+}
+
+
 // Sprite‑sheet geometry: 1400 x 800, 200 x 200 grid => 7 x 4
 static const int MODERN_ICON_CELL = 200;
 static const int MODERN_ICON_COLS = 7;
 static const int MODERN_ICON_ROWS = 4;
+static const int MODERN_GLYPH_CELL = 200;
+static const int MODERN_GLYPH_COLS = 5;
+static const int MODERN_GLYPH_ROWS = 2;
 
 static IconImage modern_toolbar_sheet;
 static bool modern_toolbar_sheet_loaded = false;
+
+static IconImage modern_glyph_sheet;
+static bool modern_glyph_sheet_loaded = false;
+
+static int width_of_plain_arrow  = 0;
+static int width_of_plain_stop   = 0;
+
+int get_stop_width() { return width_of_plain_stop;}
+int get_arrow_width() { return width_of_plain_arrow;}
 
 struct SheetEntry {
     int         gridx;
@@ -986,8 +1051,32 @@ static const SheetEntry icon_sheet[] = {
     { 1, 1, "exclamationmark", }
 };
 
+static const SheetEntry glyph_sheet[] = {
+    { 3, 0, "plain_arrow" },
+    { 3, 0, "grey_arrow" },
+    { 4, 1, "past_arrow" },
+    { 4, 0, "signal_arrow" },
+    { 3, 1, "drag_arrow" },
+    { 0, 0, "plain_stop" },
+    { 1, 0, "plain_cond" },
+    { 2, 0, "plain_temp" },
+    { 0, 0, "multi_stop" },
+    { 1, 0, "multi_cond" },
+    { 2, 0, "multi_temp" },
+    { 0, 0, "grey_stop" },
+    { 1, 0, "grey_cond" },
+    { 2, 0, "grey_temp" },
+    { 0, 1, "drag_stop" },
+    { 1, 1, "drag_cond" },
+    { 2, 1, "drag_temp" }
+};
+
+
 static const size_t icon_sheet_count =
     sizeof(icon_sheet) / sizeof(icon_sheet[0]);
+
+static const size_t glyph_sheet_count =
+    sizeof(glyph_sheet) / sizeof(glyph_sheet[0]);
 
 // Load the modern toolbar sheet (modern_iconset.xpm) into IconImage once.
 static bool load_modern_toolbar_sheet_image(Widget w,
@@ -1032,6 +1121,51 @@ static bool load_modern_toolbar_sheet_image(Widget w,
     XDestroyImage(sheet_ximage);
 
     return modern_toolbar_sheet.xdim > 0;
+}
+
+// Load the modern glyph sheet (modern_iconset.xpm) into IconImage once.
+static bool load_modern_glyph_sheet_image(Widget w,
+                                            const string &color_key,
+                                            const XWindowAttributes &win_attr)
+{
+    if (modern_glyph_sheet_loaded)
+        return modern_glyph_sheet.xdim > 0;
+
+    XpmAttributes attr{};
+    attr.valuemask = XpmVisual | XpmColormap | XpmDepth;
+    attr.visual    = win_attr.visual;
+    attr.colormap  = win_attr.colormap;
+    attr.depth     = win_attr.depth;
+    add_color_key(attr, color_key);
+    add_closeness(attr);
+
+    XImage *sheet_ximage = nullptr;
+    XImage *shape        = nullptr;
+
+    int ret = xpm("modern_glyphset.xpm",
+                  XpmCreateImageFromData(XtDisplay(w),
+                                         (char **)modern_glyphset_xpm,
+                                         &sheet_ximage,
+                                         &shape,
+                                         &attr));
+    XpmFreeAttributes(&attr);
+    if (shape)
+        XDestroyImage(shape);
+
+    modern_glyph_sheet_loaded = true;
+
+    if (ret != XpmSuccess || !sheet_ximage)
+    {
+        if (sheet_ximage)
+            XDestroyImage(sheet_ximage);
+        modern_glyph_sheet = IconImage(); // empty
+        return false;
+    }
+
+    modern_glyph_sheet = ximage_to_gray_image(sheet_ximage);
+    XDestroyImage(sheet_ximage);
+
+    return modern_glyph_sheet.xdim > 0;
 }
 
 static IconImage extract_patch(const IconImage &sheet,
@@ -1151,5 +1285,84 @@ void install_modern_icons(Widget shell, const string& color_key)
                                    foreground, insensitive_foreground,
                                    background, arm_background,
                                    win_attr);
+    }
+}
+
+void install_glyphs(Widget shell)
+{
+    // Determine attributes
+    XWindowAttributes win_attr;
+    XGetWindowAttributes(XtDisplay(shell),
+                         RootWindowOfScreen(XtScreen(shell)),
+                         &win_attr);
+
+    if (!load_modern_glyph_sheet_image(shell, string("c"), win_attr))
+        return;
+
+    Display *display = XtDisplay(toplevel);
+    XrmDatabase db = XtDatabase(display);
+
+    // Glyph icons from modern glyph sprite sheet
+    for (size_t i = 0; i < glyph_sheet_count; ++i)
+    {
+        const SheetEntry &entry = glyph_sheet[i];
+
+        int dst_size = 1.8 * app_data.fixed_width_font_size;
+        if (i<5)
+              dst_size = 2.4 * app_data.fixed_width_font_size; // increase size of arrows
+
+        if (i==0)
+            width_of_plain_arrow = dst_size;
+        else if (i==5)
+            width_of_plain_stop = dst_size;
+
+        IconImage src = extract_patch(modern_glyph_sheet,
+                                       entry.gridx, entry.gridy,
+                                       MODERN_GLYPH_CELL);
+
+        IconImage dst(dst_size, dst_size, src.cdim);
+        ScaleImage(&src, &dst);
+
+        string resource = string(entry.name) + ".foreground";
+
+        string str_name  = "ddd*" + resource;
+        string str_class = "Ddd*" + resource;
+
+        char *type;
+        XrmValue xrmvalue;
+        Bool ok = XrmGetResource(db, str_name.chars(), str_class.chars(), &type, &xrmvalue);
+        string fg;
+        if (ok)
+            fg = string(xrmvalue.addr, xrmvalue.size - 1);
+
+        ok = XrmGetResource(db, "ddd*XmText.background", "Ddd*XmText.background", &type, &xrmvalue);
+        string bg;
+        if (ok)
+            bg = string(xrmvalue.addr, xrmvalue.size - 1);
+
+        Colormap colormap = DefaultColormap(display, DefaultScreen(display));
+
+        XColor colorfg, colorfgx;
+        XAllocNamedColor(display, colormap, fg.chars(), &colorfg, &colorfgx);
+
+        XColor colorbg, colorbgx;
+        XAllocNamedColor(display, colormap, bg.chars(), &colorbg, &colorbgx);
+
+        if (app_data.dark_mode)
+        {
+            // brighten color of glyphs in dark mode
+            colorfgx.pixel += 0x00202020;
+
+            // invert background
+            colorbgx.pixel ^= 0x00ffffff;
+        }
+
+        XImage *img = blend_to_ximage(shell, win_attr.visual, dst, colorfgx.pixel, colorbgx.pixel);
+        if (img)
+            XmInstallImage(img, XMST(entry.name));
+
+        XImage *mask = image_to_mask(shell, win_attr.visual, dst);
+        if (mask)
+            XmInstallImage(mask, XMST((string(entry.name) + "-mask").chars()));
     }
 }

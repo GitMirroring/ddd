@@ -49,7 +49,7 @@ dnl SEP is the arrow symbol.
 define([SEP], [->])dnl
 dnl
 dnl DESC(ITEM, DESC) issues `* ITEM - DESC.', with ITEM in bold.
-define([DESC], [ifelse([$1], , [[DESC]], [@tt \267 LBL($1) DASH $2.])])dnl
+define([DESC], [ifelse([$1], , [[DESC]], [@tt \342\227\276 LBL($1) DASH $2.])])dnl
 dnl
 dnl LBL(FOO) is used for describing the label titled FOO.
 dnl LBL(F1, F2, ..., Fn) describes the sequence F1->F2->...->Fn.
@@ -113,7 +113,7 @@ dnl STRONG(t) places strong emphasis
 define([STRONG], [ifelse([$1], , [[STRONG]], [@bf $1@rm ])])dnl
 dnl
 dnl ITEM issues a simple centered dot.
-define([ITEM], [@tt \267 @rm])dnl
+define([ITEM], [@tt \342\227\276 @rm])dnl
 dnl
 dnl SUBITEM issues a dash.
 define([SUBITEM], DASH)dnl
@@ -143,11 +143,11 @@ dnl
 dnl KEY_HELP is the symbol of the help key
 define([KEY_HELP], [KEY(HELP_KEY)])dnl
 dnl
-dnl ONE_HALF is the 1/2 symbol.
-define([ONE_HALF], [\275])dnl
+dnl ½ (U+00BD) in UTF-8 is 0xC2 0xBD -> \302\275 in octal
+define([ONE_HALF], [\302\275])dnl
 dnl
-dnl TIMES is the x symbol.
-define([TIMES], [\327])dnl
+dnl × (U+00D7) in UTF-8 is 0xC3 0x97 -> \303\227 in octal
+define([TIMES], [\303\227])dnl
 dnl
 dnl DDD is defined as `@DDD@', which `configure' replaces by `DDD' again
 dnl Same applies to `Ddd' and `ddd'.  This allows `configure' to set up

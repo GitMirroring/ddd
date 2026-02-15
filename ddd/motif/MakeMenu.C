@@ -355,13 +355,31 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	}
 
 	case MMToggle:
+	case MMMenuToggle:
 	{
 	    // Create a ToggleButton
 	    assert(subitems == 0);
+            Pixel foreground;
+            if (!app_data.retro_style)
+	    {
+                if (app_data.dark_mode)
+                    XtVaGetValues(shell, XmNtopShadowColor, &foreground, XtPointer(0));
+                else
+                    XtVaGetValues(shell, XmNbottomShadowColor, &foreground, XtPointer(0));
+            }
 
 	    arg = 0;
             if (!app_data.retro_style)
-                { XtSetArg(args[arg], XmNdetailShadowThickness, 1);     arg++; }
+            {
+                if (type==MMMenuToggle)
+                    { XtSetArg(args[arg], XmNdetailShadowThickness, 0);     arg++;}
+                else
+                    { XtSetArg(args[arg], XmNdetailShadowThickness, 1);     arg++;}
+                XtSetArg(args[arg], XmNselectColor, foreground);     arg++;
+                XtSetArg(args[arg], XmNindicatorOn, XmINDICATOR_FILL);     arg++;
+                XtSetArg(args[arg], XmNtopShadowColor, foreground);     arg++;
+                XtSetArg(args[arg], XmNbottomShadowColor, foreground);     arg++;
+            }
             widget = verify(XmCreateToggleButton(shell, XMST(name), args, arg));
 	    break;
 	}
@@ -557,8 +575,6 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	    {
 	    case MMSpinBox:
 		arg = 0;
-                if (!app_data.retro_style)
-                    { XtSetArg(args[arg], XmNshadowThickness, 1); arg++; }
                 widget = CreateSpinBox(panel, textName.chars(), args, arg);
 		break;
 
@@ -589,6 +605,8 @@ void MMaddItems(Widget shell, MMDesc items[], bool ignore_seps)
 	    if (ignore_seps)
 		continue;
 	    arg = 0;
+            if (!app_data.retro_style)
+                { XtSetArg(args[arg], XmNseparatorType, XmSINGLE_LINE); arg++; }
 	    widget = verify(XmCreateSeparator(shell, XMST(name), args, arg));
 	    break;
 	}
@@ -883,6 +901,7 @@ static void addCallback(const MMDesc *item, XtPointer default_closure)
 	break;
     }
 
+    case MMMenuToggle:
     case MMToggle:
     case MMScale:
     {

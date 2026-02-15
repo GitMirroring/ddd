@@ -3678,11 +3678,11 @@ static void ToggleButtonCB(Widget, XtPointer client_data, XtPointer call_data)
 
 static MMDesc button_menu[] =
 {
-    { "console", MMToggle, 
+    { "console", MMMenuToggle,
       { ToggleButtonCB, XtPointer(ConsoleTarget) }, 0, 0, 0, 0},
-    { "source",  MMToggle, 
+    { "source",  MMMenuToggle,
       { ToggleButtonCB, XtPointer(SourceTarget) }, 0, 0, 0, 0},
-    { "data",    MMToggle, 
+    { "data",    MMMenuToggle,
       { ToggleButtonCB, XtPointer(DataTarget) }, 0, 0, 0, 0},
     MMEnd
 };

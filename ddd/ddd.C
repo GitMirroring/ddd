@@ -928,7 +928,7 @@ struct ProgramItems {
     { "run",       MMPush, { gdbRunCB, 0 }, 0, 0, 0, 0 }, \
     { "run_again", MMPush, { gdbCommandCB, XtPointer("run") }, 0, 0, 0, 0 }, \
     MMSep, \
-    { "separateExecWindow",  MMToggle, \
+    { "separateExecWindow",  MMMenuToggle, \
         { dddToggleSeparateExecWindowCB, 0 }, 0, &(w), 0, 0 }, \
     MMSep, \
     { "step",     MMPush, { gdbCommandCB, XtPointer("step") }, 0, 0, 0, 0 }, \
@@ -977,7 +977,7 @@ enum DDDWindow { OtherWindow = -1,
     { "console", MMPush,   { gdbOpenCommandWindowCB, 0 }, 0, 0, 0, 0}, \
     { "source",  MMPush,   { gdbOpenSourceWindowCB, 0 }, 0, 0, 0, 0}, \
     { "data",    MMPush,   { gdbOpenDataWindowCB, 0 }, 0, 0, 0, 0}, \
-    { "code",    MMToggle | MMUnmanaged, \
+    { "code",    MMMenuToggle | MMUnmanaged, \
         { gdbToggleCodeWindowCB, 0 }, 0, 0, 0, 0}, \
     MMEnd \
 }
@@ -991,10 +991,10 @@ static MMDesc views_menu[] =
     { "tool",    MMPush,   { gdbOpenToolWindowCB, 0 }, 0, 0, 0, 0},
     { "exec",    MMPush,   { gdbOpenExecWindowCB, 0 }, 0, 0, 0, 0},
     MMSep,
-    { "console", MMToggle, { gdbToggleCommandWindowCB, 0 }, 0, 0, 0, 0},
-    { "source",  MMToggle, { gdbToggleSourceWindowCB, 0 }, 0, 0, 0, 0},
-    { "data",    MMToggle, { gdbToggleDataWindowCB, 0 }, 0, 0, 0, 0},
-    { "code",    MMToggle, { gdbToggleCodeWindowCB, 0 }, 0, 0, 0, 0},
+    { "console", MMMenuToggle, { gdbToggleCommandWindowCB, 0 }, 0, 0, 0, 0},
+    { "source",  MMMenuToggle, { gdbToggleSourceWindowCB, 0 }, 0, 0, 0, 0},
+    { "data",    MMMenuToggle, { gdbToggleDataWindowCB, 0 }, 0, 0, 0, 0},
+    { "code",    MMMenuToggle, { gdbToggleCodeWindowCB, 0 }, 0, 0, 0, 0},
     MMEnd
 };
 
@@ -1034,7 +1034,7 @@ DECL_WR(dddPopupSettingsCB);
     { "settings",    MMPush,  \
       { WhenReady, XtPointer(&WR_dddPopupSettingsCB) }, 0, 0, 0, 0}, \
     MMSep, \
-    { "saveOptions", MMToggle,  \
+    { "saveOptions", MMMenuToggle,  \
       { dddToggleSaveOptionsOnExitCB, 0 }, 0, &(w), 0, 0}, \
     MMEnd \
 }
@@ -1129,12 +1129,12 @@ static MMDesc source_menu[] =
     { "findBackward", MMPush, { gdbFindCB, XtPointer(SourceView::backward) },
       0, &find_backward_w, 0, 0 },
     MMSep,
-    { "findWordsOnly",       MMToggle, { sourceToggleFindWordsOnlyCB, 0 }, 
+    { "findWordsOnly",       MMMenuToggle, { sourceToggleFindWordsOnlyCB, 0 },
       0, &find_words_only_w, 0, 0 },
-    { "findCaseSensitive",   MMToggle, { sourceToggleFindCaseSensitiveCB, 0 }, 
+    { "findCaseSensitive",   MMMenuToggle, { sourceToggleFindCaseSensitiveCB, 0 },
       0, &find_case_sensitive_w, 0, 0 },
     MMSep,
-    { "disassemble",         MMToggle,  { gdbToggleCodeWindowCB, 0 },
+    { "disassemble",         MMMenuToggle,  { gdbToggleCodeWindowCB, 0 },
       0, &disassemble_w, 0, 0 },
     MMSep,
     { "edit",       MMPush,  
@@ -1379,11 +1379,11 @@ static MMDesc data_preferences_menu[] =
     { "layout",        MMPanel, MMNoCB, layout_menu, 0, 0, 0 },
     { "overview",      MMRadioPanel,  MMNoCB, graph_overview_menu, 0, 0, 0 },
 
-    { "detectAliases", MMToggle, { graphToggleDetectAliasesCB, 0 },
+    { "detectAliases", MMMenuToggle, { graphToggleDetectAliasesCB, 0 },
       0, &graph_detect_aliases_w, 0, 0 },
-    { "align2dArrays", MMToggle,  { graphToggleAlign2dArraysCB, 0 },
+    { "align2dArrays", MMMenuToggle,  { graphToggleAlign2dArraysCB, 0 },
       0, &graph_align_2d_arrays_w, 0, 0 },
-    { "autoClose",     MMToggle,  { graphToggleAutoCloseCB, 0 },
+    { "autoClose",     MMMenuToggle,  { graphToggleAutoCloseCB, 0 },
       0, &graph_auto_close_w, 0, 0 },
     { "themes",    MMPanel | MMUnmanagedLabel, 
           MMNoCB, themes_menu, 0, 0, 0 },
@@ -1624,12 +1624,12 @@ static MMDesc data_menu[] =
         { gdbPrintCB, XtPointer(False) }, 0, &print_w, 0, 0 },
     { "display",     MMPush,  { gdbDisplayCB, 0 }, 0, &display_w, 0, 0 },
     MMSep,
-    { "detectAliases", MMToggle, { graphToggleDetectAliasesCB, 0 },
+    { "detectAliases", MMMenuToggle, { graphToggleDetectAliasesCB, 0 },
       0, &detect_aliases_w, 0, 0 },
     MMSep,
-    { "info locals", MMToggle,  { graphToggleLocalsCB, 0 }, 
+    { "info locals", MMMenuToggle,  { graphToggleLocalsCB, 0 },
       0, &locals_w, 0, 0 },
-    { "info args",   MMToggle,  { graphToggleArgsCB, 0 }, 
+    { "info args",   MMMenuToggle,  { graphToggleArgsCB, 0 },
       0, &args_w, 0, 0 },
     { "infos",       MMPush,    { WhenReady, XtPointer(&WR_dddPopupInfosCB) }, 
       0, &infos_w, 0, 0 },
@@ -2256,6 +2256,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButton.highlightThickness: 1");
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.shadowThickness: 1");
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.highlightThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*XmSeparatorGadget*shadowThickness: 0"); // disable separator between widgets
     }
 
     // Create a new auto_command_prefix if needed

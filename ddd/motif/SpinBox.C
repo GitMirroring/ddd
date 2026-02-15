@@ -38,6 +38,8 @@ char SpinBox_rcsid[] =
 #include "x11/verify.h"
 #include "agent/TimeOut.h"
 #include "base/casts.h"
+#include "AppData.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>		// sprintf
@@ -144,12 +146,17 @@ static Widget create_spin_arrow(Widget parent, unsigned char direction,
 				Widget text)
 {
     Pixel foreground;
-    XtVaGetValues(parent, XmNbackground, &foreground, XtPointer(0));
+    if (app_data.retro_style)
+        XtVaGetValues(parent, XmNbackground, &foreground, XtPointer(0));
+    else
+        XtVaGetValues(parent, XmNbottomShadowColor, &foreground, XtPointer(0));
 
     Arg args[10];
     Cardinal arg = 0;
     XtSetArg(args[arg], XmNarrowDirection,  direction);  arg++;
     XtSetArg(args[arg], XmNshadowThickness, 0);          arg++;
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNdetailShadowThickness, 0); arg++; }
     XtSetArg(args[arg], XmNforeground,      foreground); arg++;
     Widget arrow = XmCreateArrowButton(parent, 
 				       XMST("spinBoxArrow"), args, arg);

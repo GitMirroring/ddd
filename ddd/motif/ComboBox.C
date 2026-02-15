@@ -316,7 +316,7 @@ void ComboBoxSetList(Widget text, const std::vector<string>& items)
 Widget CreateComboBox(Widget parent, const _XtString name, 
 		      ArgList _args, Cardinal _arg, bool editable)
 {
-    ArgList args = new Arg[_arg + 10];
+    ArgList args = new Arg[_arg + 15];
     Cardinal arg = 0;
 
     ComboBoxInfo *info = new ComboBoxInfo;
@@ -414,7 +414,10 @@ Widget CreateComboBox(Widget parent, const _XtString name,
     XtManageChild(info->text);
 
     Pixel foreground;
-    XtVaGetValues(parent, XmNbackground, &foreground, XtPointer(0));
+    if (app_data.retro_style)
+        XtVaGetValues(parent, XmNbackground, &foreground, XtPointer(0));
+    else
+        XtVaGetValues(parent, XmNbottomShadowColor, &foreground, XtPointer(0));
 
     arg = 0;
     XtSetArg(args[arg], XmNarrowDirection,     XmARROW_DOWN);  arg++;
@@ -426,7 +429,9 @@ Widget CreateComboBox(Widget parent, const _XtString name,
     XtSetArg(args[arg], XmNrightAttachment,    XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNtopAttachment,      XmATTACH_FORM); arg++;
     XtSetArg(args[arg], XmNbottomAttachment,   XmATTACH_FORM); arg++;
-    info->button = XmCreateArrowButton(form, 
+    if (!app_data.retro_style)
+        { XtSetArg(args[arg], XmNdetailShadowThickness, 0); arg++; }
+    info->button = XmCreateArrowButton(form,
 				       XMST("comboBoxArrow"), args, arg);
     XtManageChild(info->button);
 

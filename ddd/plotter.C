@@ -156,44 +156,44 @@ static MMDesc file_menu[] =
 
 static MMDesc view_menu[] = 
 {
-    { "border",    MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
-    { "timestamp",      MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "border",    MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "timestamp",      MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
     MMSep,
-    { "grid",      MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
-    { "xzeroaxis", MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
-    { "yzeroaxis", MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "grid",      MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "xzeroaxis", MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "yzeroaxis", MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
 static MMDesc contour_menu[] = 
 {
-    { "base",      MMToggle, { SetContourCB, 0 }, 0, 0, 0, 0 },
-    { "surface",   MMToggle, { SetContourCB, 0 }, 0, 0, 0, 0 },
+    { "base",      MMMenuToggle, { SetContourCB, 0 }, 0, 0, 0, 0 },
+    { "surface",   MMMenuToggle, { SetContourCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
 static MMDesc scale_menu[] = 
 {
-    { "logscale",  MMToggle, { ToggleLogscaleCB, 0 }, 0, 0, 0, 0 },
+    { "logscale",  MMMenuToggle, { ToggleLogscaleCB, 0 }, 0, 0, 0, 0 },
     MMSep,
-    { "xtics",     MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
-    { "ytics",     MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
-    { "ztics",     MMToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "xtics",     MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "ytics",     MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
+    { "ztics",     MMMenuToggle, { ToggleOptionCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
 static MMDesc plot_menu[] = 
 {
-    { "points",         MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "lines",          MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "lines3d",        MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "linespoints",    MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "linespoints3d",  MMToggle | MMUnmanaged, 
+    { "points",         MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "lines",          MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "lines3d",        MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "linespoints",    MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "linespoints3d",  MMMenuToggle | MMUnmanaged,
                                   { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "impulses",       MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "dots",           MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "steps2d",        MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
-    { "boxes2d",        MMToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "impulses",       MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "dots",           MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "steps2d",        MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
+    { "boxes2d",        MMMenuToggle, { SetStyleCB, 0 }, 0, 0, 0, 0 },
     MMEnd
 };
 
@@ -297,7 +297,7 @@ static void configure_options(PlotWindowInfo *plot, MMDesc *menu,
 {
     for (int i = 0; menu[i].name != 0; i++)
     {
-	if ((menu[i].type & MMTypeMask) != MMToggle)
+	if ((menu[i].type & MMTypeMask) != MMMenuToggle)
 	    continue;
 
 	string name = menu[i].name;
@@ -352,7 +352,7 @@ static void configure_plot(PlotWindowInfo *plot)
     int i;
     for (i = 0; plot_menu[i].name != 0; i++)
     {
-	if ((plot_menu[i].type & MMTypeMask) != MMToggle)
+	if ((plot_menu[i].type & MMTypeMask) != MMMenuToggle)
 	    continue;
 
 	string name = plot_menu[i].name;
@@ -419,7 +419,7 @@ static void configure_plot(PlotWindowInfo *plot)
     // Get style
     for (i = 0; plot_menu[i].name != 0; i++)
     {
-	if ((plot_menu[i].type & MMTypeMask) != MMToggle)
+	if ((plot_menu[i].type & MMTypeMask) != MMMenuToggle)
 	    continue;
 
 	string name = plot_menu[i].name;

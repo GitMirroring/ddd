@@ -1192,7 +1192,7 @@ void ManualStringHelpCB(Widget widget, const MString& title,
 	{ "findBackward", MMPush, 
 	  { FindBackwardCB, XtPointer(fi) }, 0, 0, 0, 0 },
 	MMSep,
-	{ "viewIndex",    MMToggle, { ToggleIndexCB, 
+	{ "viewIndex",    MMMenuToggle, { ToggleIndexCB,
 				      XtPointer(XtParent(help_index)) }, 
 	  0, &view_index, 0, 0 },
 	MMEnd

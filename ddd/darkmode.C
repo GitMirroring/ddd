@@ -32,6 +32,7 @@ char darkmode_rcsid[] =
 
 #include <Xm/Xm.h>
 #include <Xm/ScrollBar.h>
+#include <Xm/ToggleB.h>
 
     
 void setColorMode(Widget w, bool darkmode, bool retrostyle)
@@ -57,10 +58,22 @@ void setColorMode(Widget w, bool darkmode, bool retrostyle)
             if (!retrostyle && XmIsScrollBar(child))
                 XtVaGetValues(child, XmNforeground,  &fg, nullptr);
 
+            // special case for ToggleButton keep select color
+            Pixel select;
+            if (!retrostyle && XmIsToggleButton(child))
+                XtVaGetValues(child, XmNselectColor, &select, nullptr);
+
             XmChangeColor(child, color);
 
             if (!retrostyle && XmIsScrollBar(child))
                 XtVaSetValues(child, XmNforeground, fg, nullptr);
+
+            if (!retrostyle && XmIsToggleButton(child))
+            {
+                XtVaSetValues(child, XmNtopShadowColor, select, nullptr);
+                XtVaSetValues(child, XmNbottomShadowColor, select, nullptr);
+                XtVaSetValues(child, XmNselectColor, select, nullptr);
+            }
         }
 
         setColorMode (child, darkmode, retrostyle);

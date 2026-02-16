@@ -1547,9 +1547,12 @@ void SourceView::read_file(string file_name,
     if (gdb->program_language() == LANGUAGE_C)
         TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
 
-    XmhColorToken *toksptr = &toks[0];
-    int tok_count = toks.size();
-    XmhColorTextViewSetTokens(source_text_w, toksptr, tok_count);
+    if (!toks.empty())
+    {
+        XmhColorToken *toksptr = &toks[0];
+        int tok_count = toks.size();
+        XmhColorTextViewSetTokens(source_text_w, toksptr, tok_count);
+    }
 
     Utf8Pos initial_pos = 0;
     if (initial_line > 0 && initial_line <= sourcecode.get_num_lines())

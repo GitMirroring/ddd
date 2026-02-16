@@ -1794,7 +1794,9 @@ void gdbReloadExecCB(Widget, XtPointer, XtPointer)
         return;
     }
 
-    if (gdb->running())
+    if (info.attached && gdb->has_processes())
+        gdb_command(gdb->detach_command(info.pid));
+    else if (gdb->running())
         gdb_command(gdb->kill_command());
 
     string cmd = gdb->debug_command(prog);

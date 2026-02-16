@@ -389,9 +389,6 @@ static void DestroyOldWidgets(WidgetArray& Array);
 static Utf8Pos selection_startpos;
 static Utf8Pos selection_endpos;
 static Time           selection_time;
-#if XtSpecificationRelease < 6
-static XEvent         selection_event;
-#endif
 
 
 //-----------------------------------------------------------------------
@@ -3632,10 +3629,6 @@ void SourceView::setSelection(XtPointer client_data, XtIntervalId *)
 void SourceView::startSelectWordAct (Widget text_w, XEvent* e, 
                                      String *params, Cardinal *num_params)
 {
-#if XtSpecificationRelease < 6
-    selection_event = *e;
-#endif
-
     XtCallActionProc(text_w, "grab-focus", e, params, *num_params);
 
     if (e->type != ButtonPress && e->type != ButtonRelease)
@@ -3659,9 +3652,6 @@ void SourceView::startSelectWordAct (Widget text_w, XEvent* e,
 void SourceView::endSelectWordAct (Widget text_w, XEvent* e, 
                                    String *params, Cardinal *num_params)
 {
-#if XtSpecificationRelease < 6
-    selection_event = *e;
-#endif
     selection_click = false;
 
     XtCallActionProc(text_w, "extend-end", e, params, *num_params);
@@ -7678,9 +7668,12 @@ void SourceView::set_code(const string& code,
     std::vector<XmhColorToken> toks;
     TokenizeGdbDisassembly(code.chars(), code.length(), toks);
 
-    XmhColorToken *toksptr = &toks[0];
-    int tok_count = toks.size();
-    XmhColorTextViewSetTokens(code_text_w, toksptr, tok_count);
+    if (!toks.empty())
+    {
+        XmhColorToken *toksptr = &toks[0];
+        int tok_count = toks.size();
+        XmhColorTextViewSetTokens(code_text_w, toksptr, tok_count);
+    }
 
     current_code       = code;
     current_code_start = start;

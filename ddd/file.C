@@ -1771,6 +1771,41 @@ void gdbOpenRecentCB(Widget, XtPointer client_data, XtPointer)
     }
 }
 
+void gdbReloadExecCB(Widget, XtPointer, XtPointer)
+{
+    if (!gdb)
+        return;
+
+    if (!gdb->has_exec_files() && gdb->type() != PERL && gdb->type() != DBG)
+    {
+        set_status("Reload executable: not supported by this debugger.");
+        return;
+    }
+
+    ProgramInfo info;
+    string prog = info.file;
+
+    if (prog == NO_GDB_ANSWER || prog.empty())
+        prog = gdb->program();     // fallback
+
+    if (prog.empty())
+    {
+        set_status("Reload executable: no program to reload.");
+        return;
+    }
+
+    if (gdb->running())
+        gdb_command(gdb->kill_command());
+
+    string cmd = gdb->debug_command(prog);
+    if (gdb->type() == PERL)
+        cmd.gsub("perl", string(app_data.debugger_command));
+
+    gdb_command(cmd);
+
+    set_status("Reloaded executable " + quote(prog));
+}
+
 void gdbOpenCoreCB(Widget w, XtPointer, XtPointer)
 {
     static Widget dialog = 

@@ -2927,6 +2927,7 @@ Click on @charset Find@small>> @charset()@rm  to search the previous occurrence 
 \n\
 @tt \342\227\276 @bf Open Program...@rm  @tt -@rm  open the program to be debugged.\n\
 @tt \342\227\276 @bf Open Recent@rm  @tt -@rm  open a recently used program.\n\
+@tt \342\227\276 @bf Reload Executable@rm  @tt -@rm  reloads the currently used program.\n\
 @tt \342\227\276 @bf Open Core Dump...@rm  @tt -@rm  open a core dump.\n\
 @tt \342\227\276 @bf Open Source...@rm  @tt -@rm  open a source file.\n\
 \n\
@@ -2949,6 +2950,7 @@ Click on @charset Find@small>> @charset()@rm  to search the previous occurrence 
 \n\
 @tt \342\227\276 @bf Open Program...@rm  @tt -@rm  open the program to be debugged.\n\
 @tt \342\227\276 @bf Open Recent@rm  @tt -@rm  open a recently used program.\n\
+@tt \342\227\276 @bf Reload Executable@rm  @tt -@rm  reloads the currently used program.\n\
 @tt \342\227\276 @bf Open Core Dump...@rm  @tt -@rm  open a core dump.\n\
 @tt \342\227\276 @bf Open Source...@rm  @tt -@rm  open a source file.\n\
 \n\
@@ -2986,6 +2988,11 @@ Click on @charset Find@small>> @charset()@rm  to search the previous occurrence 
 @Ddd@*menubar*fileMenu.recent.mnemonic:    R
 @Ddd@*menubar*fileMenu.recent.documentationString:   \
 @rm Reopen a program to be debugged
+
+@Ddd@*menubar*fileMenu.reload_exec.labelString: Reload Executable
+@Ddd@*menubar*fileMenu.reload_exec.mnemonic:    E
+@Ddd@*menubar*fileMenu.reload_exec.documentationString:   \
+@rm Reload the executable to be debugged
 
 @Ddd@*menubar*fileMenu.open_core.labelString: Open Core Dump...
 @Ddd@*menubar*fileMenu.open_core.mnemonic:    D

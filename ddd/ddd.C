@@ -842,7 +842,7 @@ static MMDesc source_recent_menu[]  = RECENT_MENU;
 static MMDesc data_recent_menu[]    = RECENT_MENU;
 
 struct FileItems {
-    enum FileItem { OpenClass, OpenFile, Recent, OpenCore, OpenSource, Sep1,
+    enum FileItem { OpenClass, OpenFile, Recent, ReloadExec, OpenCore, OpenSource, Sep1,
                     OpenSession, SaveSession, Sep2,
                     Attach, Detach, Sep3,
                     Print, PrintAgain, Sep4,
@@ -861,6 +861,7 @@ struct WhenReadyProc_t {
  static WhenReadyProc_t WR_##PROC = { PROC }
 DECL_WR(gdbOpenClassCB);
 DECL_WR(gdbOpenFileCB);
+DECL_WR(gdbReloadExecCB);
 DECL_WR(gdbOpenCoreCB);
 DECL_WR(OpenSessionCB);
 DECL_WR(SaveSessionAsCB);
@@ -876,6 +877,8 @@ DECL_WR(gdbMakeAgainCB);
     { "open_file",     MMPush, \
         { WhenReady, XtPointer(&WR_gdbOpenFileCB) }, 0, 0, 0, 0 }, \
     { "recent",        MMMenu, MMNoCB, recent_menu, 0, 0, 0 }, \
+    { "reload_exec",   MMPush, \
+        { WhenReady, XtPointer(&WR_gdbReloadExecCB) }, 0, 0, 0, 0 }, \
     { "open_core",     MMPush, \
         { WhenReady, XtPointer(&WR_gdbOpenCoreCB) }, 0, 0, 0, 0}, \
     { "open_source",   MMPush, { gdbLookupSourceCB, 0 }, 0, 0, 0, 0 }, \
@@ -7331,6 +7334,10 @@ static void setup_options()
     manage_child(command_file_menu[FileItems::OpenFile].widget,     have_exec);
     manage_child(source_file_menu[FileItems::OpenFile].widget,      have_exec);
     manage_child(data_file_menu[FileItems::OpenFile].widget,        have_exec);
+
+    manage_child(command_file_menu[FileItems::ReloadExec].widget, have_exec);
+    manage_child(source_file_menu[FileItems::ReloadExec].widget,  have_exec);
+    manage_child(data_file_menu[FileItems::ReloadExec].widget,    have_exec);
 
     bool have_classes = gdb->has_classes();
     manage_child(command_file_menu[FileItems::OpenClass].widget, have_classes);

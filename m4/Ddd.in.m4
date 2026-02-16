@@ -1970,6 +1970,7 @@ WIDGET(File Menu)\n\
 \n\
 DESC(Open Program..., [open the program to be debugged])\n\
 DESC(Open Recent, [open a recently used program])\n\
+DESC(Reload Executable, [reloads the currently used program])\n\
 DESC(Open Core Dump..., [open a core dump])\n\
 DESC(Open Source..., [open a source file])\n\
 \n\
@@ -2010,6 +2011,11 @@ Ddd*menubar*fileMenu.recent.labelString: Open Recent
 Ddd*menubar*fileMenu.recent.mnemonic:    R
 Ddd*menubar*fileMenu.recent.documentationString:   \
 @rm Reopen a program to be debugged
+
+Ddd*menubar*fileMenu.reload_exec.labelString: Reload Executable
+Ddd*menubar*fileMenu.reload_exec.mnemonic:    E
+Ddd*menubar*fileMenu.reload_exec.documentationString:   \
+@rm Reload the executable to be debugged
 
 Ddd*menubar*fileMenu.open_core.labelString: Open Core Dump...
 Ddd*menubar*fileMenu.open_core.mnemonic:    D

@@ -598,10 +598,13 @@ LIBELF     = @LIBELF@
 LIBNSL     = @LIBNSL@
 # Additional libraries required for non-X programs (-lsocket -lnsl)
 NON_X_LIBS = @LIBS@
+# DL library (-ldl)
+LIBDL      = @LIBDL@
+
 
 # All libraries shown above
 ALL_LIBS = $(CXXLIBS) $(LIBREADLINE) $(LIBSOCKET) $(LIBNSL) $(LIBRX) \
-	$(LIBTERMCAP) $(LIBY) $(LIBM) $(LIBELF)
+	$(LIBTERMCAP) $(LIBY) $(LIBM) $(LIBELF) $(LIBDL)
 
 
 

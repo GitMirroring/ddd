@@ -330,6 +330,9 @@ dnl
 AC_CHECK_LIB(m, sin, LIBM="-lm")
 AC_SUBST(LIBM)
 dnl
+AC_CHECK_LIB([dl],[dladdr], [LIBDL="-ldl"], [LIBDL=""])
+AC_SUBST(LIBDL)
+dnl
 AC_CHECK_LIB(c, open, LIBC="-lc")
 AC_SUBST(LIBC)
 dnl

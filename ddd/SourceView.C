@@ -1547,12 +1547,9 @@ void SourceView::read_file(string file_name,
     if (gdb->program_language() == LANGUAGE_C)
         TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
 
-    if (!toks.empty())
-    {
-        XmhColorToken *toksptr = &toks[0];
-        int tok_count = toks.size();
-        XmhColorTextViewSetTokens(source_text_w, toksptr, tok_count);
-    }
+    XmhColorToken *toksptr = toks.data();
+    int tok_count = toks.size();
+    XmhColorTextViewSetTokens(source_text_w, toksptr, tok_count);
 
     Utf8Pos initial_pos = 0;
     if (initial_line > 0 && initial_line <= sourcecode.get_num_lines())
@@ -7671,12 +7668,9 @@ void SourceView::set_code(const string& code,
     std::vector<XmhColorToken> toks;
     TokenizeGdbDisassembly(code.chars(), code.length(), toks);
 
-    if (!toks.empty())
-    {
-        XmhColorToken *toksptr = &toks[0];
-        int tok_count = toks.size();
-        XmhColorTextViewSetTokens(code_text_w, toksptr, tok_count);
-    }
+    XmhColorToken *toksptr = toks.data();
+    int tok_count = toks.size();
+    XmhColorTextViewSetTokens(code_text_w, toksptr, tok_count);
 
     current_code       = code;
     current_code_start = start;

@@ -1053,6 +1053,8 @@ XPM_ICONS = \
 	$(srctoolbardir)/hide.xpm \
 	$(srctoolbardir)/lookup.xpm \
 	$(srctoolbardir)/maketemp.xpm \
+	$(srctoolbardir)/modern_iconset.xpm \
+	$(glyphsdir)/modern_glyphset.xpm \
 	$(srctoolbardir)/newbreak.xpm \
 	$(srctoolbardir)/newdisplay.xpm \
 	$(srctoolbardir)/newwatch.xpm \

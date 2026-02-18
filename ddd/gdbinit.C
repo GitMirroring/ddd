@@ -532,6 +532,7 @@ static struct table {
     { DBG,  "dbg" },
     { DBX,  "dbx"  },
     { DBX,  "ladebug" },
+    { GDB,  "gdb-multiarch" }, // prefer gdb-multiarch if present
     { GDB,  "gdb"  },
     { GDB,  "wdb"  },
     { JDB,  "jdb"  },

@@ -996,6 +996,7 @@ static void open_session(const string& session)
     case PERL: shortcuts = XtNperlDisplayShortcuts; break;
     case PYDB: shortcuts = XtNpydbDisplayShortcuts; break;
     case XDB:  shortcuts = XtNxdbDisplayShortcuts;  break;
+    case DEBUGGER_INVALID: break;
     }
 
     display_shortcuts = get_resource(db, shortcuts, XtCDisplayShortcuts);
@@ -1029,6 +1030,7 @@ static void open_session(const string& session)
     case XDB:
 	app_data.xdb_display_shortcuts  = display_shortcuts.chars();
 	break;
+    case DEBUGGER_INVALID: break;
     }
     update_user_buttons();
 
@@ -1081,6 +1083,7 @@ static void open_session(const string& session)
     settings = string(config_get_string("perl.settings"));
 	break;
 
+    case DEBUGGER_INVALID: break;
     }
     init_session(restart, settings, app_data.source_init_commands);
 
@@ -1146,6 +1149,8 @@ void RestartDebuggerCB(Widget, XtPointer, XtPointer)
     case XDB:
 	GDBAgent_XDB_settings = (char *) settings.chars();
 	break;
+
+    case DEBUGGER_INVALID: break;
     }
 
     _gdb_out("Restarting " + gdb->title() + "\n");

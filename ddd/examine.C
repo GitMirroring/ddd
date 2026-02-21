@@ -123,7 +123,7 @@ static string examine_command()
     strip_space(repeat);
     strip_space(address);
 
-    if (GDB == gdb->type() && gdb->cpu == cpu_intel) {
+    if (GDB == gdb->type()) {
       
       /* Intel x86 8 and 16-bit handling: 
 	 When you have an assembly line like this:
@@ -142,26 +142,28 @@ static string examine_command()
       */
 
       //ZARKO - prikaz sadrzaja memorije kod opsteg formata adresiranja
-      int left_par, right_par, comma1, comma2;
-      string addr,addr_addr,addr_base,addr_index,addr_mul;
-      addr = address;
-      char added = 0;
+      string addr = address;
       addr.gsub(" ","");	//izbaci sve razmake
       addr.gsub("\t","");	//izbaci sve tabove
 
       //zameni % sa $, pa ako je bilo ikakvih zamena, radi dalje
       //% replaced by $, and as there have been other replacements, we like to move on
-      if (addr.gsub("%","$") > 0) {
-	left_par = addr.index("(");
-	right_par = addr.index(")", left_par+1);
+      if (addr.gsub("%","$") > 0)
+      {
+        char added = 0;
+
+	int left_par = addr.index("(");
+	int right_par = addr.index(")", left_par+1);
 
 	//samo ako ima zagrada, treba dalje analizirati
-    //only if there is a problem, further analysis is needed
-	if ((left_par != -1) && (right_par != -1)) {
-	  addr_addr = "";		//adresa
-	  addr_base = "";		//baza
-	  addr_mul = "";		//mnozilac
-	  addr_index = "";	//indeks
+        //only if there is a problem, further analysis is needed
+	if ((left_par != -1) && (right_par != -1))
+        {
+          int comma1, comma2;
+	  string addr_addr = "";		//adresa
+	  string addr_base = "";		//baza
+	  string addr_mul = "";		//mnozilac
+	  string addr_index = "";	//indeks
 	  if ((comma1 = addr.index(",",left_par+1)) != -1) {
 	    if ((comma2 = addr.index(",", comma1+1)) == -1) 
 	      comma2 = right_par;

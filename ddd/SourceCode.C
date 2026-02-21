@@ -448,6 +448,8 @@ String SourceCode::read_from_gdb(const string& file_name, long& length,
     case XDB:
         command = "w " HUGE_LINE_NUMBER;
         break;
+    case DEBUGGER_INVALID:
+        break;
     }
     string listing = gdb_question(command, -1, true);
 
@@ -965,6 +967,9 @@ string SourceCode::get_source_name(string filename)
             source = basename(filename.chars());
             strip_java_suffix(source);
         }
+        break;
+
+    case DEBUGGER_INVALID:
         break;
     }
 

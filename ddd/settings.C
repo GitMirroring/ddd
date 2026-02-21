@@ -1035,6 +1035,7 @@ static EntryType entry_type(DebuggerType type,
     case XDB:
     case JDB:
     case PERL:
+    case DEBUGGER_INVALID:
 	break;			// FIXME
     }
 
@@ -1508,6 +1509,7 @@ string show_command(const string& cmd, DebuggerType type)
 
     case JDB:
     case XDB:
+    case DEBUGGER_INVALID:
 	break;
     }
 
@@ -1784,6 +1786,8 @@ static void add_button(Widget form, int& row, Dimension& max_width,
 	    doc = base;
 	    break;
 	}
+
+        case DEBUGGER_INVALID: break;
 	}
 
 	if (e_type != entry_filter)
@@ -2089,6 +2093,7 @@ static void add_button(Widget form, int& row, Dimension& max_width,
 	case PERL:
 	case PYDB:
 	case XDB:
+        case DEBUGGER_INVALID:
 	    return;		// FIXME
 	}
 
@@ -2403,6 +2408,8 @@ static void add_settings(Widget form, int& row, Dimension& max_width,
     case PERL:
 	commands = cached_gdb_question("o");
 	break;
+
+    case DEBUGGER_INVALID: break;
     }
 
     if (type == GDB && entry_filter == SignalEntry)
@@ -3370,6 +3377,8 @@ static void get_setting(std::ostream& os, DebuggerType type,
 	// Add setting
 	os << base << ' ' << value << '\n';
 	break;
+
+    case DEBUGGER_INVALID: break;
     }
     
 }

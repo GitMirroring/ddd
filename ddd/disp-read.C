@@ -74,6 +74,7 @@ bool is_single_display_cmd (const string& cmd, GDBAgent *gdb)
     case PERL:
     case PYDB:
     case XDB:
+    case DEBUGGER_INVALID:
 	return false;
     }
 
@@ -424,6 +425,8 @@ bool is_file_cmd (const string& cmd, GDBAgent *gdb)
 
     case MAKE:
 	return cmd.contains("exec ", 0);
+    case DEBUGGER_INVALID:
+        break;
     }
 
     assert(0);
@@ -657,6 +660,8 @@ int display_index (const string& gdb_answer, GDBAgent *gdb)
     case XDB:
 	prx = &rxdbx_begin_of_display;
 	break;
+    case DEBUGGER_INVALID:
+        break;
     }
 
     const regex& rx = *prx;
@@ -818,6 +823,7 @@ static int display_info_index (const string& gdb_answer, GDBAgent *gdb)
     case MAKE:
     case PERL:
     case XDB:
+    case DEBUGGER_INVALID:
 	return -1;		// No displays in these debuggers
     }
 
@@ -904,6 +910,7 @@ string read_next_disp_info (string& gdb_answer, GDBAgent *gdb)
     case PERL:
     case BASH:
     case MAKE:
+    case DEBUGGER_INVALID:
 	break;			// FIXME
     }
 
@@ -928,6 +935,7 @@ string get_info_disp_str (const string& display_info, GDBAgent *gdb)
     case PERL:
     case BASH:
     case MAKE:
+    case DEBUGGER_INVALID:
 	return "";		// FIXME
     }
 
@@ -952,6 +960,7 @@ bool disp_is_disabled (const string& info_disp_str, GDBAgent *gdb)
     case MAKE:
     case PERL:
     case XDB:
+    case DEBUGGER_INVALID:
 	return false;		// FIXME
     }
 
@@ -989,6 +998,7 @@ string  read_disp_nr_str (string& display, GDBAgent *gdb)
     case PERL:
     case BASH:
     case MAKE:
+    case DEBUGGER_INVALID:
 	return "";		// FIXME
     }
 

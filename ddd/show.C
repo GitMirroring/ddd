@@ -243,6 +243,8 @@ void show_invocation(const string& gdb_command, std::ostream& os)
 	options.push_back("  [XDB options]      Pass option to XDB.");
     }
     break;
+    case DEBUGGER_INVALID:
+        break;
     }
 
     show_version(os);

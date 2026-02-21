@@ -571,6 +571,9 @@ void SourceView::temp_n_cont(const string& a)
             address = address.after(':');
         gdb_command("c " + address);
         break;
+
+    case DEBUGGER_INVALID:
+        break;
     }
 }
 
@@ -641,6 +644,7 @@ bool SourceView::move_pc(const string& a)
         case MAKE:
         case PERL:
         case PYDB:
+        case DEBUGGER_INVALID:
             break;                // Never reached
         }
 
@@ -2996,6 +3000,9 @@ void SourceView::process_info_line_main(string& info_output)
         info_output = "";
     }
     break;
+
+    case DEBUGGER_INVALID:
+    break;
     }
 
     // Strip 'Line <n> of <file> starts at <address>...' info
@@ -3125,6 +3132,8 @@ void SourceView::lookup(string s, bool silent)
                 show_position(full_path(sourcecode.get_filename())
                               + ":" + itostring(line));
                 break;
+            case DEBUGGER_INVALID:
+                break;
             }
         }
         else
@@ -3213,6 +3222,9 @@ void SourceView::lookup(string s, bool silent)
             gdb_command(c);
             break;
         }
+
+        case DEBUGGER_INVALID:
+            break;
         }
     }
 }
@@ -3268,6 +3280,7 @@ void SourceView::add_position_to_history(const string& file_name, int line,
     case MAKE:
     case PERL:
     case XDB:
+    case DEBUGGER_INVALID:
         break;
     }
 
@@ -3384,6 +3397,9 @@ void SourceView::process_pwd(string& pwd_output)
                 process_cd(current_pwd);
                 return;
             }
+            break;
+
+        case DEBUGGER_INVALID:
             break;
         }
     }
@@ -4590,6 +4606,8 @@ static string cond_filter(const string& cmd)
         // FIXME
         break;
     }
+    case DEBUGGER_INVALID:
+        break;
     }
 
     return "";                        // No condition
@@ -5412,6 +5430,9 @@ void SourceView::SelectFrameCB (Widget w, XtPointer, XtPointer call_data)
             frame_pos_locked = (offset != 0);
         }
         break;
+
+    case DEBUGGER_INVALID:
+        break;
     }
 }
 
@@ -5613,6 +5634,8 @@ void SourceView::process_frame(string& frame_output)
             // FIXME
             break;
         }
+        case DEBUGGER_INVALID:
+            break;
         }
 
         int frame = get_positive_nr(frame_nr);
@@ -5679,6 +5702,8 @@ void SourceView::process_frame(int frame)
 
         case XDB:
             pos = frame + 1;
+            break;
+        case DEBUGGER_INVALID:
             break;
         }
 
@@ -6000,6 +6025,8 @@ void SourceView::process_threads(string& threads_output)
         }
         break;
     }
+    case DEBUGGER_INVALID:
+        break;
     }
 
     setLabelList(thread_list_w, thread_list, selected, count, false, false);
@@ -6049,6 +6076,7 @@ void SourceView::refresh_threads(bool all_threadgroups)
     case PERL:
     case PYDB:
     case XDB:
+    case DEBUGGER_INVALID:
         // No threads.
         break;
     }
@@ -8075,6 +8103,8 @@ bool SourceView::get_state(std::ostream& os)
 
     case XDB:
         os << "v " << line_of_cursor() << '\n';
+        break;
+    case DEBUGGER_INVALID:
         break;
     }
 

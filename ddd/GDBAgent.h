@@ -56,8 +56,8 @@ class BreakPoint;
 // Debugger types
 //-----------------------------------------------------------------------------
 
-enum DebuggerType { BASH, DBG, DBX, GDB, JDB, PERL, PYDB, XDB, MAKE };
-enum DebuggerCPU { cpu_intel, cpu_unknown};
+enum DebuggerType {DEBUGGER_INVALID = -1, BASH, DBG, DBX, GDB, JDB, PERL, PYDB, XDB, MAKE };
+
 //-----------------------------------------------------------------------------
 // Program language
 //-----------------------------------------------------------------------------
@@ -148,7 +148,6 @@ struct ReplyRequiredInfo {
 class GDBAgent: public TTYAgent {
 public:
     DECLARE_TYPE_INFO
-    DebuggerCPU cpu;
     int max_breakpoint_number_seen;     // TODO: Move to protected
 
 protected:

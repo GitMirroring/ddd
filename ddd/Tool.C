@@ -122,19 +122,13 @@ void create_command_tool()
     XtAddEventHandler(tool_shell, STRUCTURE_MASK, False,
 		      StructureNotifyEH, XtPointer(0));
 
-#if XmVersion >= 1002
-#define FIXED_COMMAND_TOOL 1
-#endif
-
-#if FIXED_COMMAND_TOOL
     // Some FVWM flavors have trouble in finding the `best' window size.
     // Determine `best' size for tool shell.
     XtWidgetGeometry size;
     size.request_mode = CWHeight | CWWidth;
     XtQueryGeometry(tool_buttons_w, (XtWidgetGeometry *)0, &size);
-#endif
 
-    // some window manager cannot move window with a width below 100 pixel
+    // some window managers cannot move windows with a width below 100 pixel
     size.width = std::max(size.width, Dimension(110));
 
     // Set shell geometry
@@ -142,9 +136,7 @@ void create_command_tool()
     get_transient_pos(XtScreen(tool_shell_parent), pos_x, pos_y);
 
     std::ostringstream os;
-#if FIXED_COMMAND_TOOL
     os << size.width << "x" << size.height;
-#endif
     os << "+" << pos_x << "+" << pos_y;
     string geometry(os);
 
@@ -152,13 +144,11 @@ void create_command_tool()
     XtSetArg(args[arg], XmNx, pos_x);                   arg++;
     XtSetArg(args[arg], XmNy, pos_y);                   arg++;
 
-#if FIXED_COMMAND_TOOL
     // Some FVWM flavors have trouble in finding the `best' window size.
     XtSetArg(args[arg], XmNmaxWidth,  size.width);      arg++;
     XtSetArg(args[arg], XmNmaxHeight, size.height);     arg++;
     XtSetArg(args[arg], XmNminWidth,  size.width);      arg++;
     XtSetArg(args[arg], XmNminHeight, size.height);     arg++;
-#endif
 
     XtSetValues(tool_shell, args, arg);
 

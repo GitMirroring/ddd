@@ -457,6 +457,9 @@ void start_gdb(bool config)
     // Add some additional init commands with reply handling
     switch (gdb->type())
     {
+    case DEBUGGER_INVALID:
+        assert(false);
+
     case GDB:
 	cmds.push_back("info line");	// Fails if no symbol table is loaded.
 	cmds.push_back("list");		// But works just fine after a `list'.
@@ -967,6 +970,8 @@ void send_gdb_command(string cmd,
 		case PERL:
 		    // Perl `l' command issues a position anyway.
 		    break;
+                case DEBUGGER_INVALID:
+                    break;
 		}
 	    }
 	}
@@ -1139,6 +1144,7 @@ void send_gdb_command(string cmd,
 	case XDB:
 	case PYDB:
 	case DBG:
+        case DEBUGGER_INVALID:
 	    break;		// FIXME
 	}
     }
@@ -1564,6 +1570,9 @@ void send_gdb_command(string cmd,
     // Setup additional trailing commands
     switch (gdb->type())
     {
+    case DEBUGGER_INVALID:
+        assert(false);
+
     case GDB:
 	if (extra_data->refresh_initial_line)
 	{
@@ -2164,6 +2173,7 @@ static void command_completed(void *data)
 	    case JDB:
 	    case PYDB:
 	    case PERL:
+            case DEBUGGER_INVALID:
 		// FIXME
 		break;
 	    }
@@ -2804,11 +2814,8 @@ static void process_config_program_language(const string& lang)
 
 static void process_config_gdb_version(const string& answer)
 {
-    gdb->is_windriver_gdb(answer.contains("vxworks"));
-    if (answer.contains("i686") || answer.contains("i586") 
-	|| answer.contains("i386")) {
-      gdb->cpu = cpu_intel;
-    }
+    string a = downcase(answer);
+    gdb->is_windriver_gdb(a.contains("vxworks") || a.contains("wind river"));
 }
 
 
@@ -2954,6 +2961,8 @@ static void extra_completed (std::vector<string>& answers,
 	    }
 	    break;
 	}
+        case DEBUGGER_INVALID:
+            break;
 	}
     }
 
@@ -3215,11 +3224,10 @@ static void extra_completed (std::vector<string>& answers,
 	}
     }
 
-    if (extra_data->refresh_user && extra_data->n_refresh_user>0 &&
-int(answers.size())<=qu_count + extra_data->n_refresh_user)
+    if (extra_data->refresh_user &&
+        extra_data->n_refresh_user > 0 &&
+        qu_count + extra_data->n_refresh_user <= int(answers.size()))
     {
-// 	StringArray answers_(answers.data() + qu_count,
-// 			    extra_data->n_refresh_user);
         std::vector<string> answers_(answers.cbegin() + qu_count, answers.cbegin() + qu_count + extra_data->n_refresh_user);
 	data_disp->process_user(answers_);
 	qu_count += extra_data->n_refresh_user;

@@ -229,6 +229,7 @@ void PosBuffer::filter (string& answer)
     case XDB:
     case JDB:
     case PYDB:
+    case DEBUGGER_INVALID:
 	break;			// Nothing special
     }
 
@@ -352,6 +353,8 @@ void PosBuffer::filter (string& answer)
 	case XDB:
 	    filter_xdb(answer);
 	    break;
+        case DEBUGGER_INVALID:
+            break;
 	}
 
 	filter_line(answer);

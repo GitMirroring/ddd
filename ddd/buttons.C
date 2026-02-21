@@ -376,6 +376,7 @@ static string gdbSettingsValue(const string& command)
     case JDB:
     case PERL:
     case XDB:
+    case DEBUGGER_INVALID:
 	return NO_GDB_ANSWER;		// FIXME
     }
 
@@ -1490,6 +1491,7 @@ static void create_buttons_dialog(Widget parent)
     case PERL: str = &app_data.perl_display_shortcuts; break;
     case PYDB: str = &app_data.pydb_display_shortcuts; break;
     case XDB:  str = &app_data.xdb_display_shortcuts;  break;
+    case DEBUGGER_INVALID: break;
     }
 
     shortcut_w = 
@@ -1570,6 +1572,7 @@ void refresh_button_editor()
     case PERL: str = &app_data.perl_display_shortcuts; break;
     case PYDB: str = &app_data.pydb_display_shortcuts; break;
     case XDB:  str = &app_data.xdb_display_shortcuts;  break;
+    case DEBUGGER_INVALID: break;
     }
 
     *str = XtNewString(expr.chars());

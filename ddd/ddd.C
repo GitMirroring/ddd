@@ -2120,7 +2120,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     // From this point on, we'll be running under X.
 
     // Open X connection and create top-level application shell
-    XtAppContext app_context;
     arg = 0;
     XtSetArg(args[arg], XmNdeleteResponse, XmDO_NOTHING); arg++;
 
@@ -2315,24 +2314,24 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XtAppSetWarningHandler(app_context, ddd_xt_warning);
 
     // Determine debugger type
-    DebuggerType debugger_type = DebuggerType(-1);
+    DebuggerType debugger_type = DEBUGGER_INVALID;
+    // Guess debugger type from args
+    DebuggerInfo info(argc, argv);
 
-    if (debugger_type == DebuggerType(-1) && !gdb_name.empty())
+    if (debugger_type == DEBUGGER_INVALID && !gdb_name.empty())
     {
         // Use given debugger
         get_debugger_type(gdb_name, debugger_type);
     }
 
-    if (debugger_type == DebuggerType(-1) && !app_data.auto_debugger)
+    if (debugger_type == DEBUGGER_INVALID && !app_data.auto_debugger)
     {
         // Use debugger from args or app_defaults
         get_debugger_type(app_data.debugger, debugger_type);
     }
 
-    if (debugger_type == DebuggerType(-1))
+    if (debugger_type == DEBUGGER_INVALID)
     {
-        // Guess debugger type from args
-        DebuggerInfo info(argc, argv);
         debugger_type = info.type;
 
         if (!app_data.auto_debugger)
@@ -3427,6 +3426,7 @@ static void set_shortcut_menu(DataDisp *data_disp)
     string display_shortcuts;
     switch (gdb->type())
     {
+        case DEBUGGER_INVALID: display_shortcuts = ""; break;
         case BASH: display_shortcuts = app_data.bash_display_shortcuts; break;
         case DBG:  display_shortcuts = app_data.dbg_display_shortcuts;  break;
         case DBX:  display_shortcuts = app_data.dbx_display_shortcuts;  break;
@@ -3920,7 +3920,7 @@ void update_options()
     set_toggle(toolbar_scaling_w, app_data.scale_toolbar);
     set_toggle(glyph_scaling_w, app_data.scale_glyphs);
 
-    DebuggerType debugger_type = DebuggerType(-1);
+    DebuggerType debugger_type = DEBUGGER_INVALID;
     get_debugger_type(app_data.debugger, debugger_type);
 
     set_toggle(set_debugger_bash_w, debugger_type == BASH);
@@ -7023,6 +7023,8 @@ static void setup_environment()
             // afterwards.  Set the execution TTY type right now.
             put_environment("TERM", app_data.term_type);
             break;
+        case DEBUGGER_INVALID:
+            break;
     }
 
     // Don't let TERMCAP settings override our TERM settings.
@@ -7399,7 +7401,7 @@ static void setup_theme_manager()
     std::vector<string> available_themes;
     get_themes(available_themes);
 
-    for (int i = 0; i < int(available_themes.size()); i++)
+    for (size_t i = 0; i < available_themes.size(); i++)
     {
         const char* theme = basename(available_themes[i].chars());
 

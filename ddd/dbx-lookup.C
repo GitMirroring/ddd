@@ -89,6 +89,8 @@ string dbx_lookup(const string& func_name, bool silent)
     case MAKE:
 	reply = gdb_question("target " + func_name, 0, true);
 	break;
+    case DEBUGGER_INVALID:
+        break;
     }
 
     if (reply == NO_GDB_ANSWER)
@@ -151,6 +153,8 @@ string dbx_lookup(const string& func_name, bool silent)
 	}
 	break;
     }
+    case DEBUGGER_INVALID:
+        break;
     }
 
     string pos = "";

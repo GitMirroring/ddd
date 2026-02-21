@@ -488,6 +488,7 @@ static int gdb_set_tty(string tty_name = "",
         case JDB:
         case PYDB:        // for now
         case XDB:
+        case DEBUGGER_INVALID:
             // No way to set environment variables
             break;
     }
@@ -668,6 +669,9 @@ static void redirect_process(string& command,
 
         case PYDB:
             break;                        // No redirection in PYDB (for now)
+
+        case DEBUGGER_INVALID:
+            break;
     }
 
     string new_args;

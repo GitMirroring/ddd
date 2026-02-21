@@ -275,8 +275,6 @@ GDBAgent::GDBAgent (XtAppContext app_context,
     addHandler(Input,  traceInputHP);     // GDB => DDD
     addHandler(Output, traceOutputHP);    // DDD => GDB
     addHandler(Error,  traceErrorHP);     // GDB Errors => DDD
-
-    cpu = cpu_unknown;
 }
 
 
@@ -2185,6 +2183,7 @@ string GDBAgent::clear_command(string pos, bool clear_next, int first_bp)
         case DBG:
         case MAKE:
         case XDB:
+        case DEBUGGER_INVALID:
             break;
         }
     }

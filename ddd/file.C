@@ -674,6 +674,7 @@ static void openCoreDone(Widget w, XtPointer client_data, XtPointer call_data)
 	case PERL:
 	case PYDB:
 	case XDB:
+        case DEBUGGER_INVALID:
 	    break;		// FIXME
 	}
     }
@@ -972,6 +973,9 @@ ProgramInfo::ProgramInfo()
 
 	running = jvm_running;
 	break;
+
+    case DEBUGGER_INVALID:
+        break;
     }
 
     if (file == NO_GDB_ANSWER)

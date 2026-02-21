@@ -2157,6 +2157,7 @@ bool get_restart_commands(string& restart, unsigned long flags)
         case XDB:
         case PYDB:
         case DBG:
+        case DEBUGGER_INVALID:
             // FIXME
             break;
         }
@@ -2322,6 +2323,8 @@ static bool save_options_init(unsigned long flags)
             xdb_settings = settings;
             break;
 
+        case DEBUGGER_INVALID:
+            break;
         }
     }
 
@@ -2545,6 +2548,7 @@ static bool save_options_init(unsigned long flags)
         case PERL: perl_display_shortcuts = expr; break;
         case PYDB: pydb_display_shortcuts = expr; break;
         case XDB:  xdb_display_shortcuts  = expr; break;
+        case DEBUGGER_INVALID: break;
         }
 
         os << string_app_value(XtNbashDisplayShortcuts,

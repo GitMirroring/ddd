@@ -995,11 +995,7 @@ inline string::string(char c)
 // was flagging this and it does result in undefined behavior.
 inline void string_DeleteRep(strRep *rep)
 {
-#if HAVE_PLACEMENT_NEW
     operator delete(rep);
-#else
-    delete[] (char *) rep;
-#endif
 }
 
 inline string::~string()

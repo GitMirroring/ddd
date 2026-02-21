@@ -1656,6 +1656,7 @@ namespace BP
     case XDB:
     case JDB:
     case PERL:
+    case DEBUGGER_INVALID:
         break;
     }
 
@@ -1738,6 +1739,8 @@ namespace BP
             }
             break;
         }
+        case DEBUGGER_INVALID:
+            break;
         }
 
         if (bp_nr <= 0)

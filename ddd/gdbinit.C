@@ -67,6 +67,8 @@ GDBAgent *new_gdb(DebuggerType type,
     {
 	switch(type)
 	{
+        case DEBUGGER_INVALID:
+            assert(false);
 
 	case BASH:
 	    // Be sure to invoke the debugger.
@@ -267,10 +269,10 @@ static bool have_cmd(const string& cmd)
 // Return an appropriate debugger type from ARGC/ARGV.
 // Set ARG if debugger type could be deduced from an argument.
 DebuggerInfo::DebuggerInfo(int argc, const char * const argv[])
-    : type(DebuggerType(-1)),
+    : type(DEBUGGER_INVALID),
       arg("")
 {
-    DebuggerType fallback = DebuggerType(-1);
+    DebuggerType fallback = DEBUGGER_INVALID;
     get_debugger_type(app_data.debugger, fallback);
 
     static bool have_bash   = (fallback == BASH || have_cmd("bash"));

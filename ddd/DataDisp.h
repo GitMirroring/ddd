@@ -557,6 +557,7 @@ public:
 
     // Constructor
     DataDisp(Widget parent, Widget& data_buttons_w);
+    ~DataDisp();
 
     void create_shells();
 

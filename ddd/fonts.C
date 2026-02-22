@@ -359,6 +359,7 @@ std::vector<string> GetFixedWithFonts()
 
     FcFontSet *fontSet = FcFontList(NULL, pattern, os);
     FcObjectSetDestroy(os);
+    FcPatternDestroy(pattern);
 
     if (fontSet == nullptr)
         return fontlist;
@@ -404,6 +405,7 @@ std::vector<string> GetVariableWithFonts()
 
     FcFontSet *fontSet = FcFontList(NULL, pattern, os);
     FcObjectSetDestroy(os);
+    FcPatternDestroy(pattern);
 
     if (!fontSet)
         return fontlist;

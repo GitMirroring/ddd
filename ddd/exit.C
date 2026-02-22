@@ -103,6 +103,8 @@ char exit_rcsid[] =
 #include "hostname.h"
 #include "SourceView.h"
 #include "plotter.h"
+#include "logo.h"
+#include "DataDisp.h"
 
 #include <signal.h>
 #include <iostream>
@@ -121,6 +123,8 @@ char exit_rcsid[] =
 #include <Xm/Text.h>
 
 #include <sys/time.h>
+#include <fontconfig/fontconfig.h>
+
 
 pid_t getpid_ret;
 string core_file_name;
@@ -213,8 +217,14 @@ void ddd_cleanup()
 	    save_history(session_history_file(app_data.session));
     }
 
-//    clear_plot_window_cache();
+    clear_plot_window_cache();
     delete source_view;
+
+    // cleanup valgrind output
+    cleanupLogos();
+
+    delete data_disp;
+    FcFini();
 
     // Famous last words
     string last_words = "Thanks for using " DDD_NAME " " DDD_VERSION "!";
@@ -310,6 +320,11 @@ static void post_fatal(const string& title, const string& cause,
 		       const string& cls, bool core_dumped = false)
 {
     (void) core_dumped;		// Use it
+
+    // Make sure we have a ~/.ddd/log file
+    init_dddlog();
+
+    dddlog.flush();
 
     static Widget fatal_dialog = 0;
 

@@ -66,12 +66,25 @@ char logo_rcsid[] =
 #undef XtIsRealized
 #endif
 
+std::vector<XImage *> logoCleanup;
+
 //-----------------------------------------------------------------------------
 // DDD logo
 //-----------------------------------------------------------------------------
 
 void install_modern_icons(Widget shell, const string& color_key);
 
+
+void cleanupLogos()
+{
+   for (XImage *img : logoCleanup)
+   {
+       XmUninstallImage(img);
+       XDestroyImage(img);
+   }
+
+   logoCleanup.clear();
+}
 
 static int xpm(const _XtString name, int ret)
 {
@@ -412,6 +425,7 @@ static void install_icon(Widget w, const _XtString name,
             image = scaledimage;
         }
 
+        logoCleanup.push_back(image);
         Boolean ok = XmInstallImage(image, XMST(name));
         if (ok)
             return;
@@ -1219,24 +1233,28 @@ static void install_modern_button_icon(Widget shell, const _XtString name,
 
     // Normal icon
     XImage *img = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
+    logoCleanup.push_back(img);
     if (img)
         XmInstallImage(img, XMST(name));
 
     // Insensitive icon: same grayscale, but dark-gray foreground
     string insensitive_name = string(name) + "-xx";
     XImage *imgxx = blend_to_ximage(shell, win_attr.visual, dst, insensitive_foreground, background);
+    logoCleanup.push_back(imgxx);
     if (imgxx)
         XmInstallImage(imgxx, XMST(insensitive_name.chars()));
 
     // Armed icon: active color key, arm background
     string armed_name = string(name) + "-arm";
     XImage *imgarm = blend_to_ximage(shell, win_attr.visual, dst, foreground, arm_background);
+    logoCleanup.push_back(imgarm);
     if (imgarm)
         XmInstallImage(imgarm, XMST(armed_name.chars()));
 
     // Highlight icon: active color key, normal background
     string hi_name = string(name) + "-hi";
     XImage *imghi = blend_to_ximage(shell, win_attr.visual, dst, foreground, background);
+    logoCleanup.push_back(imghi);
     if (imghi)
         XmInstallImage(imghi, XMST(hi_name.chars()));
 }
@@ -1358,10 +1376,12 @@ void install_glyphs(Widget shell)
         }
 
         XImage *img = blend_to_ximage(shell, win_attr.visual, dst, colorfgx.pixel, colorbgx.pixel);
+        logoCleanup.push_back(img);
         if (img)
             XmInstallImage(img, XMST(entry.name));
 
         XImage *mask = image_to_mask(shell, win_attr.visual, dst);
+        logoCleanup.push_back(mask);
         if (mask)
             XmInstallImage(mask, XMST((string(entry.name) + "-mask").chars()));
     }

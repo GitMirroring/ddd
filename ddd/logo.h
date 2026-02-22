@@ -62,6 +62,8 @@ void install_glyphs(Widget shell);
 int get_stop_width();
 int get_arrow_width();
 
+void cleanupLogos();
+
 // Set label of W to NEW_LABEL (and its pixmap to IMAGE_NAME, if given)
 extern void set_label(Widget w, const MString& new_label, 
 		      const char *image_name = 0);

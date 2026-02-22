@@ -6945,6 +6945,14 @@ DataDisp::DataDisp(Widget parent, Widget& data_buttons_w)
     XtAddCallback(graph_selection_w, XmNlosePrimaryCallback, SelectionLostCB, XtPointer(0));
 }
 
+DataDisp::~DataDisp()
+{
+    delete StringBox::fontTable;
+    StringBox::fontTable = nullptr;
+
+    // delete disp_graph; // todo: debug destructor of DispGraph
+}
+
 void DataDisp::create_shells()
 {
     Arg args[10];

@@ -1115,6 +1115,9 @@ Ddd*grey_stop.labelPixmap:	grey_stop
 Ddd*grey_cond.labelPixmap:	grey_cond
 Ddd*grey_temp.labelPixmap:	grey_temp
 
+Ddd*multi_stop.labelPixmap:     multi_stop
+Ddd*multi_cond.labelPixmap:     multi_cond
+Ddd*multi_temp.labelPixmap:     multi_temp
 
 !-----------------------------------------------------------------------------
 ! Data display fonts and colors

@@ -7060,7 +7060,8 @@ void SourceView::update_glyphs_now()
                     if (bp->dispo() != BPKEEP)
                     {
                         // Temporary breakpoint
-                        if (bp->enabled()) {
+                        if (bp->enabled())
+                        {
                             if (bp->n_locations() == 1)
                                 bp_glyph = map_stop_at(text_w, pos, plain_temps[k],
                                                        plain_temps_count, positions);
@@ -7069,13 +7070,16 @@ void SourceView::update_glyphs_now()
                                                        multi_temps_count, positions);
                         }
                         else
+                        {
                             bp_glyph = map_stop_at(text_w, pos, grey_temps[k],
                                                    grey_temps_count, positions);
+                        }
                     }
                     else if (!bp->condition().empty() || bp->ignore_count() != 0)
                     {
                         // Conditional breakpoint
-                        if (bp->enabled()) {
+                        if (bp->enabled())
+                        {
                             if (bp->n_locations() == 1)
                                 bp_glyph = map_stop_at(text_w, pos, plain_conds[k],
                                                        plain_conds_count, positions);
@@ -7084,13 +7088,16 @@ void SourceView::update_glyphs_now()
                                                        multi_conds_count, positions);
                         }
                         else
+                        {
                             bp_glyph = map_stop_at(text_w, pos, grey_conds[k],
                                                    grey_conds_count, positions);
+                        }
                     }
                     else
                     {
                         // Ordinary breakpoint
-                        if (bp->enabled()) {
+                        if (bp->enabled())
+                        {
                             if (bp->n_locations() == 1)
                                 bp_glyph = map_stop_at(text_w, pos, plain_stops[k],
                                                        plain_stops_count, positions);
@@ -7099,8 +7106,10 @@ void SourceView::update_glyphs_now()
                                                        multi_stops_count, positions);
                         }
                         else
+                        {
                             bp_glyph = map_stop_at(text_w, pos, grey_stops[k],
                                                    grey_stops_count, positions);
+                        }
                     }
                 }
             }

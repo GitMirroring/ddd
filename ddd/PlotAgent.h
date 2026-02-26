@@ -81,6 +81,8 @@ struct PixelCache
 
     bool read_image(string file, int xdim, int ydim, int cdim, string gdbtype, Layout layout);
     bool write_image_interleaved(const string& filename);
+    bool savePNM(const string& filename);
+    bool saveNRRD(const string& filename);
 
     void *pixelat(int x, int y, int c = 0)
     {

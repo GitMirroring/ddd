@@ -4973,10 +4973,17 @@ Ddd*plot*print.mnemonic:        P
 Ddd*plot*print.documentationString:   \
 @rm Print the current plot
 
+Ddd*plot*save_image.labelString:    Save Image
+Ddd*plot*save_image.mnemonic:       S
+Ddd*plot*save_image.accelerator:	~Shift ~Meta Ctrl<Key>S
+Ddd*plot*save_image.acceleratorText: @accel Ctrl+S
+Ddd*plot*save_image.documentationString:   \
+@rm Save image as .pgm, .ppm or .nrrd file
+
 Ddd*plot*menubar.helpString:		\
 WIDGET(Menu Bar)\n\
 \n\
-DESC(File, [print plot and close this window])\n\
+DESC(File, [print plot save and close this window])\n\
 DESC(Edit, [cut, copy, and paste text])\n\
 DESC(View, [set plot options])\n\
 DESC(Plot, [set plot style])\n\

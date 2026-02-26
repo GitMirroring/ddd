@@ -254,6 +254,9 @@ void install_scrollbar_hover_style(Widget scrollbar)
 
 void modernize_scrollbar(Widget w)
 {
+    if (!w)
+        return;
+
     if (!XmIsScrolledWindow(w))
         w = XtParent(w);
 

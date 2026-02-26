@@ -6239,10 +6239,17 @@ Use @bf File->@bf Close@rm  to close this window.
 @Ddd@*plot*print.documentationString:   \
 @rm Print the current plot
 
+@Ddd@*plot*save_image.labelString:    Save Image
+@Ddd@*plot*save_image.mnemonic:       S
+@Ddd@*plot*save_image.accelerator:	~Shift ~Meta Ctrl<Key>S
+@Ddd@*plot*save_image.acceleratorText: @accel Ctrl+S
+@Ddd@*plot*save_image.documentationString:   \
+@rm Save image as .pgm, .ppm or .nrrd file
+
 @Ddd@*plot*menubar.helpString:		\
 @bs Menu Bar@rm \n\
 \n\
-@tt \342\227\276 @bf File@rm  @tt -@rm  print plot and close this window.\n\
+@tt \342\227\276 @bf File@rm  @tt -@rm  print plot save and close this window.\n\
 @tt \342\227\276 @bf Edit@rm  @tt -@rm  cut, copy, and paste text.\n\
 @tt \342\227\276 @bf View@rm  @tt -@rm  set plot options.\n\
 @tt \342\227\276 @bf Plot@rm  @tt -@rm  set plot style.\n\

@@ -177,6 +177,128 @@ bool PixelCache::write_image_interleaved(const string& filename)
     return true;
 }
 
+bool PixelCache::savePNM(const string& filename)
+{
+    if (width <= 0 || height <= 0 || channels <= 0 || pixel_size == 0 || pixmap.empty())
+        return false;
+
+    if (data_type != DT_UINT8 || (channels!=1 && channels!=3))
+        return false;
+
+    FILE *fp = fopen(filename.chars(), "wb");
+    if (fp==nullptr)
+        return false;
+
+    if (channels == 1)
+    {
+        if (fprintf(fp,"P5\n")<0)
+        {
+            fclose(fp);
+            return false;
+        }
+
+        fprintf(fp,"%d %d\n255\n", width, height);
+    }
+    else
+    {
+        if (fprintf(fp,"P6\n")<0)
+        {
+            fclose(fp);
+            return false;
+        }
+
+        fprintf(fp,"%d %d\n255\n", width, height);
+    }
+
+    for (int y=0; y<height; y++)
+    {
+        for (int x=0; x<width; x++)
+        {
+            for (int c=0; c<channels; c++)
+            {
+                if (fwrite(pixelat(x, y, c), sizeof(char), 1, fp) == 0)
+                {
+                    fclose(fp);
+                    return false;
+                }
+            }
+        }
+    }
+
+
+    fclose(fp);
+    return true;
+}
+
+bool PixelCache::saveNRRD(const string& filename)
+{
+    // Only grayscale images (channels == 1)
+    if (width <= 0 || height <= 0 || channels != 1 || pixel_size == 0 || pixmap.empty())
+        return false;
+
+    const size_t total_bytes = size_t(width) * size_t(height) * size_t(pixel_size);
+
+    if (pixmap.size() < total_bytes)
+        return false;
+
+    FILE *fp = fopen(filename.chars(), "wb");
+    if (fp == 0)
+        return false;
+
+    const char *typeStr = 0;
+    switch (data_type)
+    {
+    case DT_UINT8:   typeStr = "uchar";  break;
+    case DT_INT8:    typeStr = "char";   break;
+    case DT_UINT16:  typeStr = "ushort"; break;
+    case DT_INT16:   typeStr = "short";  break;
+    case DT_UINT32:  typeStr = "uint";   break;
+    case DT_INT32:   typeStr = "int";    break;
+    case DT_FLOAT32: typeStr = "float";  break;
+    case DT_FLOAT64: typeStr = "double"; break;
+    default:
+        fclose(fp);
+        return false;
+    }
+
+    if (fprintf(fp, "NRRD0005\n") < 0 ||
+        fprintf(fp, "type: %s\n", typeStr) < 0 ||
+        fprintf(fp, "dimension: 2\n") < 0 ||
+        fprintf(fp, "sizes: %d %d\n", width, height) < 0 ||
+        fprintf(fp, "encoding: raw\n") < 0)
+    {
+        fclose(fp);
+        return false;
+    }
+
+    // Endianness for multi‑byte types
+    if (pixel_size > 1)
+    {
+        uint16_t x = 1;
+        const char *endianStr = (*(uint8_t *)&x == 1) ? "little" : "big";
+        if (fprintf(fp, "endian: %s\n", endianStr) < 0)
+        {
+            fclose(fp);
+            return false;
+        }
+    }
+
+    if (fprintf(fp, "\n") < 0)  // blank line before raw data
+    {
+        fclose(fp);
+        return false;
+    }
+
+    if (fwrite(pixmap.data(), total_bytes, 1, fp) != 1)
+    {
+        fclose(fp);
+        return false;
+    }
+
+    fclose(fp);
+    return true;
+}
+
 // ------------------- PlotAgent -------------------------------------------
 
 // Start and initialize

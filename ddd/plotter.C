@@ -63,6 +63,7 @@ char plotter_rcsid[] =
 #include "x11/DestroyCB.h"
 #include "agent/TimeOut.h"
 #include "darkmode.h"
+#include "scrollbar.h"
 
 #include <stdio.h>
 #include <fstream>
@@ -99,6 +100,8 @@ static void CancelPlotCB(Widget, XtPointer, XtPointer);
 
 static void SelectPlotCB(Widget, XtPointer, XtPointer);
 static void SelectAndPrintPlotCB(Widget, XtPointer, XtPointer);
+static void SaveImageCB(Widget, XtPointer, XtPointer);
+static void SaveImageOkCB(Widget, XtPointer, XtPointer);
 
 static void ReplotCB(Widget, XtPointer, XtPointer);
 static void PlotCommandCB(Widget, XtPointer, XtPointer);
@@ -138,17 +141,21 @@ struct PlotWindowInfo {
     double y_offset = 0.0;
 };
 
+static Widget save_image_dialog = 0;
+static PlotWindowInfo *save_image_plot = 0;
 
 //-------------------------------------------------------------------------
 // Menus
 //-------------------------------------------------------------------------
 
+static Widget save_image_w;
 static MMDesc file_menu[] = 
 {
     { "command", MMPush, { PlotCommandCB, 0 }, 0, 0, 0, 0 },
     MMSep,
     { "replot",  MMPush, { ReplotCB, 0 }, 0, 0, 0, 0 },
     { "print",   MMPush, { SelectAndPrintPlotCB, 0 }, 0, 0, 0, 0 },
+    { "save_image",   MMPush, { SaveImageCB, 0 }, 0, &save_image_w, 0, 0 },
     MMSep,
     { "close",   MMPush, { CancelPlotCB, 0 }, 0, 0, 0, 0 },
     MMEnd
@@ -415,6 +422,8 @@ static void configure_plot(PlotWindowInfo *plot)
     configure_options(plot, view_menu,    plot->settings);
     configure_options(plot, contour_menu, plot->settings);
     configure_options(plot, scale_menu,   plot->settings);
+
+    XtSetSensitive(save_image_w, image);
 
     // Get style
     for (i = 0; plot_menu[i].name != 0; i++)
@@ -761,7 +770,144 @@ static void SelectAndPrintPlotCB(Widget w, XtPointer client_data,
     PrintPlotCB(w, client_data, call_data);
 }
 
+static void SaveImageCB(Widget, XtPointer client_data, XtPointer)
+{
+    PlotWindowInfo *plot = (PlotWindowInfo *)client_data;
+    if (!plot || !plot->plotter || !plot->gnuplot)
+        return;
 
+    PixelCache *imgdata = plot->plotter->getPixelCache();
+    if (!imgdata || !imgdata->valid())
+    {
+        post_error("No image in cache to save.", "save_image_error");
+        return;
+    }
+
+    // Remember which plot window we’re saving from
+    save_image_plot = plot;
+
+    if (save_image_dialog == 0)
+    {
+        Arg args[10];
+        int arg = 0;
+
+        XtSetArg(args[arg], XmNpathMode, XmPATH_MODE_RELATIVE); arg++;
+        XtSetArg(args[arg], XmNtextColumns, 60); arg++;           // wider
+        XtSetArg(args[arg], XmNlistVisibleItemCount, 20); arg++;  // taller
+
+        save_image_dialog =
+            XmCreateFileSelectionDialog(plot->shell,
+                                        XMST("save_image_dialog"),
+                                        args, arg);
+        Delay::register_shell(save_image_dialog);
+
+        XtAddCallback(save_image_dialog, XmNokCallback, SaveImageOkCB, XtPointer(0));
+        XtAddCallback(save_image_dialog, XmNcancelCallback, UnmanageThisCB, XtPointer(save_image_dialog));
+        XtAddCallback(save_image_dialog, XmNhelpCallback, ImmediateHelpCB, XtPointer(0));
+
+        if (!app_data.retro_style)
+        {
+            Widget file_list = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_LIST);
+            modernize_scrollbar(file_list);
+
+            Widget dir_list = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_DIR_LIST);
+            modernize_scrollbar(dir_list);
+
+            Widget ok = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_OK_BUTTON);
+            Widget apply = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_APPLY_BUTTON);
+            Widget cancel = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_CANCEL_BUTTON);
+            Widget help = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_HELP_BUTTON);
+
+            XtVaSetValues(ok, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+            XtVaSetValues(apply, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+            XtVaSetValues(cancel, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+            XtVaSetValues(help, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        }
+    }
+
+    // Suggest a default filename each time the dialog is shown
+    string def_name = plot->source->name();
+    if (imgdata->channels == 1 && imgdata->data_type != PixelCache::DT_UINT8)
+        def_name += ".nrrd";
+    else if (imgdata->channels == 1) // Non‑uint8 grayscale -> propose NRRD
+        def_name += ".pgm"; // 8‑bit grayscale -> PGM
+    else
+        def_name += ".ppm"; // Color -> PPM
+
+    Widget text = XmFileSelectionBoxGetChild(save_image_dialog, XmDIALOG_TEXT);
+    if (text)
+        XmTextSetString(text, XMST(def_name.chars()));
+
+    manage_and_raise(save_image_dialog);
+}
+
+static void SaveImageOkCB(Widget w, XtPointer, XtPointer call_data)
+{
+    // Use the common DDD helper to get the filename from the file dialog
+    string filename = get_file(w, 0, call_data);
+    if (filename.empty())
+        return;                 // directory selected or no value yet
+
+    XtUnmanageChild(w);
+
+    if (filename == NO_GDB_ANSWER)
+        return;                 // invalid selection
+
+    if (!save_image_plot || !save_image_plot->plotter)
+    {
+        post_error("No plot to save.", "save_image_error");
+        return;
+    }
+
+    PixelCache *imgdata = save_image_plot->plotter->getPixelCache();
+    if (!imgdata || !imgdata->valid())
+    {
+        post_error("No image in cache to save.", "save_image_error");
+        return;
+    }
+
+    // Decide extension / format
+    bool want_nrrd = false;
+    if (filename.contains('.'))
+    {
+        // check for ".nrrd" (lowercase)
+        if (filename.contains(".nrrd"))
+            want_nrrd = true;
+    }
+    else
+    {
+        // No extension: choose based on type and channels
+        if (imgdata->channels == 1 && imgdata->data_type != PixelCache::DT_UINT8)
+        {
+            filename += ".nrrd";
+            want_nrrd = true;
+        }
+        else if (imgdata->channels == 1)
+        {
+            filename += ".pgm";
+        }
+        else
+        {
+            filename += ".ppm";
+        }
+    }
+
+    bool ok = false;
+    if (want_nrrd)
+    {
+        // NRRD export currently defined for grayscale only
+        ok = imgdata->saveNRRD(filename);
+    }
+    else
+    {
+        ok = imgdata->savePNM(filename);
+    }
+
+    if (!ok)
+        post_error("Cannot save image in " + quote(filename), "save_image_error");
+    else
+        set_status("Saved image in " + quote(filename));
+}
 
 //-------------------------------------------------------------------------
 // Plot again

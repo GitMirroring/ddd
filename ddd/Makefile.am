@@ -418,6 +418,8 @@ DDD_SRC = \
 	mydialogs.h  \
 	options.C    \
 	options.h    \
+	pixelcache.C \
+	pixelcache.h \
 	plotter.C    \
 	plotter.h    \
 	post.C       \

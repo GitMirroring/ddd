@@ -1774,9 +1774,6 @@ string DispValue::make_title(const string& name)
 
 void DispValue::plot() const
 {
-    if (can_plot() == false)
-	return;
-
     if (!can_do_gdb_command())
         return;
 

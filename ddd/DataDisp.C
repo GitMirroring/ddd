@@ -1887,7 +1887,7 @@ void DataDisp::displayArgCB(Widget w, XtPointer client_data,
 void DataDisp::plotArgCB(Widget, XtPointer, XtPointer)
 {
     DispValue *disp_value_arg = selected_value();
-    if (disp_value_arg != 0)
+    if (disp_value_arg != 0 && disp_value_arg->can_plot())
     {
 	// Plot selected value
 	disp_value_arg->plot();
@@ -2562,7 +2562,7 @@ void DataDisp::RefreshArgsCB(XtPointer, XtIntervalId *timer_id)
 	{
 	    arg = disp_value_arg->full_name();
 	    arg_ok = true;
-	    plot_ok = disp_value_arg->can_plot();
+	    plot_ok = disp_value_arg->can_plot() || dereference_ok;
 	}
     }
     else

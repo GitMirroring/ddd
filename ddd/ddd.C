@@ -164,10 +164,6 @@ char ddd_rcsid[] =
 #include <X11/Xmu/Editres.h>
 #endif
 
-#if HAVE_ATHENA
-#include <X11/Xaw/XawInit.h>
-#endif
-
 #include "x11/Sash.h"
 
 // ANSI C++ doesn't like the XtIsRealized() macro
@@ -2103,12 +2099,6 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
             XrmMergeDatabases(session_db, &dddinit);
     }
 
-#if HAVE_ATHENA
-    // Initialize Xaw widget set, registering the Xaw Converters.
-    // This is done before installing our own converters.
-    XawInitializeWidgetSet();
-#endif
-
     // Register own converters.  This must be done here to install the
     // String -> Cardinal converter.
     registerOwnConverters();
@@ -2246,6 +2236,9 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     setup_fonts(app_data, XtDatabase(XtDisplay(toplevel)));
     if (app_data.show_fonts)
         return DDD_EXIT_SUCCESS;
+
+    // set the double click time for DDD  to the KDE default
+    XtSetMultiClickTime(XtDisplay(toplevel), 400);
 
     if (!app_data.retro_style)
     {     

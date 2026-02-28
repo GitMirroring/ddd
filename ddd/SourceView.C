@@ -3941,7 +3941,7 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
         bool double_click = 
             last_selection_time != 0 &&
             (Time(selection_time - last_selection_time) <= 
-             Time(2*XtGetMultiClickTime(XtDisplay(text_w))));
+             Time(XtGetMultiClickTime(XtDisplay(text_w))));
 
         if (double_click)
             last_selection_time = 0;

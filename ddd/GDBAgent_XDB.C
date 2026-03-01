@@ -32,6 +32,8 @@
 #include "BreakPoint.h"
 #include "Command.h"
 
+extern GDBAgent* gdb;
+
 char *GDBAgent_XDB_init_commands;
 char *GDBAgent_XDB_settings;
 

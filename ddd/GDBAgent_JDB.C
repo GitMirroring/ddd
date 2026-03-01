@@ -32,6 +32,8 @@
 #include "string-fun.h"
 #include "disp-read.h"
 
+extern GDBAgent* gdb;
+
 char *GDBAgent_JDB_init_commands;
 char *GDBAgent_JDB_settings;
 

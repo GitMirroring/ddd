@@ -36,6 +36,8 @@
 #include "dbx-lookup.h"
 #include "disp-read.h"
 
+extern GDBAgent* gdb;
+
 char *GDBAgent_DBX_init_commands;
 char *GDBAgent_DBX_settings;
 

@@ -38,6 +38,8 @@
 // startup/shutdown.  There can be only a single GDBAgent instance
 // at any time.  
 
+extern GDBAgent* gdb;
+
 char *GDBAgent_GDB_init_commands;
 char *GDBAgent_GDB_settings;
 

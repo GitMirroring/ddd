@@ -58,6 +58,7 @@ char BreakPoint_rcsid[] =
 #include "CodeCache.h"
 #include "disp-read.h"
 #include "UndoBuffer.h"
+#include "SourceView.h"
 
 #if RUNTIME_REGEX
 static regex rxnl_int ("\n[1-9]");
@@ -66,7 +67,22 @@ static regex rxint_dot_int ("[0-9]+\\.[0-9]+");
 #endif
 
 Map<int, BreakPoint> bp_map;
-extern string last_info_output;
+string last_info_output = "";
+
+bool BreakPointLocn::is_match(const string& file, int line)
+{
+    return ((line == 0 || myline_nr == line) &&
+            (myfile_name.empty()
+                || source_view->file_matches(myfile_name, file)));
+}
+
+// Check if BP Locn is in the curent source
+bool BreakPointLocn::is_match(int line)
+{
+    return (is_match(source_view->name_of_source(), line) ||
+            is_match(source_view->name_of_file(), line));
+}
+
 
 // Create new breakpoint from INFO_OUTPUT
 BreakPoint::BreakPoint(string& info_output, const string& arg,
@@ -872,6 +888,12 @@ bool BreakPoint::update(string& info_output,
     }
 
     return changed;
+}
+
+bool BreakPoint::is_match(int line)
+{
+    return (is_match(source_view->name_of_source(), line) ||
+            is_match(source_view->name_of_file(), line));
 }
 
 

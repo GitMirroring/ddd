@@ -1195,8 +1195,7 @@ static void AppSelectOnClickEH(Widget w, XtPointer client, XEvent *ev, Boolean *
 // If this is true, no motion occurred while selecting
 static bool selection_click = false;
 
-// TODO move to BreakPoint
-string last_info_output = "";
+extern string last_info_output;
 
 void SourceView::set_source_argCB(Widget text_w, 
                                   XtPointer client_data, 

@@ -39,9 +39,10 @@
 
 // Misc includes
 #include "base/strclass.h"
+#include "template/Map.h"
 #include "GDBAgent.h"
-#include "SourceView.h"
 #include "Command.h"
+#include "BreakPoint.h"
 
 extern class SourceView *source_view;
 
@@ -106,18 +107,9 @@ public:
     Widget& source_glyph() { return mysource_glyph; }
     Widget& code_glyph()   { return mycode_glyph; }
     // Check if BP Locn in file & line
-    bool is_match(const string& file, int line = 0)
-    {
-        return ((line == 0 || myline_nr == line) &&
-                (myfile_name.empty()
-                 || source_view->file_matches(myfile_name, file)));
-    }
+    bool is_match(const string& file, int line = 0);
     // Check if BP Locn is in the curent source
-    bool is_match(int line = 0)
-    {
-        return (is_match(source_view->name_of_source(), line) ||
-                is_match(source_view->name_of_file(), line));
-    }
+    bool is_match(int line = 0);
 
     friend class BreakPoint;
 };
@@ -254,11 +246,7 @@ public:
     bool is_match(const string& file, int line = 0);
 
     // Check if BP matches current source
-    bool is_match(int line = 0) 
-    {
-        return (is_match(source_view->name_of_source(), line) ||
-                is_match(source_view->name_of_file(), line));
-    }
+    bool is_match(int line = 0);
 };
 
 namespace BP

@@ -34,6 +34,7 @@
 #include "Command.h"
 #include "string-fun.h"
 #include "disp-read.h"
+#include "SourceView.h"
 
 char *GDBAgent_PERL_init_commands;
 char *GDBAgent_PERL_settings;

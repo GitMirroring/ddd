@@ -31,6 +31,8 @@
 #include "Command.h"
 #include "string-fun.h"
 
+extern GDBAgent* gdb;
+
 char *GDBAgent_DBG_init_commands;
 char *GDBAgent_DBG_settings;
 

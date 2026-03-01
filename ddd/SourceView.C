@@ -342,7 +342,6 @@ bool SourceView::register_dialog_popped_up = false;
 bool SourceView::thread_dialog_popped_up   = false;
 
 bool SourceView::cache_machine_code     = true;
-bool SourceView::display_glyphs         = true;
 bool SourceView::disassemble            = true;
 bool SourceView::all_registers          = false;
 
@@ -748,16 +747,11 @@ bool SourceView::move_bp(int bp_nr, const string& a, bool copy)
     return true;
 }
 
-void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
+void SourceView::_set_bps_cond(const std::vector<int>& nrs, const string& cond,
                                int make_false)
 {
     CommandGroup cg;
 
-    // _NRS might be changed via MOVE_BREAKPOINT_PROPERTIES, 
-    // so we make a copy
-    std::vector<int> nrs(_nrs);
-
-    int count = 0;
     for (int i = 0; i < int(nrs.size()); i++)
     {
         int bp_nr = nrs[i];
@@ -772,6 +766,7 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
         int m = make_false;
         if (m < 0)
             m = (!bp->enabled() && !gdb->has_enable_command());
+
         if (m)
             c = BreakPoint::make_false(c);
 
@@ -779,38 +774,6 @@ void SourceView::_set_bps_cond(const std::vector<int>& _nrs, const string& cond,
         {
             // Use the `cond' command to assign a condition
             gdb_command(gdb->condition_command(itostring(bp_nr), c));
-        }
-        else
-        {
-            // Create a new breakpoint with a new condition COND, making it
-            // inherit the current settings
-            std::ostringstream os;
-            bool ok = bp->get_state(os, 0, false, "", c);
-            if (!ok)
-                continue;                // Command failed
-
-            string commands(os);
-
-            int new_bp_nr = bp_nr;
-            if (gdb->has_numbered_breakpoints())
-            {
-                new_bp_nr = next_breakpoint_number() + count;
-                commands.gsub("@0@", itostring(new_bp_nr));
-            }
-
-            gdb_command(commands);
-
-            if (gdb->has_numbered_breakpoints())
-            {
-                // Copy properties to new breakpoint
-                move_breakpoint_properties(bp_nr, new_bp_nr);
-
-                // Delete old breakpoint
-                delete_bp(bp_nr);
-
-                // Next breakpoint will get the next number
-                count++;
-            }
         }
     }
 }
@@ -1735,7 +1698,7 @@ bool SourceView::get_line_of_pos (Widget   w,
         line_nr = max(line_nr, 1);
 
         // Check for breakpoints...
-        if (display_glyphs || bps_in_line.has(line_nr)==false)
+        if (bps_in_line.has(line_nr)==false)
             return true;
 
         std::vector<int>& bps = bps_in_line[line_nr];
@@ -4535,8 +4498,8 @@ void SourceView::update_properties_panel(BreakpointPropertiesInfo *info)
     set_sensitive(info->ignore,           gdb->has_ignore_command());
     set_sensitive(XtParent(info->ignore), gdb->has_ignore_command());
 
-    set_sensitive(info->condition,           gdb->has_breakpoint_conditions());
-    set_sensitive(XtParent(info->condition), gdb->has_breakpoint_conditions());
+    set_sensitive(info->condition,           gdb->has_condition_command());
+    set_sensitive(XtParent(info->condition), gdb->has_condition_command());
 
     bool can_record = ((gdb->type() == GDB 
                         || gdb->type() == PYDB || gdb->type() == BASH)
@@ -6972,8 +6935,7 @@ void SourceView::update_glyphs_now()
         // Show current execution position
         Utf8Pos pos = Utf8Pos(-1);
 
-        if (display_glyphs &&
-            (is_current_file(last_execution_file) ||
+        if ((is_current_file(last_execution_file) ||
              base_matches(last_execution_file, sourcecode.get_filename())) &&
                 sourcecode.get_num_lines() > 0 &&
              last_execution_line > 0 &&
@@ -6990,7 +6952,7 @@ void SourceView::update_glyphs_now()
         // Show current PC
         Utf8Pos pos = Utf8Pos(-1);
 
-        if (display_glyphs && !last_execution_pc.empty())
+        if (!last_execution_pc.empty())
             pos = find_pc(last_execution_pc);
 
         map_arrow_at(code_text_w, pos);
@@ -7016,100 +6978,97 @@ void SourceView::update_glyphs_now()
         int multi_temps_count = 0;
         int grey_temps_count  = 0;
 
-        if (display_glyphs)
+        std::vector<Utf8Pos> positions;
+
+        MapRef ref;
+        for (BreakPoint *bp = bp_map.first(ref);
+                bp != 0;
+                bp = bp_map.next(ref))
         {
-            std::vector<Utf8Pos> positions;
-            
-            MapRef ref;
-            for (BreakPoint *bp = bp_map.first(ref);
-                 bp != 0;
-                 bp = bp_map.next(ref))
-            {
-                // According to the GDB folks
-                // (http://sourceware.org/ml/gdb/2009-02/msg00117.html)
-                // we can assume the source locations are all the same.
-                // So we only need one source glyph.
-                int n = (k == 0) ? 1 : bp->n_locations();
-                for (int i = 0; i < n; i++) {
-                    BreakPointLocn &locn = bp->get_location(i);
-                    if (bp->type() != BREAKPOINT)
+            // According to the GDB folks
+            // (http://sourceware.org/ml/gdb/2009-02/msg00117.html)
+            // we can assume the source locations are all the same.
+            // So we only need one source glyph.
+            int n = (k == 0) ? 1 : bp->n_locations();
+            for (int i = 0; i < n; i++) {
+                BreakPointLocn &locn = bp->get_location(i);
+                if (bp->type() != BREAKPOINT)
+                    continue;
+
+                Widget& bp_glyph = k ? locn.code_glyph() : locn.source_glyph();
+                Widget text_w    = k ? code_text_w      : source_text_w;
+                bp_glyph = 0;
+
+                Utf8Pos pos;
+                if (k == 0)
+                {
+                    // Find source position
+                    if (!bp->is_match()
+                        || sourcecode.get_num_lines() <= 0
+                        || locn.line_nr() <= 0
+                        || locn.line_nr() > sourcecode.get_num_lines())
                         continue;
 
-                    Widget& bp_glyph = k ? locn.code_glyph() : locn.source_glyph();
-                    Widget text_w    = k ? code_text_w      : source_text_w;
-                    bp_glyph = 0;
+                    pos = sourcecode.getBytePosOfLine(locn.line_nr());
+                }
+                else
+                {
+                    // Find code position
+                    pos = find_pc(locn.address());
+                }
 
-                    Utf8Pos pos;
-                    if (k == 0)
+                if (bp->dispo() != BPKEEP)
+                {
+                    // Temporary breakpoint
+                    if (bp->enabled())
                     {
-                        // Find source position
-                        if (!bp->is_match()
-                            || sourcecode.get_num_lines() <= 0
-                            || locn.line_nr() <= 0
-                            || locn.line_nr() > sourcecode.get_num_lines())
-                            continue;
-
-                        pos = sourcecode.getBytePosOfLine(locn.line_nr());
+                        if (bp->n_locations() == 1)
+                            bp_glyph = map_stop_at(text_w, pos, plain_temps[k],
+                                                    plain_temps_count, positions);
+                        else
+                            bp_glyph = map_stop_at(text_w, pos, multi_temps[k],
+                                                    multi_temps_count, positions);
                     }
                     else
                     {
-                        // Find code position
-                        pos = find_pc(locn.address());
+                        bp_glyph = map_stop_at(text_w, pos, grey_temps[k],
+                                                grey_temps_count, positions);
                     }
-
-                    if (bp->dispo() != BPKEEP)
+                }
+                else if (!bp->condition().empty() || bp->ignore_count() != 0)
+                {
+                    // Conditional breakpoint
+                    if (bp->enabled())
                     {
-                        // Temporary breakpoint
-                        if (bp->enabled())
-                        {
-                            if (bp->n_locations() == 1)
-                                bp_glyph = map_stop_at(text_w, pos, plain_temps[k],
-                                                       plain_temps_count, positions);
-                            else
-                                bp_glyph = map_stop_at(text_w, pos, multi_temps[k],
-                                                       multi_temps_count, positions);
-                        }
+                        if (bp->n_locations() == 1)
+                            bp_glyph = map_stop_at(text_w, pos, plain_conds[k],
+                                                    plain_conds_count, positions);
                         else
-                        {
-                            bp_glyph = map_stop_at(text_w, pos, grey_temps[k],
-                                                   grey_temps_count, positions);
-                        }
-                    }
-                    else if (!bp->condition().empty() || bp->ignore_count() != 0)
-                    {
-                        // Conditional breakpoint
-                        if (bp->enabled())
-                        {
-                            if (bp->n_locations() == 1)
-                                bp_glyph = map_stop_at(text_w, pos, plain_conds[k],
-                                                       plain_conds_count, positions);
-                            else
-                                bp_glyph = map_stop_at(text_w, pos, multi_conds[k],
-                                                       multi_conds_count, positions);
-                        }
-                        else
-                        {
-                            bp_glyph = map_stop_at(text_w, pos, grey_conds[k],
-                                                   grey_conds_count, positions);
-                        }
+                            bp_glyph = map_stop_at(text_w, pos, multi_conds[k],
+                                                    multi_conds_count, positions);
                     }
                     else
                     {
-                        // Ordinary breakpoint
-                        if (bp->enabled())
-                        {
-                            if (bp->n_locations() == 1)
-                                bp_glyph = map_stop_at(text_w, pos, plain_stops[k],
-                                                       plain_stops_count, positions);
-                            else
-                                bp_glyph = map_stop_at(text_w, pos, multi_stops[k],
-                                                       multi_stops_count, positions);
-                        }
+                        bp_glyph = map_stop_at(text_w, pos, grey_conds[k],
+                                                grey_conds_count, positions);
+                    }
+                }
+                else
+                {
+                    // Ordinary breakpoint
+                    if (bp->enabled())
+                    {
+                        if (bp->n_locations() == 1)
+                            bp_glyph = map_stop_at(text_w, pos, plain_stops[k],
+                                                    plain_stops_count, positions);
                         else
-                        {
-                            bp_glyph = map_stop_at(text_w, pos, grey_stops[k],
-                                                   grey_stops_count, positions);
-                        }
+                            bp_glyph = map_stop_at(text_w, pos, multi_stops[k],
+                                                    multi_stops_count, positions);
+                    }
+                    else
+                    {
+                        bp_glyph = map_stop_at(text_w, pos, grey_stops[k],
+                                                grey_stops_count, positions);
                     }
                 }
             }

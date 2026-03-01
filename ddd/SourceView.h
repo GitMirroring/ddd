@@ -286,9 +286,6 @@ class SourceView {
     static Widget thread_list_w;              // Thread list inside
     static bool thread_dialog_popped_up;      // True if registers are visible
 
-    static bool display_glyphs;                      // Display glyphs?
-//     static bool display_line_numbers;              // Display line numbers?
-    
     static bool disassemble;                      // Disassemble code?
     static bool all_registers;                      // Show all registers?
     static bool at_lowest_frame;              // Are we at lowest frame?

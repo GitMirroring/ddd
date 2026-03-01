@@ -150,11 +150,9 @@ char SourceView_rcsid[] =
 #include <X11/extensions/shape.h>
 #endif
 
-#if XmVersion >= 2000
 #include <Xm/SpinB.h>
 #ifndef XmIsSpinBox
 #define XmIsSpinBox(w) XtIsSubclass((w), xmSpinBoxWidgetClass)
-#endif
 #endif
 
 #include <stdio.h>
@@ -490,7 +488,7 @@ void SourceView::clearBP(XtPointer client_data, XtIntervalId *)
     int bp_nr = (int)(long)client_data;
     BreakPoint *bp = BP::get(bp_nr);
     if (bp != 0)
-        delete_bp(bp_nr);
+        BP::remove(bp_nr);
 }
 
 // Save last `jump' target for XDB
@@ -686,97 +684,41 @@ bool SourceView::move_pc(const string& a)
 
 bool SourceView::move_bp(int bp_nr, const string& a, bool copy)
 {
-    CommandGroup cg;
-
     string address = a;
 
     // std::clog << "Moving breakpoint " << bp_nr << " to " << address << '\n';
 
     BreakPoint *bp = BP::get(bp_nr);
-    if (bp == 0)
-        return false;                // No such breakpoint
+    if (!bp)
+        return false;
 
-    if (!copy)
+    if (!copy && address.contains('*', 0) && bp->n_locations() > 1)
     {
-        if (address.contains('*', 0))
-        {
-            if (bp->n_locations() > 1) {
-                post_warning("Cannot move multiple BP in code window");
-                return false;
-            }
-            if (compare_address(address.after('*'), bp->address()) == 0)
-                return false;        // Breakpoint already at address
-        }
-        else
-        {
-            string file = address.before(':');
-            int line    = get_positive_nr(address.after(':'));
-
-            if (bp->is_match(file, line))
-                return false;        // Breakpoint already at address
-        }
+        post_warning("Cannot move multiple BP in code window");
+        return false;
     }
 
-    // Create a new breakpoint at ADDRESS, making it inherit the
-    // current settings
-    std::ostringstream os;
-    bool ok = bp->get_state(os, 0, false, address);
-    if (!ok)
-        return false;                // Command failed
-
-    int new_bp_nr = next_breakpoint_number();
-    string commands(os);
-    commands.gsub("@0@", itostring(new_bp_nr));
-
-    gdb_command(commands);
+    // Debugger-side move: create new breakpoint with same settings
+    int new_bp_nr = BP::move(bp_nr, address, copy);
+    if (!new_bp_nr)
+        return false;  // nothing changed or failed
 
     if (copy)
     {
-        // Copy properties
+        // keep old bp, duplicate properties
         copy_breakpoint_properties(bp_nr, new_bp_nr);
     }
     else
     {
-        // Rename properties
+        // rename properties first (so panels track the future number),
+        // then delete old breakpoint in the debugger
         move_breakpoint_properties(bp_nr, new_bp_nr);
-
-        // Delete old breakpoint
-        delete_bp(bp_nr);
+        BP::remove(bp_nr);
     }
 
     return true;
 }
 
-void SourceView::_set_bps_cond(const std::vector<int>& nrs, const string& cond,
-                               int make_false)
-{
-    CommandGroup cg;
-
-    for (int i = 0; i < int(nrs.size()); i++)
-    {
-        int bp_nr = nrs[i];
-        BreakPoint *bp = BP::get(bp_nr);
-        if (bp == 0)
-            continue;                // No such breakpoint
-
-        string c = cond;
-        if (c == char(-1))
-            c = bp->condition();
-
-        int m = make_false;
-        if (m < 0)
-            m = (!bp->enabled() && !gdb->has_enable_command());
-
-        if (m)
-            c = BreakPoint::make_false(c);
-
-        if (gdb->has_condition_command())
-        {
-            // Use the `cond' command to assign a condition
-            gdb_command(gdb->condition_command(itostring(bp_nr), c));
-        }
-    }
-}
 
 
 // ***************************************************************************
@@ -786,7 +728,7 @@ void SourceView::bp_popup_deleteCB (Widget,
                                     XtPointer)
 {
     int bp_nr = *((int *)client_data);
-    delete_bp(bp_nr);
+    BP::remove(bp_nr);
 }
 
 
@@ -801,9 +743,9 @@ void SourceView::bp_popup_disableCB (Widget,
     if (bp != 0)
     {
         if (bp->enabled())
-            disable_bp(bp_nr);
+            BP::disable(bp_nr);
         else
-            enable_bp(bp_nr);
+            BP::enable(bp_nr);
     }
 }
 
@@ -818,105 +760,6 @@ string SourceView::numbers(const std::vector<int>& nrs)
         cmd += itostring(nrs[i]);
     }
     return cmd;
-}
-
-// Same, but use "" if we have GDB and all numbers are used
-string SourceView::all_numbers(const std::vector<int>& nrs)
-{
-    if ((gdb->type() == GDB || gdb->type() == PYDB || gdb->type() == DBG) && all_bps(nrs))
-        return "";                // In GDB, no arg means `all'
-    else
-        return numbers(nrs);
-}
-
-// Return true if NRS contains all breakpoints and
-// a GDB delete/disable/enable command can be given without args.
-bool SourceView::all_bps(const std::vector<int>& nrs)
-{
-    if ((gdb->type() != GDB && gdb->type() != PYDB) || nrs.size() < 2)
-        return false;
-
-    return BP::contains_all_bps(nrs);
-}
-
-void SourceView::enable_bps(const std::vector<int>& nrs)
-{
-    CommandGroup cg;
-
-    if (gdb->has_enable_command())
-    {
-        gdb_command(gdb->enable_command(all_numbers(nrs)));
-    }
-    else if (gdb->has_conditions())
-    {
-        // Unset `false' breakpoint condition
-        enable_bps_cond(nrs);
-    }
-}
-
-void SourceView::disable_bps(const std::vector<int>& nrs)
-{
-    CommandGroup cg;
-
-    if (gdb->has_disable_command())
-    {
-        gdb_command(gdb->disable_command(all_numbers(nrs)));
-    }
-    else if (gdb->has_conditions())
-    {
-        // Set breakpoint condition to `false'
-        disable_bps_cond(nrs);
-    }
-}
-
-// TODO move to BreakPoint.C
-void SourceView::delete_bps(const std::vector<int>& nrs)
-{
-    CommandGroup cg;
-
-    if (gdb->recording() && gdb->has_clear_command())
-    {
-        // While recording, prefer commands without explicit numbers.
-        for (int i = 0; i < int(nrs.size()); i++)
-        {
-            BreakPoint *bp = BP::get(nrs[i]);
-            if (bp != 0)
-                for (int j = 0; j < bp->n_locations(); j++)
-                    gdb_command(gdb->clear_command(bp->get_location(j).pos()));
-        }
-    }
-    else if (gdb->has_delete_command())
-    {
-        gdb_command(gdb->delete_command(all_numbers(nrs)));
-    }
-    else
-    {
-        for (int i = 0; i < int(nrs.size()); i++) {
-            std::vector<string> delcmds = delete_commands(nrs[i]);
-            for (unsigned j = 0; j < delcmds.size(); j++)
-                gdb_command(delcmds[j]);
-        }
-    }
-}
-
-// TODO move to BreakPoint.C
-// A generic deletion command for breakpoint BP::NR - either `clear' or `delete'
-std::vector<string> SourceView::delete_commands(int bp_nr)
-{
-    std::vector<string> cmds;
-    if (gdb->has_delete_command())
-    {
-        cmds.push_back(gdb->delete_command(itostring(bp_nr)));
-    }
-    else if (gdb->has_clear_command())
-    {
-        BreakPoint *bp = BP::get(bp_nr);
-        if (bp != 0) {
-            for (int j = 0; j < bp->n_locations(); j++)
-                cmds.push_back(gdb->clear_command(bp->get_location(j).pos()));
-        }
-    }
-    return cmds;
 }
 
 // ***************************************************************************
@@ -2680,29 +2523,21 @@ void SourceView::show_position(string position, bool silent)
 void SourceView::process_info_bp (string& info_output,
                                   const string& break_arg)
 {
-#if 0
-    // DEC DBX issues empty lines, which causes trouble
-    info_output.gsub("\n\n", "\n");
-
-    // SGI DBX issues `Process PID' before numbers
-#if RUNTIME_REGEX
-    static regex rxprocess1("Process[ \t]+[0-9]+:[ \t]*");
-#endif
-    info_output.gsub(rxprocess1, "");
-
-    last_info_output = info_output;
-    string keep_me = "";
-
+    // For GDB-like debuggers: if the output doesn't start with the
+    // breakpoint table header or the "No breakpoints" line, treat it
+    // as a plain message and do not touch the breakpoint map.
     switch (gdb->type())
     {
     case GDB:
     case BASH:
     case MAKE:
     case PYDB:
-        // If there is no breakpoint info, process it as GDB message.
-        if (!info_output.contains("Num", 0) && 
+        if (!info_output.contains("Num", 0) &&
             !info_output.contains("No breakpoints", 0))
+        {
             check_remainder(info_output);
+            return;
+        }
         break;
 
     case DBG:
@@ -2710,196 +2545,11 @@ void SourceView::process_info_bp (string& info_output,
     case XDB:
     case JDB:
     case PERL:
+    case DEBUGGER_INVALID:
         break;
     }
-                                    
-    std::vector<int> bps_not_read;
-    MapRef ref;
-    int i;
-    for (i = bp_map.first_key(ref); i != 0; i = bp_map.next_key(ref))
-        bps_not_read.push_back(i);
 
-    bool changed = false;
-    bool added   = false;
-    std::ostringstream undo_commands;
-    string file = sourcecode.get_filename();
-
-    while (!info_output.empty())
-    {
-        int bp_nr = -1;
-        switch(gdb->type())
-        {
-        case BASH:
-        case DBG:
-        case GDB:
-        case MAKE:
-        case PYDB:
-            if (!has_nr(info_output))
-            {
-                // Skip this line
-                info_output = info_output.after('\n');
-                continue;
-            }
-            bp_nr = get_positive_nr (info_output);
-            break;
-
-        case DBX:
-            {
-                // SGI IRIX DBX issues `Process PID: ' 
-                // before status lines.
-#if RUNTIME_REGEX
-                static regex rxprocess2("Process[ \t]+[0-9]+:");
-#endif
-                if (info_output.contains(rxprocess2, 0))
-                    info_output = info_output.after(':');
-                strip_leading_space(info_output);
-                    
-                if (!info_output.contains('(', 0)
-                    && !info_output.contains('[', 0)
-                    && !info_output.contains('#', 0))
-                {
-                    // No breakpoint info - skip this line
-                    info_output = info_output.after('\n');
-                    continue;
-                }
-                string bp_nr_s = info_output.after(0);
-                bp_nr = get_positive_nr (bp_nr_s);
-            }
-            break;
-
-
-        case XDB:
-            bp_nr = get_positive_nr(info_output);
-            break;
-
-        case PERL:
-        case JDB:
-        {
-            // JDB and Perl have no breakpoint numbers.
-            // Check if we already have a breakpoint at this location.
-            bp_nr = BP::breakpoint_number(info_output, file);
-            if (bp_nr == 0)
-                bp_nr = gdb->max_breakpoint_number_seen + 1;        // new breakpoint
-            if (bp_nr < 0)
-            {
-                // Not a breakpoint
-                string line = info_output.before('\n');
-                if (!line.contains("Current breakpoints set"))
-                    keep_me += line;
-                
-                // Skip this line
-                info_output = info_output.after('\n');
-                continue;
-            }
-            break;
-        }
-        }
-
-        if (bp_nr <= 0)
-        {
-            info_output = info_output.after('\n');
-            continue;
-        }
-
-        if (bp_map.contains (bp_nr))
-        {
-            // Update existing breakpoint
-            //bps_not_read -= bp_nr;
-            bps_not_read.erase(std::remove(bps_not_read.begin(), bps_not_read.end(), bp_nr), bps_not_read.end());
-            BreakPoint *bp = bp_map.get(bp_nr);
-
-            std::ostringstream old_state;
-            undo_buffer.add_breakpoint_state(old_state, bp);
-
-            std::ostringstream local_commands;
-            bool need_total_undo = false;
-
-            bool bp_changed = 
-                bp->update(info_output, local_commands, need_total_undo);
-
-            if (bp_changed)
-            {
-                if (bp->position_changed() || bp->enabled_changed())
-                {
-                    changed = true;
-                }
-
-                if (need_total_undo)
-                {
-                    // To undo this change, we must delete the old
-                    // breakpoint and create a new one.
-                    std::vector<string> delcmds = delete_commands(bp->number());
-                    for (unsigned i = 0; i < delcmds.size(); i++)
-                        undo_commands << delcmds[i] << "\n";
-                    undo_commands << string(old_state);
-                }
-                else
-                {
-                    // A simple command suffices to undo this change.
-                    undo_commands << string(local_commands);
-                }
-            }
-        }
-        else
-        {
-            // New breakpoint
-            changed = true;
-            BreakPoint *new_bp = 
-                new BreakPoint(info_output, break_arg, bp_nr, file);
-            bp_map.insert(bp_nr, new_bp);
-
-            if (gdb->has_delete_command())
-            {
-                const string num = "@" + itostring(bp_nr) + "@";
-                undo_commands << gdb->delete_command(num) << '\n';
-            }
-            else
-            {
-                std::vector<string> delcmds = delete_commands(bp_nr);
-                for (unsigned i = 0; i < delcmds.size(); i++)
-                    undo_commands << delcmds[i] << '\n';
-            }
-
-            if (!added)
-            {
-                added = true;
-                // Select this breakpoint only
-                MapRef ref;
-                for (BreakPoint* bp = bp_map.first(ref);
-                     bp != 0;
-                     bp = bp_map.next(ref))
-                {
-                    bp->selected() = false;
-                }
-            }
-            new_bp->selected() = true;
-        }
-
-        gdb->max_breakpoint_number_seen = max(gdb->max_breakpoint_number_seen, bp_nr);
-    }
-
-    // Keep this stuff for further processing
-    info_output = keep_me;
-
-    // Delete all breakpoints not found now
-    for (i = 0; i < int(bps_not_read.size()); i++)
-    {
-        BreakPoint *bp = BP::get(bps_not_read[i]);
-
-        // Older Perl versions only listed breakpoints in the current file
-        if (gdb->type() == PERL && !bp->is_match(sourcecode.get_filename()))
-            continue;
-
-        // Delete it
-        undo_buffer.add_breakpoint_state(undo_commands, bp);
-        delete bp;
-        bp_map.del(bps_not_read[i]);
-
-        changed = true;
-    }
-#else
     bool changed = BP::process_info_bp(info_output, break_arg);
-#endif
 
     if (changed)
         update_glyphs();
@@ -2907,19 +2557,10 @@ void SourceView::process_info_bp (string& info_output,
     // Set up breakpoint editor contents
     process_breakpoints(last_info_output);
 
-#if 0
-    undo_buffer.add_command(string(undo_commands));
-#endif
 
     // Set up existing panels
     update_properties_panels();
 }
-
-int SourceView::next_breakpoint_number()
-{
-    return gdb->max_breakpoint_number_seen + 1;
-}
-
 
 // Process GDB `info line main' output
 void SourceView::process_info_line_main(string& info_output)
@@ -3929,7 +3570,7 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
     {
         // Clicked on breakpoint
         if (control)
-            delete_bp(bp_nr);
+            BP::remove(bp_nr);
         else
             edit_bp(bp_nr);
         return;
@@ -3990,7 +3631,7 @@ void SourceView::doubleClickAct(Widget w, XEvent *e, String *params,
         {
             // In breakpoint area, and we already have a breakpoint.
             if (control)
-                delete_bps(bps);
+                BP::remove(bps);
             else
                 edit_bps(bps);
         }
@@ -4343,7 +3984,7 @@ void SourceView::update_properties_panel(BreakpointPropertiesInfo *info)
     int i;
     for (i = 0; i < int(info->nrs.size()); i++)
     {
-        if (info->nrs[i] >= next_breakpoint_number())
+        if (info->nrs[i] >= BP::next_breakpoint_number())
         {
             // Panel for future (renamed) breakpoint
             future = true;
@@ -4432,14 +4073,12 @@ void SourceView::update_properties_panel(BreakpointPropertiesInfo *info)
     {
         bool lock = info->spin_locked;
         info->spin_locked = true;
-#if XmVersion >= 2000
         if (XmIsSpinBox(XtParent(info->ignore)))
         {
             XtVaSetValues(info->ignore, XmNposition,
                           bp->ignore_count(), XtPointer(0));
         }
         else
-#endif
         {
             String old_ignore = XmTextFieldGetString(info->ignore);
             if (atoi(old_ignore) != bp->ignore_count())
@@ -4512,7 +4151,7 @@ void SourceView::update_properties_panel(BreakpointPropertiesInfo *info)
     if (info->sync_commands)
     {
         for (i = 1; i < int(info->nrs.size()); i++)
-            set_bp_commands(info->nrs[i], bp->commands());
+            BP::set_commands(info->nrs[i], bp->commands());
         info->sync_commands = false;
     }
 }
@@ -4787,7 +4426,7 @@ void SourceView::SetBreakpointConditionCB(Widget,
         (BreakpointPropertiesInfo *)client_data;
 
     String cond = XmTextFieldGetString(info->condition);
-    set_bps_cond(info->nrs, cond);
+    BP::set_condition(info->nrs, cond);
     XtFree(cond);
 }
 
@@ -4805,7 +4444,7 @@ void SourceView::ApplyBreakpointPropertiesCB(Widget w,
 
     // Apply condition
     String cond = XmTextFieldGetString(info->condition);
-    set_bps_cond(info->nrs, cond);
+    BP::set_condition(info->nrs, cond);
     XtFree(cond);
 
     if (XtIsManaged(XtParent(info->editor)))
@@ -4885,7 +4524,7 @@ void SourceView::DeleteBreakpointsCB(Widget, XtPointer client_data,
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    delete_bps(info->nrs);
+    BP::remove(info->nrs);
 }
 
 // Enable Breakpoints
@@ -4895,7 +4534,7 @@ void SourceView::EnableBreakpointsCB(Widget, XtPointer client_data,
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    enable_bps(info->nrs);
+    BP::enable(info->nrs);
 }
 
 // Disable Breakpoints
@@ -4904,7 +4543,7 @@ void SourceView::DisableBreakpointsCB(Widget, XtPointer client_data, XtPointer)
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    disable_bps(info->nrs);
+    BP::disable(info->nrs);
 }
 
 // Record breakpoint commands
@@ -4976,124 +4615,6 @@ void SourceView::RecordingHP(Agent *, void *client_data, void *call_data)
     }
 }
 
-// Set breakpoint commands
-void SourceView::set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands)
-{
-    CommandGroup cg;
-
-    for (int i = 0; i < int(nrs.size()); i++)
-    {
-        // Check for breakpoint
-        BreakPoint *bp = BP::find_by_number(nrs[i]);
-        if (bp == 0)
-            continue;                // No such breakpoint
-
-        if (commands.size() == bp->commands().size())
-        {
-            bool same_commands = true;
-            for (int j = 0; same_commands && j < int(bp->commands().size()); j++)
-            {
-                string c1 = bp->commands()[j];
-                strip_auto_command_prefix(c1);
-                string c2 = commands[j];
-                strip_auto_command_prefix(c2);
-
-                if (c1 != c2)
-                    same_commands = false;
-            }
-
-            if (same_commands)
-                continue;        // Commands unchanged
-        }
-
-        string action = "";
-        if (gdb->type() != GDB)
-        {
-            // Get action for non-GDB types - a semicolon-separated
-            // list of commands
-            for (int j = 0; j < int(commands.size()); j++)
-            {
-                if (j > 0 && 
-                    !action.contains(";", -1) && !action.contains("; ", -1))
-                {
-                    action += "; ";
-                }
-
-                string command = commands[j];
-
-                if (is_graph_cmd(command) || is_running_cmd(command) ||
-                    (gdb->type() == PERL && command.contains(' ', 1)))
-                {
-                    // If:
-                    // - this is a DDD command, or
-                    // - this is a running command, or
-                    // - this is a Perl debugger command,
-                    // make this a DDD auto-command.
-                    add_auto_command_prefix(command);
-                }
-
-                action += command;
-            }
-        }
-
-        switch (gdb->type())
-        {
-        case GDB:
-        {
-            gdb_command("commands " + itostring(nrs[i]));
-            for (int j = 0; j < int(commands.size()); j++)
-                gdb_command(commands[j]);
-            gdb_command("end");
-            break;
-        }
-
-        case DBX:
-        {
-            // Use `when' to set breakpoint commands.
-            if (gdb->has_when_semicolon())
-                action += "; ";
-
-            string cmd;
-            if (!bp->func().empty())
-                cmd = "when in " + bp->func();
-            else
-            {
-                gdb_command("file " + bp->file_name());
-                cmd = "when at " + itostring(bp->line_nr());
-            }
-
-            cmd += " { " + action + " }";
-            gdb_command(cmd);
-            break;
-        }
-
-        case XDB:
-        {
-            // Replace breakpoint by new one with command.
-            const string cmd = "b " + 
-                bp->file_name() + ":" + 
-                itostring(bp->line_nr()) + 
-                " {" + action + "}";
-            gdb_command(cmd);
-            delete_bp(bp->number());
-            break;
-        }
-
-        case PERL:
-        {
-            // Just set an action.
-            gdb_command("f " + bp->file_name());
-            const string cmd = "a " + itostring(bp->line_nr()) + " " + action;
-            gdb_command(cmd);
-            break;
-        }
-
-        default:
-            assert(!gdb->has_breakpoint_commands());
-        }
-    }
-}
-
 
 // Edit breakpoint commands
 void SourceView::EditBreakpointCommandsCB(Widget,
@@ -5125,7 +4646,7 @@ void SourceView::EditBreakpointCommandsCB(Widget,
             cmd = cmd.after('\n');
         }
 
-        set_bp_commands(info->nrs, commands);
+        BP::set_commands(info->nrs, commands);
 
         // Update all panels in the next run
         gdb->addHandler(Recording, RecordingHP, (void *)0);
@@ -5169,11 +4690,11 @@ void SourceView::BreakpointCmdCB(Widget,
     const string cmd = (String)client_data;
 
     if (cmd == "delete")
-        delete_bps(nrs);
+        BP::remove(nrs);
     else if (cmd == "enable")
-        enable_bps(nrs);
+        BP::enable(nrs);
     else if (cmd == "disable")
-        disable_bps(nrs);
+        BP::disable(nrs);
 }
 
 void SourceView::LookupBreakpointCB(Widget, XtPointer client_data, XtPointer)
@@ -7605,7 +7126,7 @@ void SourceView::deleteGlyphAct(Widget glyph, XEvent *, String *, Cardinal *)
         bps.push_back(bp->number());
     }
 
-    delete_bps(bps);
+    BP::remove(bps);
 }
 
 

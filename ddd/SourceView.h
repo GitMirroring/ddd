@@ -66,6 +66,7 @@
 #include "template/StringSA.h"
 #include "motif/MString.h"
 #include "SourceCode.h"
+#include "BreakPoint.h"
 
 //-----------------------------------------------------------------------------
 extern GDBAgent* gdb;
@@ -170,38 +171,6 @@ class SourceView {
     static void add_position_to_history(const string& file_name, 
                                         int line, bool stopped);
 
-    // Set condition of breakpoints NRS to COND.
-    // * If COND is char(-1), preserve old condition.
-    // * If MAKE_FALSE is >= 0, disable breakpoint by making 
-    //   the condition false.
-    // * If MAKE_FALSE is == 0, enable breakpoint by restoring
-    //   the original condition.
-    // * Otherwise, preserve the condition state.
-    static void _set_bps_cond(const std::vector<int>& nrs, const string& cond,
-                              int make_false);
-
-    // Set condition of breakpoints NRS to COND.
-    inline static void set_bps_cond(const std::vector<int>& nrs, const string& cond)
-    {
-        _set_bps_cond(nrs, cond, -1);
-    }
-
-    // Enable and disable breakpoints via conditions.
-    inline static void set_bps_cond_enabled(const std::vector<int>& nrs, bool enabled)
-    {
-        _set_bps_cond(nrs, char(-1), enabled ? 0 : 1);
-    }
-
-    // Custom calls
-    inline static void enable_bps_cond(const std::vector<int>& nrs)
-    {
-        set_bps_cond_enabled(nrs, true);
-    }
-
-    inline static void disable_bps_cond(const std::vector<int>& nrs)
-    {
-        set_bps_cond_enabled(nrs, false);
-    }
 
     // Find the line number at POS.  LINE_NR becomes the line number
     // at POS.  IN_TEXT becomes true iff POS is in the source area.
@@ -652,9 +621,6 @@ public:
     // The maximum breakpoint number when saving states
     static int max_breakpoint_number;
 
-    // The next breakpoint number (the highest last seen + 1)
-    static int next_breakpoint_number();
-
     // Custom calls
     static void create_bp(const string& a);
     static void create_temp_bp(const string& a);
@@ -663,32 +629,8 @@ public:
     // Create a temporary breakpoint at A and continue execution.
     static void temp_n_cont(const string& a);
 
-    // Enable/Disable/Delete/Edit breakpoints
-    static void enable_bps     (const std::vector<int>& nrs0);
-    static void disable_bps    (const std::vector<int>& nrs);
-    static void delete_bps     (const std::vector<int>& nrs);
+    // Edit breakpoints
     static void edit_bps       (std::vector<int>& nrs);
-
-    inline static void enable_bp(int nr)
-    {
-        std::vector<int> nrs;
-        nrs.push_back(nr);
-        enable_bps(nrs);
-    }
-
-    inline static void disable_bp(int nr)
-    {
-        std::vector<int> nrs;
-        nrs.push_back(nr);
-        disable_bps(nrs);
-    }
-
-    inline static void delete_bp(int nr)
-    {
-        std::vector<int> nrs;
-        nrs.push_back(nr);
-        delete_bps(nrs);
-    }
 
     inline static void edit_bp(int nr)
     {
@@ -697,19 +639,7 @@ public:
         edit_bps(nrs);
     }
 
-    // Set breakpoint commands
-    static void set_bp_commands(std::vector<int>& nrs, const std::vector<string>& commands);
-
-    inline static void set_bp_commands(int nr, const std::vector<string>& commands)
-    {
-        std::vector<int> nrs;
-        nrs.push_back(nr);
-        set_bp_commands(nrs, commands);
-    }
-
     static string numbers(const std::vector<int>& nrs);
-    static string all_numbers(const std::vector<int>& nrs);
-    static bool all_bps(const std::vector<int>& nrs);
             
     // Move PC to ADDRESS; return true if changed.
     static bool move_pc(const string& address);

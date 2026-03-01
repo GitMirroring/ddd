@@ -1160,6 +1160,11 @@ bool BreakPoint::is_match(const string& file, int line)
 
 namespace BP
 {
+  int next_breakpoint_number()
+  {
+      return gdb->max_breakpoint_number_seen + 1;
+  }
+
   // Return specified breakpoint
   BreakPoint *get(int num)
   {
@@ -1422,6 +1427,146 @@ namespace BP
       return true;
   }
 
+  // Convert NRS to a a space‑separated list of breakpoint numbers
+  string numbers(const std::vector<int>& nrs)
+  {
+      string cmd = "";
+      for (int i = 0; i < int(nrs.size()); i++)
+      {
+          if (i > 0)
+              cmd += " ";
+          cmd += itostring(nrs[i]);
+      }
+      return cmd;
+  }
+
+  // Same as numbers(), but return "" if the debugger allows commands
+  // without explicit arguments and NRS covers all breakpoints.
+  string all_numbers(const std::vector<int>& nrs)
+  {
+      // Only GDB-like debuggers support "no args means all breakpoints",
+      // and only use that optimization if NRS actually contains all of them.
+      if ((gdb->type() == GDB || gdb->type() == PYDB || gdb->type() == DBG) &&
+          nrs.size() >= 2 && contains_all_bps(nrs))
+      {
+          return "";  // no arg means "all"
+      }
+
+      return numbers(nrs);
+  }
+
+void set_condition(const std::vector<int>& nrs, const string& cond,
+                               int make_false)
+{
+    CommandGroup cg;
+
+    for (int i = 0; i < int(nrs.size()); i++)
+    {
+        int bp_nr = nrs[i];
+        BreakPoint *bp = BP::get(bp_nr);
+        if (bp == 0)
+            continue;                // No such breakpoint
+
+        string c = cond;
+        if (c == char(-1))
+            c = bp->condition();
+
+        int m = make_false;
+        if (m < 0)
+            m = (!bp->enabled() && !gdb->has_enable_command());
+
+        if (m)
+            c = BreakPoint::make_false(c);
+
+        if (gdb->has_condition_command())
+        {
+            // Use the `cond' command to assign a condition
+            gdb_command(gdb->condition_command(itostring(bp_nr), c));
+        }
+    }
+}
+
+void enable(const std::vector<int>& nrs)
+{
+    CommandGroup cg;
+
+    if (gdb->has_enable_command())
+    {
+        gdb_command(gdb->enable_command(all_numbers(nrs)));
+    }
+    else if (gdb->has_conditions())
+    {
+        // Unset `false' breakpoint condition
+        enable_condition(nrs);
+    }
+}
+
+  void disable(const std::vector<int>& nrs)
+  {
+      CommandGroup cg;
+
+      if (gdb->has_disable_command())
+      {
+          gdb_command(gdb->disable_command(all_numbers(nrs)));
+      }
+      else if (gdb->has_conditions())
+      {
+          // Set breakpoint condition to `false'
+          disable_condition(nrs);
+      }
+  }
+
+  // A generic deletion command for breakpoint BP::NR - either `clear' or `delete'
+  std::vector<string> delete_commands(int bp_nr)
+  {
+      std::vector<string> cmds;
+      if (gdb->has_delete_command())
+      {
+          cmds.push_back(gdb->delete_command(itostring(bp_nr)));
+      }
+      else if (gdb->has_clear_command())
+      {
+          BreakPoint *bp = get(bp_nr);
+          if (bp != 0)
+          {
+              for (int j = 0; j < bp->n_locations(); j++)
+                  cmds.push_back(gdb->clear_command(bp->get_location(j).pos()));
+          }
+      }
+      return cmds;
+  }
+
+  void remove(const std::vector<int>& nrs)
+  {
+      CommandGroup cg;
+
+      if (gdb->recording() && gdb->has_clear_command())
+      {
+          // While recording, prefer commands without explicit numbers.
+          for (int i = 0; i < int(nrs.size()); i++)
+          {
+              BreakPoint *bp = BP::get(nrs[i]);
+              if (bp != 0)
+                  for (int j = 0; j < bp->n_locations(); j++)
+                      gdb_command(gdb->clear_command(bp->get_location(j).pos()));
+          }
+      }
+      else if (gdb->has_delete_command())
+      {
+          gdb_command(gdb->delete_command(all_numbers(nrs)));
+      }
+      else
+      {
+          for (int i = 0; i < int(nrs.size()); i++)
+          {
+              std::vector<string> delcmds = delete_commands(nrs[i]);
+              for (unsigned j = 0; j < delcmds.size(); j++)
+                  gdb_command(delcmds[j]);
+          }
+      }
+  }
+
+
   // Return all breakpoints/tracepoints in current file
   std::vector<BreakPoint *> all_bps_in_file()
   {
@@ -1661,27 +1806,6 @@ namespace BP
     last_info_output = info_output;
     string keep_me = "";
 
-    switch (gdb->type())
-    {
-    case GDB:
-    case BASH:
-    case MAKE:
-    case PYDB:
-        // If there is no breakpoint info, process it as GDB message.
-        if (!info_output.contains("Num", 0) &&
-            !info_output.contains("No breakpoints", 0))
-            SourceView::check_remainder(info_output);
-        break;
-
-    case DBG:
-    case DBX:
-    case XDB:
-    case JDB:
-    case PERL:
-    case DEBUGGER_INVALID:
-        break;
-    }
-
     std::vector<int> bps_not_read;
     MapRef ref;
     int i;
@@ -1799,7 +1923,7 @@ namespace BP
                     // To undo this change, we must delete the old
                     // breakpoint and create a new one.
                     std::vector<string> delcmds =
-                        SourceView::delete_commands(bp->number());
+                        delete_commands(bp->number());
                     for (unsigned i = 0; i < delcmds.size(); i++)
                         undo_commands << delcmds[i] << "\n";
                     undo_commands << string(old_state);
@@ -1826,7 +1950,7 @@ namespace BP
             }
             else
             {
-                std::vector<string> delcmds = SourceView::delete_commands(bp_nr);
+                std::vector<string> delcmds = delete_commands(bp_nr);
                 for (unsigned i = 0; i < delcmds.size(); i++)
                     undo_commands << delcmds[i] << '\n';
             }
@@ -1934,5 +2058,169 @@ namespace BP
     if (!reset_later)
         callback("", 0);
   }
+
+  // Set breakpoint commands
+void set_commands(std::vector<int>& nrs, const std::vector<string>& commands)
+{
+    CommandGroup cg;
+
+    for (int i = 0; i < int(nrs.size()); i++)
+    {
+        // Check for breakpoint
+        BreakPoint *bp = BP::find_by_number(nrs[i]);
+        if (bp == 0)
+            continue;                // No such breakpoint
+
+        if (commands.size() == bp->commands().size())
+        {
+            bool same_commands = true;
+            for (int j = 0; same_commands && j < int(bp->commands().size()); j++)
+            {
+                string c1 = bp->commands()[j];
+                strip_auto_command_prefix(c1);
+                string c2 = commands[j];
+                strip_auto_command_prefix(c2);
+
+                if (c1 != c2)
+                    same_commands = false;
+            }
+
+            if (same_commands)
+                continue;        // Commands unchanged
+        }
+
+        string action = "";
+        if (gdb->type() != GDB)
+        {
+            // Get action for non-GDB types - a semicolon-separated
+            // list of commands
+            for (int j = 0; j < int(commands.size()); j++)
+            {
+                if (j > 0 &&
+                    !action.contains(";", -1) && !action.contains("; ", -1))
+                {
+                    action += "; ";
+                }
+
+                string command = commands[j];
+
+                if (is_graph_cmd(command) || is_running_cmd(command) ||
+                    (gdb->type() == PERL && command.contains(' ', 1)))
+                {
+                    // If:
+                    // - this is a DDD command, or
+                    // - this is a running command, or
+                    // - this is a Perl debugger command,
+                    // make this a DDD auto-command.
+                    add_auto_command_prefix(command);
+                }
+
+                action += command;
+            }
+        }
+
+        switch (gdb->type())
+        {
+        case GDB:
+        {
+            gdb_command("commands " + itostring(nrs[i]));
+            for (int j = 0; j < int(commands.size()); j++)
+                gdb_command(commands[j]);
+            gdb_command("end");
+            break;
+        }
+
+        case DBX:
+        {
+            // Use `when' to set breakpoint commands.
+            if (gdb->has_when_semicolon())
+                action += "; ";
+
+            string cmd;
+            if (!bp->func().empty())
+                cmd = "when in " + bp->func();
+            else
+            {
+                gdb_command("file " + bp->file_name());
+                cmd = "when at " + itostring(bp->line_nr());
+            }
+
+            cmd += " { " + action + " }";
+            gdb_command(cmd);
+            break;
+        }
+
+        case XDB:
+        {
+            // Replace breakpoint by new one with command.
+            const string cmd = "b " +
+                bp->file_name() + ":" +
+                itostring(bp->line_nr()) +
+                " {" + action + "}";
+            gdb_command(cmd);
+            BP::remove(bp->number());
+            break;
+        }
+
+        case PERL:
+        {
+            // Just set an action.
+            gdb_command("f " + bp->file_name());
+            const string cmd = "a " + itostring(bp->line_nr()) + " " + action;
+            gdb_command(cmd);
+            break;
+        }
+
+        default:
+            assert(!gdb->has_breakpoint_commands());
+        }
+    }
+}
+
+int move(int bp_nr, const string& a, bool copy)
+{
+    CommandGroup cg;
+
+    BreakPoint *bp = BP::get(bp_nr);
+    if (!bp)
+        return 0;            // No such breakpoint
+
+    string address = a;
+
+    if (!copy)
+    {
+        if (address.contains('*', 0))
+        {
+            // Code window: compare addresses
+            if (bp->n_locations() > 1)
+                return 0;     // UI will warn; we just refuse
+            if (compare_address(address.after('*'), bp->address()) == 0)
+                return 0;     // Already at that address
+        }
+        else
+        {
+            // Source window: compare file:line
+            string file = address.before(':');
+            int line    = get_positive_nr(address.after(':'));
+            if (bp->is_match(file, line))
+                return 0;     // Already there
+        }
+    }
+
+    // Create a new breakpoint with same settings at ADDRESS
+    std::ostringstream os;
+    if (!bp->get_state(os, 0, false, address))
+        return 0;
+
+    int new_bp_nr = next_breakpoint_number();
+    string commands(os);
+    commands.gsub("@0@", itostring(new_bp_nr));
+
+    gdb_command(commands);
+
+    // Note: we do NOT delete the old breakpoint here – the caller (UI)
+    // handles that after updating its properties.
+    return new_bp_nr;
+}
 
 } // End namespace BP

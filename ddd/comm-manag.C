@@ -365,7 +365,7 @@ static void fix_symbols(string& cmd)
     while ((i = index(cmd, rxnum, "@")) >= 0)
     {
 	int j = cmd.index('@', i + 1);
-	int base = SourceView::next_breakpoint_number() - 1;
+	int base = BP::next_breakpoint_number() - 1;
 	cmd.at(i, j - i + 1) = itostring(atoi(cmd.chars() + i + 1) + base);
     }
 

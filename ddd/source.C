@@ -192,9 +192,9 @@ void gdbToggleEnableBreakpointCB(Widget, XtPointer, XtPointer)
     if (bp != 0)
     {
 	if (bp->enabled())
-	    source_view->disable_bp(bp->number());
+	    BP::disable(bp->number());
 	else
-	    source_view->enable_bp(bp->number());
+	    BP::enable(bp->number());
     }
 }
 
@@ -204,9 +204,9 @@ void gdbToggleEnableWatchpointCB(Widget, XtPointer, XtPointer)
     if (bp != 0)
     {
 	if (bp->enabled())
-	    source_view->disable_bp(bp->number());
+	    BP::disable(bp->number());
 	else
-	    source_view->enable_bp(bp->number());
+	    BP::enable(bp->number());
     }
 }
 
@@ -290,7 +290,7 @@ void gdbUnwatchCB(Widget, XtPointer, XtPointer)
 	BreakPoint *wp = source_view->watchpoint_at(current_arg());
 	if (wp == 0)
 	    return;
-	source_view->delete_bp(wp->number());
+	BP::remove(wp->number());
     }
 }
 

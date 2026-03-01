@@ -42,7 +42,6 @@
 #include "template/Map.h"
 #include "GDBAgent.h"
 #include "Command.h"
-#include "BreakPoint.h"
 
 extern class SourceView *source_view;
 
@@ -76,9 +75,9 @@ enum BPDispo {
     BPDIS			// Disable (`enable once' in GDB)
 };
 
-extern Map<int, BreakPoint> bp_map;
 
 class BreakPoint;
+extern Map<int, BreakPoint> bp_map;
 
 class BreakPointLocn {
     string  myfile_name;	// File name
@@ -106,8 +105,10 @@ public:
     // Associated glyphs in source and machine code
     Widget& source_glyph() { return mysource_glyph; }
     Widget& code_glyph()   { return mycode_glyph; }
+
     // Check if BP Locn in file & line
     bool is_match(const string& file, int line = 0);
+
     // Check if BP Locn is in the curent source
     bool is_match(int line = 0);
 
@@ -254,7 +255,10 @@ namespace BP
   // Return specified breakpoint
   BreakPoint *get(int num);
 
-  // TODO: Overload select functions
+  // Next free breakpoint number
+  int next_breakpoint_number();
+
+    // TODO: Overload select functions
   // Select breakpoint by line number
   void select_by_line(int line);
 
@@ -289,6 +293,80 @@ namespace BP
   // a GDB delete/disable/enable command can be given without args.
   bool contains_all_bps(const std::vector<int>& nrs);
 
+  // Convert NRS to a space‑separated list of breakpoint numbers.
+  string numbers(const std::vector<int>& nrs);
+
+  // Same as numbers(), but return "" if the debugger allows commands
+  // without explicit arguments and NRS covers all breakpoints.
+  string all_numbers(const std::vector<int>& nrs);
+
+  // Set condition of breakpoints NRS to COND.
+  // * If COND is char(-1), preserve old condition.
+  // * If MAKE_FALSE is >= 0, disable breakpoint by making
+  //   the condition false.
+  // * If MAKE_FALSE is == 0, enable breakpoint by restoring
+  //   the original condition.
+  // * Otherwise, preserve the condition state.
+  // Set condition of breakpoints NRS to COND.
+  void set_condition(const std::vector<int>& nrs, const string& cond, int make_false);
+
+  // Set condition text on breakpoints that support the 'condition' command
+  inline void set_condition(const std::vector<int>& nrs, const string& cond)
+  {
+      set_condition(nrs, cond, -1);
+  }
+
+  // Enable and disable breakpoints via conditions.
+  inline void set_condition_enabled(const std::vector<int>& nrs, bool enabled)
+  {
+      set_condition(nrs, char(-1), enabled ? 0 : 1);
+  }
+
+  // Custom calls
+  inline void enable_condition(const std::vector<int>& nrs)
+  {
+      set_condition_enabled(nrs, true);
+  }
+
+  inline void disable_condition(const std::vector<int>& nrs)
+  {
+      set_condition_enabled(nrs, false);
+  }
+
+  // Enable/disable breakpoints, using enable/disable commands if available,
+  // otherwise *only* condition-based fallback (no GUI).
+  void enable(const std::vector<int>& nrs);
+  void disable(const std::vector<int>& nrs);
+
+  // Delete breakpoints NRS using the most appropriate command(s) for
+  // the current debugger.
+  void remove(const std::vector<int>& nrs);
+
+  inline void enable(int nr)
+  {
+      std::vector<int> nrs;
+      nrs.push_back(nr);
+      enable(nrs);
+  }
+
+  inline void disable(int nr)
+  {
+      std::vector<int> nrs;
+      nrs.push_back(nr);
+      disable(nrs);
+  }
+
+  inline void remove(int nr)
+  {
+     std::vector<int> nrs;
+     nrs.push_back(nr);
+     remove(nrs);
+  }
+
+  // A generic deletion command for breakpoint BP_NR - either `clear'
+  // or `delete'.
+  std::vector<string> delete_commands(int bp_nr);
+
   // Return all breakpoints/tracepoints in current file
   std::vector<BreakPoint *> all_bps_in_file();
 
@@ -321,6 +399,20 @@ namespace BP
 
   // Delete all breakpoints
   void reset_all_bps(OQCProc callback);
+
+  void set_commands(std::vector<int>& nrs, const std::vector<string>& commands);
+
+  inline void set_commands(int nr, const std::vector<string>& commands)
+  {
+      std::vector<int> nrs;
+      nrs.push_back(nr);
+      set_commands(nrs, commands);
+  }
+
+  // Create a new breakpoint like bp_nr at address/pos A.
+  // Returns new breakpoint number on success, 0 on failure/no-op.
+  int move(int bp_nr, const string& a, bool copy = false);
+
 }
 
 #endif // _DDD_BreakPoint_h

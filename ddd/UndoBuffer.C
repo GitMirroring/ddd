@@ -534,7 +534,7 @@ bool UndoBuffer::process_command(UndoBufferEntry& entry)
 	if (cmd.contains(REMAP_COMMAND, 0))
 	{
 	    int old_bp_nr = atoi(cmd.chars() + strlen(REMAP_COMMAND "@"));
-	    int new_bp_nr = source_view->next_breakpoint_number() + bp_count++;
+	    int new_bp_nr = BP::next_breakpoint_number() + bp_count++;
 
 	    remap_breakpoint(old_bp_nr, new_bp_nr);
 	    remap_breakpoint(commands, old_bp_nr, new_bp_nr);

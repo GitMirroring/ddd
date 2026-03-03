@@ -224,7 +224,7 @@ void ddd_cleanup()
     cleanupLogos();
 
     delete data_disp;
-    FcFini();
+    //FcFini();  // seems to crash on some systems
 
     // Famous last words
     string last_words = "Thanks for using " DDD_NAME " " DDD_VERSION "!";

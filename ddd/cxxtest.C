@@ -745,8 +745,13 @@ void image_test()
 
     (void) img;			// Plot this
 
+    double pi = 3.14159265358979323846;
+    Image<float> img2(500, 500, 1);
+    for (int i = 0; i < img2.ydim; i++)
+        for (int j = 0; j < img2.xdim; j++)
+            img2.at(j, i) = i * i * sin(j * 2 * pi / img2.xdim * 3);
 
-    std::cout << "pixel at 10,10 " << int(img.at(10, 10,2)) << std::endl;
+    (void) img2;			// Plot this
 
 }
 

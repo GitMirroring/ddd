@@ -200,6 +200,21 @@ void sourceToggleCacheMachineCodeCB (Widget, XtPointer, XtPointer call_data)
                    "Machine code cache has been cleared.");
 }
 
+void sourceToggleSyntaxHighlightingCB(Widget, XtPointer, XtPointer call_data)
+{
+    XmToggleButtonCallbackStruct *info =
+        (XmToggleButtonCallbackStruct *)call_data;
+
+    app_data.syntax_highlighting = info->set;
+
+    update_options();
+
+    if (info->set)
+        set_status("Enable syntax highlighting.");
+    else
+        set_status("Disable syntax highlighting.");
+}
+
 void sourceSetUseSourcePathCB (Widget, XtPointer client_data, XtPointer)
 {
     Boolean state = (int)(long)client_data;
@@ -2339,6 +2354,8 @@ static bool save_options_init(unsigned long flags)
                          app_data.cache_source_files) << '\n';
     os << bool_app_value(XtNcacheMachineCode,
                          app_data.cache_machine_code) << '\n';
+    os << bool_app_value(XtNsyntaxHighlighting,
+                         app_data.syntax_highlighting) << '\n';
     os << bool_app_value(XtNdisassemble,
                          app_data.disassemble) << '\n';
     os << bool_app_value(XtNallRegisters,

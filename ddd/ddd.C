@@ -1268,12 +1268,14 @@ static MMDesc scales_menu[] =
 
 
 static Widget refer_sources_w;
-static MMDesc source_preferences_menu[] = 
+static Widget syntax_highlighting_w;
+static MMDesc source_preferences_menu[] =
 {
     { "toolButtons",  MMRadioPanel,  MMNoCB, tool_buttons_menu, 0, 0, 0 },
     { "referSources", MMRadioPanel, MMNoCB, refer_menu, &refer_sources_w, 0,0},
     { "find",         MMButtonPanel, MMNoCB, find_preferences_menu, 0, 0, 0 },
     { "cache",        MMButtonPanel, MMNoCB, cache_menu, 0, 0, 0 },
+    { "syntaxHighlighting", MMToggle, { sourceToggleSyntaxHighlightingCB, 0 },  0, &syntax_highlighting_w, 0, 0 },
     { "scales",       MMPanel | MMUnmanagedLabel, MMNoCB, scales_menu, 0, 0, 0 },
     MMEnd
 };
@@ -3810,6 +3812,7 @@ void update_options()
 
     set_toggle(cache_source_files_w,     app_data.cache_source_files);
     set_toggle(cache_machine_code_w,     app_data.cache_machine_code);
+    set_toggle(syntax_highlighting_w,    app_data.syntax_highlighting);
     set_toggle(set_refer_path_w,         app_data.use_source_path);
     set_toggle(set_refer_base_w,         !app_data.use_source_path);
 
@@ -4245,10 +4248,9 @@ static void ResetSourcePreferencesCB(Widget, XtPointer, XtPointer)
     notify_set_toggle(words_only_w, initial_app_data.find_words_only);
     notify_set_toggle(case_sensitive_w, initial_app_data.find_case_sensitive);
 
-    notify_set_toggle(cache_source_files_w, 
-                      initial_app_data.cache_source_files);
-    notify_set_toggle(cache_machine_code_w, 
-                      initial_app_data.cache_machine_code);
+    notify_set_toggle(cache_source_files_w, initial_app_data.cache_source_files);
+    notify_set_toggle(cache_machine_code_w, initial_app_data.cache_machine_code);
+    notify_set_toggle(syntax_highlighting_w, initial_app_data.syntax_highlighting);
     if (app_data.tab_width != initial_app_data.tab_width)
     {
         app_data.tab_width = initial_app_data.tab_width;
@@ -4274,6 +4276,9 @@ static bool source_preferences_changed()
         return true;
 
     if (app_data.cache_machine_code != initial_app_data.cache_machine_code)
+        return true;
+
+    if (app_data.syntax_highlighting != initial_app_data.syntax_highlighting)
         return true;
 
     if (app_data.tab_width != initial_app_data.tab_width)

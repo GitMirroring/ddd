@@ -1081,6 +1081,16 @@ XtResource ddd_resources[] = {
     },
 
     {
+        XTRESSTR(XtNsyntaxHighlighting),
+        XTRESSTR(XtCSyntaxHighlighting),
+        XtRBoolean,
+        sizeof(Boolean),
+        XtOffsetOf(AppData, syntax_highlighting),
+        XtRImmediate,
+        XtPointer(True)
+    },
+
+    {
         XTRESSTR(XtNsuppressWarnings),
         XTRESSTR(XtCSuppressWarnings),
         XtRBoolean,

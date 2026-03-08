@@ -1,3 +1,15 @@
+// DDD Syntax Parser (temporary)
+//
+// Minimal, experimental syntax highlighter used by the Source View.
+// This is a stop-gap implementation to collect user feedback before the
+// transition from Motif to Qt.
+//
+// TODO: Replace this implementation with the Kate syntax highlighting engine
+// once a Qt port of DDD is ready.
+// - Avoid adding new features here unless strictly necessary.
+// - This code may be removed or changed without backward-compatibility guarantees.
+//
+
 #include <cctype>
 #include <cstdint>
 #include <vector>

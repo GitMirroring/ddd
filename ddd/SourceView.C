@@ -1353,7 +1353,7 @@ void SourceView::read_file(string file_name,
     XmhColorTextViewSetString(source_text_w, XMST(sourcecode.get_source().chars()));
 
     std::vector<XmhColorToken> toks;
-    if (gdb->program_language() == LANGUAGE_C)
+    if (gdb->program_language() == LANGUAGE_C && app_data.syntax_highlighting)
         TokenizeCpp_BreezeLight(sourcecode.get_source().chars(), sourcecode.get_source().length(), toks);
 
     XmhColorToken *toksptr = toks.data();
@@ -7182,7 +7182,8 @@ void SourceView::set_code(const string& code,
 {
     XmhColorTextViewSetString(code_text_w, XMST(code.chars()));
     std::vector<XmhColorToken> toks;
-    TokenizeGdbDisassembly(code.chars(), code.length(), toks);
+    if (app_data.syntax_highlighting)
+        TokenizeGdbDisassembly(code.chars(), code.length(), toks);
 
     XmhColorToken *toksptr = toks.data();
     int tok_count = toks.size();

@@ -1,5 +1,5 @@
 // $Id$ -*- C++ -*-
-// Kill unmanaged sashes
+// modernize apperance of scrollbars
 
 // This file is part of DDD.
 // 
@@ -100,12 +100,12 @@ static void scrollbar_hover_handler(Widget w, XtPointer client,
             break;
 
         case EnterNotify:
-            /* pointer over scrollbar -> visible scroll area */
+            // pointer over scrollbar -> visible scroll area
             scrollbar_apply_bg(w, st, True);
             break;
 
         case LeaveNotify:
-            /* hide ONLY if not dragging from a press that started inside */
+            // hide ONLY if not dragging from a press that started inside
             if (!st->pressed_inside)
                 scrollbar_apply_bg(w, st, False);
         break;
@@ -114,7 +114,7 @@ static void scrollbar_hover_handler(Widget w, XtPointer client,
             if (be->button == Button1)
             {
                 st->pressed_inside = True;
-                /* ensure visible when press starts inside */
+                // ensure visible when press starts inside
                 scrollbar_apply_bg(w, st, True);
             }
             break;
@@ -127,7 +127,6 @@ static void scrollbar_hover_handler(Widget w, XtPointer client,
                 /* After release:
                  *              - if pointer is outside -> hide
                  *              - if pointer is inside -> stay visible (hover) */
-
                 Dimension width, height;
                 XtVaGetValues(w,
                               XmNwidth,  &width,
@@ -154,12 +153,11 @@ void install_scrollbar_hover_style(Widget scrollbar)
     if (scrollbar==nullptr || !XmIsScrollBar(scrollbar))
         return;
 
-    Pixel bg, trough/*, bottom, dummy*/;
+    Pixel bg, trough;
     unsigned char orientation;
 
     XtVaGetValues(scrollbar,
                   XmNtroughColor, &trough,
-                  // XmNforeground,  &dummy,
                   XmNorientation,       &orientation,
                   NULL);
 
@@ -167,7 +165,6 @@ void install_scrollbar_hover_style(Widget scrollbar)
     // Switch to TROUGH mode with a dummy trough color -> rebuild GC once
     XtVaSetValues(scrollbar,
                   XmNsliderVisual, XmTROUGH_COLOR,
-                  // XmNtroughColor,  dummy,
                   NULL);
 
     // Now set the real trough color -> rebuild GC again with correct Pixel
@@ -182,7 +179,6 @@ void install_scrollbar_hover_style(Widget scrollbar)
     XtVaGetValues(scrollbar,
                   XmNbackground,        &bg,      // hidden scroll area
                   XmNtroughColor,       &trough,  // visible scroll area
-                  // XmNbottomShadowColor, &bottom,  // slider color
                   NULL);
 
     // Allocate #808080 in the scrollbar's colormap
@@ -193,10 +189,8 @@ void install_scrollbar_hover_style(Widget scrollbar)
     XColor screen_def, exact_def;
     Pixel slider_pixel = BlackPixelOfScreen(XtScreen(scrollbar)); // fallback
 
-    if (XAllocNamedColor(dpy, cmap, "#808080",
-        &screen_def, &exact_def)) {
+    if (XAllocNamedColor(dpy, cmap, "#808080", &screen_def, &exact_def))
         slider_pixel = screen_def.pixel;
-        }
 
     if (orientation == XmHORIZONTAL)
         XtVaSetValues(scrollbar, XmNheight, 16, NULL);
@@ -215,15 +209,12 @@ void install_scrollbar_hover_style(Widget scrollbar)
      *      - no arrows
      *      - slider = bottomShadowColor (foreground)
      *      - scroll area initially hidden (background);
-     *
-     *        Realize may have set the window background to trough,
-     *        but we fix that in Expose / or immediately if realized. */
+     */
     XtVaSetValues(scrollbar,
                   XmNshowArrows,        XmNONE,
                   XmNshadowThickness,   0,
                   XmNhighlightThickness,1,
                   XmNsliderVisual,      XmFOREGROUND_COLOR,
-                  // XmNforeground,        bottom,      // slider color
                   XmNforeground,        slider_pixel, // use #808080
                   XmNbackground,        st->base_bg, // hidden scroll
                   NULL);

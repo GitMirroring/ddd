@@ -761,6 +761,9 @@ Ddd*displayLineNumbers: on
 ! Do we wish to cache source files in memory?
 Ddd*cacheSourceFiles: on
 
+! Do we wish to shw syntax highlighting
+Ddd*syntaxHighlighting: on
+
 ! Do we wish to cache machine code in memory?
 Ddd*cacheMachineCode: on
 
@@ -3354,7 +3357,7 @@ Ddd*preferences*find.labelString:	        Find
 Ddd*preferences*wordsOnly.labelString:		Words Only\ 
 Ddd*preferences*caseSensitive.labelString:	Case Sensitive
 
-Ddd*preferences*lineNumbers.labelString:	Display Source Line Numbers
+Ddd*preferences*syntaxHighlighting.labelString:	Syntax Highlighting
 
 Ddd*preferences*tabWidth.orientation:		XmHORIZONTAL
 Ddd*preferences*tabWidth.minimum:		1
@@ -3362,20 +3365,6 @@ Ddd*preferences*tabWidth.maximum:		32
 Ddd*preferences*tabWidth.showValue:		on
 Ddd*preferences*tabWidth.titleString:		\
 Tab Width\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 
-
-Ddd*preferences*sourceIndent.orientation:	XmHORIZONTAL
-Ddd*preferences*sourceIndent.minimum:		0
-Ddd*preferences*sourceIndent.maximum:		16
-Ddd*preferences*sourceIndent.showValue:		on
-Ddd*preferences*sourceIndent.titleString:	\
-Source Indentation\ \ \ \ \ \ \ \ \ \ \ 
-
-Ddd*preferences*codeIndent.orientation:		XmHORIZONTAL
-Ddd*preferences*codeIndent.minimum:		0
-Ddd*preferences*codeIndent.maximum:		16
-Ddd*preferences*codeIndent.showValue:		on
-Ddd*preferences*codeIndent.titleString:		\
-Machine Code Indentation
 
 
 Ddd*preferences*data*helpString:	\

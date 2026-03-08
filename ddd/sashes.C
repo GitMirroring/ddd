@@ -106,11 +106,11 @@ static void draw_sash_line_internal(Widget w, unsigned char orientation)
     gcv.foreground = bg;
     GC gc_bg = XCreateGC(dpy, win, GCForeground, &gcv);
 
-    /* Clear the entire sash area to background */
+    // Clear the entire sash area to background
     XFillRectangle(dpy, win, gc_bg, 0, 0, width, height);
     XFreeGC(dpy, gc_bg);
 
-    /* Draw the 1‑pixel line */
+    // Draw the 1‑pixel line
     gcv.foreground = fg;
     gc = XCreateGC(dpy, win, GCForeground, &gcv);
 

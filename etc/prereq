@@ -64,13 +64,13 @@ DEBIANDEVPKGS=( \
   "imagemagick" "texlive-font-utils" "texlive-latex-base" \
   )
 
-FEDORAPKGS=( \
+REDHATPKGS=( \
   "binutils" "gcc-c++" "gcc" "make" "motif-devel" "libX11-devel" "libXpm-devel" \
   "libXaw-devel" "libXt-devel" "ncurses-devel" "gdb" "liberation-fonts-common" \
   "liberation-sans-fonts" "liberation-mono-fonts" "liberation-serif-fonts" \
   "netpbm-progs" "tinyxml2-devel" \
   )
-FEDORADEVPKGS=( \
+REDHATDEVPKGS=( \
   "automake" "autoconf" "libtool" "bison" "flex" "texinfo" "netpbm" "transfig" \
   "ImageMagick" "texinfo-tex" \
   )
@@ -97,7 +97,9 @@ elif grep USE /etc/os-release > /dev/null; then
     INSTALLED=$(echo $INSTALLED | grep -v '32bit')
   fi
 elif grep Fedora /etc/redhat-release > /dev/null; then
-  DISTRO="FEDORA"
+  DISTRO="REDHAT"
+elif grep AlmaLinux /etc/redhat-release > /dev/null; then
+  DISTRO="REDHAT"
 else
   DISTRO="UNKNOWN"
 fi
@@ -131,13 +133,13 @@ if [ "$DISTRO" = "DEBIAN" ]; then
   rm -f /tmp/debian.dpkg.$$
 fi
 
-if [ "$DISTRO" = "FEDORA" ]; then
+if [ "$DISTRO" = "REDHAT" ]; then
   echo "Checking pre-req's for $DISTRO"
 
   if [ $MAINTAINER = 1 ]; then
-    PKGS=( ${FEDORAPKGS[*]} ${FEDORADEVPKGS[*]} )
+    PKGS=( ${REDHATPKGS[*]} ${REDHATDEVPKGS[*]} )
   else
-    PKGS=( ${FEDORAPKGS[*]} )
+    PKGS=( ${REDHATPKGS[*]} )
   fi
  
   for PKG in ${PKGS[@]}
@@ -170,6 +172,14 @@ if [ "$DISTRO" = "SUSE" ]; then
       NEEDED="$NEEDED $PKG"
     fi
   done
+fi
+
+if [ $MAINTAINER = 1 ]; then
+  AUTOCONF_VERSION=$(autoconf --version | head -n 1 | awk '{print $NF;}')
+  if [ "$AUTOCONF_VERSION" \< 2.71 ]; then
+    echo "AUTOCONF VERSION = $AUTOCONF_VERSION"
+    echo "AUTOCONF version 2.71 or later required"
+  fi
 fi
 
 echo " "

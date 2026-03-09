@@ -128,8 +128,8 @@ Ddd*separateExecWindow: off
 Ddd*groupIconify: off
 
 
-! On if DDD windows are to be uniconified when GDB becomes ready.
-Ddd*uniconifyWhenReady: on
+! On if DDD windows are to be raised when GDB becomes ready.
+Ddd*raiseWhenReady: on
 
 
 ! On if the TAB key is to complete text in all DDD windows.
@@ -3264,10 +3264,10 @@ the focus.\n\
 ITEM If LBL(Iconify all windows at once) is set, all DDD windows are \
 iconified as a group.\n\
     Otherwise, windows are iconified separately.\n\
-ITEM If LBL(Uniconify when ready) is set, the DDD windows are \
-automatically uniconified\n\
+ITEM If LBL(Raise when ready) is set, the DDD windows are \
+automatically raised\n\
     when DDD becomes ready (e.g. after reaching a breakpoint).\n\
-    Otherwise, DDD windows remain iconified.\n\
+    Otherwise, DDD windows remain unchanged.\n\
 ITEM If LBL(Suppress X warnings) is set, X warnings are silently ignored.\n\
 ITEM If LBL(Continue automatically...) is set, DDD will continue execution\n\
     of programs that were interrupted while grabbing the mouse pointer.\n\
@@ -3301,8 +3301,8 @@ Ddd*preferences*clear.labelString:  Clear Undo Buffer
 
 Ddd*preferences*groupIconify.labelString:	\
 Iconify all Windows at Once
-Ddd*preferences*uniconifyWhenReady.labelString:	\
-Uniconify When Ready
+Ddd*preferences*raiseWhenReady.labelString:	\
+Raise When Ready
 Ddd*preferences*suppressWarnings.labelString:	\
 Suppress X Warnings
 Ddd*preferences*checkGrabs.labelString:	 	\

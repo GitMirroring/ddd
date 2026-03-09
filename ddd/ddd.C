@@ -1189,7 +1189,7 @@ static MMDesc undo_menu [] =
 };
 
 static Widget group_iconify_w;
-static Widget uniconify_when_ready_w;
+static Widget raise_when_ready_w;
 static Widget suppress_warnings_w;
 static Widget warn_if_locked_w;
 static Widget check_grabs_w;
@@ -1201,8 +1201,8 @@ static MMDesc general_preferences_menu[] =
     { "tabCompletion",       MMRadioPanel,  MMNoCB, completion_menu, 0, 0, 0 },
     { "groupIconify",        MMToggle, { dddToggleGroupIconifyCB, 0 },
       0, &group_iconify_w, 0, 0 },
-    { "uniconifyWhenReady",  MMToggle, { dddToggleUniconifyWhenReadyCB, 0 },
-      0, &uniconify_when_ready_w, 0, 0 },
+    { "raiseWhenReady",  MMToggle, { dddToggleRaiseWhenReadyCB, 0 },
+      0, &raise_when_ready_w, 0, 0 },
     { "suppressWarnings",    MMToggle, { dddToggleSuppressWarningsCB, 0 },
       0, &suppress_warnings_w, 0, 0 },
     { "warnIfLocked",        MMToggle, { dddToggleWarnIfLockedCB, 0 }, 
@@ -3805,7 +3805,7 @@ void update_options()
     set_toggle(set_global_completion_w,  app_data.global_tab_completion);
     set_toggle(set_console_completion_w, !app_data.global_tab_completion);
     set_toggle(group_iconify_w,          app_data.group_iconify);
-    set_toggle(uniconify_when_ready_w,   app_data.uniconify_when_ready);
+    set_toggle(raise_when_ready_w,   app_data.raise_when_ready);
     set_toggle(check_grabs_w,            app_data.check_grabs);
     set_toggle(suppress_warnings_w,      app_data.suppress_warnings);
     set_toggle(warn_if_locked_w,         app_data.warn_if_locked);
@@ -4188,8 +4188,8 @@ static void ResetGeneralPreferencesCB(Widget, XtPointer, XtPointer)
     notify_set_toggle(set_console_completion_w, 
                !initial_app_data.global_tab_completion);
     notify_set_toggle(group_iconify_w, initial_app_data.group_iconify);
-    notify_set_toggle(uniconify_when_ready_w, 
-                      initial_app_data.uniconify_when_ready);
+    notify_set_toggle(raise_when_ready_w,
+                      initial_app_data.raise_when_ready);
     notify_set_toggle(suppress_warnings_w, initial_app_data.suppress_warnings);
     notify_set_toggle(warn_if_locked_w, initial_app_data.warn_if_locked);
     notify_set_toggle(check_grabs_w, 
@@ -4220,7 +4220,7 @@ static bool general_preferences_changed()
     if (app_data.group_iconify != initial_app_data.group_iconify)
         return true;
 
-    if (app_data.uniconify_when_ready != initial_app_data.uniconify_when_ready)
+    if (app_data.raise_when_ready != initial_app_data.raise_when_ready)
         return true;
 
     if (app_data.suppress_warnings != initial_app_data.suppress_warnings)
@@ -5357,11 +5357,15 @@ static void gdb_readyHP(Agent *, void *, void *call_data)
         // We don't exit and we don't restart
         ddd_is_exiting = ddd_is_restarting = false;
 
-        if (app_data.uniconify_when_ready && userInteractionSeen())
+        if (app_data.raise_when_ready && userInteractionSeen())
         {
+            Widget shell = source_view_shell ? source_view_shell : command_shell;
+
             // Uniconify the command shell.  If `iconify all windows
             // at once' is set, this also uniconifies the other windows.
-            uniconify_shell(command_shell);
+            uniconify_shell(shell);
+
+            raise_shell(shell);
         }
     }
 }

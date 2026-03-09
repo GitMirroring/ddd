@@ -45,5 +45,8 @@ void wait_until_mapped(Widget w, Widget shell = 0);
 void raise_shell(Widget w);
 void manage_and_raise(Widget w);
 
+// Ask the WM to activate/raise a window (EWMH _NET_ACTIVE_WINDOW)
+void request_active_window(Widget w, Time timestamp);
+
 #endif // _DDD_wm_h
 // DON'T ADD ANYTHING BEHIND THIS #endif

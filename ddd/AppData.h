@@ -223,8 +223,8 @@
 #define XtCFindCaseSensitive     "FindCaseSensitive"
 #define XtNgroupIconify          "groupIconify"
 #define XtCGroupIconify          "GroupIconify"
-#define XtNuniconifyWhenReady    "uniconifyWhenReady"
-#define XtCUniconifyWhenReady    "UniconifyWhenReady"
+#define XtNraiseWhenReady        "raiseWhenReady"
+#define XtCRaiseWhenReady        "RaiseWhenReady"
 #define XtNtransientDialogs      "transientDialogs"
 #define XtCTransientDialogs      "TransientDialogs"
 #define XtNglobalTabCompletion   "globalTabCompletion"
@@ -481,7 +481,7 @@ struct AppData {
     Boolean   find_words_only;
     Boolean   find_case_sensitive;
     Boolean   group_iconify;
-    Boolean   uniconify_when_ready;
+    Boolean   raise_when_ready;
     Boolean   transient_dialogs;
     Boolean   global_tab_completion;
     Boolean   save_history_on_exit;

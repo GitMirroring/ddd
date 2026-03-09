@@ -548,18 +548,18 @@ void dddToggleGroupIconifyCB (Widget, XtPointer, XtPointer call_data)
     update_options();
 }
 
-void dddToggleUniconifyWhenReadyCB (Widget, XtPointer, XtPointer call_data)
+void dddToggleRaiseWhenReadyCB (Widget, XtPointer, XtPointer call_data)
 {
     XmToggleButtonCallbackStruct *info = 
         (XmToggleButtonCallbackStruct *)call_data;
 
-    app_data.uniconify_when_ready = info->set;
+    app_data.raise_when_ready = info->set;
 
     if (info->set)
-        set_status(DDD_NAME " windows will be uniconified automatically "
+        set_status(DDD_NAME " windows will be raised automatically "
                    "whenever " DDD_NAME " becomes ready.");
     else
-        set_status(DDD_NAME " windows always remain iconified.");
+        set_status(DDD_NAME " windows are not raised.");
 
     update_options();
 }
@@ -2640,7 +2640,7 @@ static bool save_options_init(unsigned long flags)
     os << bool_app_value(XtNscaleGlyphs, app_data.scale_glyphs) << '\n';
     os << bool_app_value(XtNseparateExecWindow, app_data.separate_exec_window) << '\n';
     os << bool_app_value(XtNgroupIconify, app_data.group_iconify) << '\n';
-    os << bool_app_value(XtNuniconifyWhenReady, app_data.uniconify_when_ready) << '\n';
+    os << bool_app_value(XtNraiseWhenReady, app_data.raise_when_ready) << '\n';
 
     // Maintenance
     os << "\n! Maintenance.\n";

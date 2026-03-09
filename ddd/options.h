@@ -91,7 +91,7 @@ extern void graphSetDisplayPlacementCB      (Widget, XtPointer, XtPointer);
 extern void graphSetOverviewModeCB          (Widget, XtPointer, XtPointer);
 
 extern void dddToggleGroupIconifyCB         (Widget, XtPointer, XtPointer);
-extern void dddToggleUniconifyWhenReadyCB   (Widget, XtPointer, XtPointer);
+extern void dddToggleRaiseWhenReadyCB       (Widget, XtPointer, XtPointer);
 extern void dddToggleSeparateExecWindowCB   (Widget, XtPointer, XtPointer);
 extern void dddToggleCheckGrabsCB           (Widget, XtPointer, XtPointer);
 extern void dddToggleSaveHistoryOnExitCB    (Widget, XtPointer, XtPointer);

@@ -1011,11 +1011,11 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNuniconifyWhenReady),
-        XTRESSTR(XtCUniconifyWhenReady),
+        XTRESSTR(XtNraiseWhenReady),
+        XTRESSTR(XtCRaiseWhenReady),
         XtRBoolean,
         sizeof(Boolean),
-        XtOffsetOf(AppData, uniconify_when_ready),
+        XtOffsetOf(AppData, raise_when_ready),
         XtRImmediate,
         XtPointer(True)
     },

@@ -144,18 +144,13 @@ void raise_shell(Widget w)
     Widget shell = findShellParent(w);
     if (shell != 0 && XtIsRealized(shell))
     {
-	XRaiseWindow(XtDisplay(w), XtWindow(shell));
+        Time ts = XtLastTimestampProcessed(XtDisplay(shell));
+        request_active_window(shell, ts);
 
-#if 0
-	wait_until_mapped(w);
+        // Fallback for older pure‑X11 WMs
+        XRaiseWindow(XtDisplay(shell), XtWindow(shell));
 
-	// Get focus
-	XSetInputFocus(XtDisplay(w), XtWindow(w), RevertToParent, 
-		       XtLastTimestampProcessed(XtDisplay(w)));
-#endif
-
-	// Try this one
-	XmProcessTraversal(w, XmTRAVERSE_CURRENT);
+        XmProcessTraversal(w, XmTRAVERSE_CURRENT);
     }
 }
 
@@ -164,23 +159,9 @@ void manage_and_raise(Widget w)
     if (w == 0)
         return;
 
-    // If top-level shell is withdrawn or iconic, realize dialog as icon
-    bool iconic = false;
-    Widget shell = find_shell(w);
-    if (shell != 0)
-    {
-        XWindowAttributes attr;
-        iconic = (!XtIsRealized(shell)
-                    || (XGetWindowAttributes(XtDisplay(shell), XtWindow(shell), &attr)
-                    && attr.map_state != IsViewable));
-
-        if (iconic)
-            XtVaSetValues(w, XmNinitialState, IconicState, XtPointer(0));
-    }
-
     XtManageChild(w);
 
-    shell = w;
+    Widget shell = w;
     while (shell != 0 && !XtIsShell(shell))
         shell = XtParent(shell);
 
@@ -196,3 +177,39 @@ void manage_and_raise(Widget w)
     setColorMode(XtParent(w), app_data.dark_mode, app_data.retro_style);
 }
 
+void request_active_window(Widget w, Time timestamp)
+{
+    if (w == 0 || !XtIsRealized(w))
+        return;
+
+    Widget shell = findShellParent(w);
+    if (shell == 0 || !XtIsRealized(shell))
+        return;
+
+    Display *dpy   = XtDisplay(shell);
+    Window   win   = XtWindow(shell);
+    Window   root  = DefaultRootWindow(dpy);
+    Atom     net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+
+    if (net_active == None)
+        return;  // WM doesn't support EWMH activation
+
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+
+    ev.xclient.type         = ClientMessage;
+    ev.xclient.display      = dpy;
+    ev.xclient.window       = win;
+    ev.xclient.message_type = net_active;
+    ev.xclient.format       = 32;
+
+    // EWMH _NET_ACTIVE_WINDOW:
+    // data.l[0] = source indication (1 = application)
+    // data.l[1] = timestamp
+    ev.xclient.data.l[0] = 1;          // source: application
+    ev.xclient.data.l[1] = timestamp;  // last user interaction time
+
+    XSendEvent(dpy, root, False,
+               SubstructureRedirectMask | SubstructureNotifyMask,
+               &ev);
+}

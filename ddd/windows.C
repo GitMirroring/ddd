@@ -399,6 +399,9 @@ void initial_popup_shell(Widget w)
         return;
 
     Boolean iconic = started_iconified(w);
+    if (w == tool_shell)
+        iconic = False;
+
     XtVaSetValues(w, 
                   XmNiconic, iconic,
                   XmNinitialState, iconic ? IconicState : NormalState,
@@ -673,6 +676,11 @@ void StructureNotifyEH(Widget w, XtPointer, XEvent *event, Boolean *)
                 popup_shell(source_view_shell);
                 set_state(source_view_shell, Transient);
             }
+            if (state(tool_shell) == Iconic)
+            {
+                popup_shell(tool_shell);
+                set_state(tool_shell, Transient);
+            }
             popup_tty(command_shell);
         }
         break;
@@ -685,7 +693,7 @@ void StructureNotifyEH(Widget w, XtPointer, XEvent *event, Boolean *)
         if (state(w) != Iconic && state(w) != PoppedDown)
             set_state(w, Iconic);
 
-        if (!synthetic
+        if (!synthetic && app_data.group_iconify
             && (w == source_view_shell
                 || (source_view_shell == 0 && w == command_shell)))
         {

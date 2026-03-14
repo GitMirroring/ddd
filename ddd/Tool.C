@@ -73,21 +73,6 @@ void create_command_tool()
     Widget tool_shell_parent = 
 	source_view_shell ? source_view_shell : command_shell;
 
-    bool use_transient_tool_shell = true;
-    switch (app_data.decorate_tool)
-    {
-    case On:
-	use_transient_tool_shell = false;
-	break;
-    case Off:
-	use_transient_tool_shell = true;
-	break;
-    case Auto:
-	use_transient_tool_shell = 
-	    have_decorated_transients(tool_shell_parent);
-	break;
-    }
-
     Arg args[10];
     int arg = 0;
 
@@ -98,18 +83,9 @@ void create_command_tool()
     XtSetArg(args[arg], XmNmwmFunctions, 
 	     MWM_FUNC_MOVE | MWM_FUNC_CLOSE); arg++;
 
-    if (use_transient_tool_shell)
-    {
-	tool_shell = verify(XmCreateDialogShell(tool_shell_parent, 
-						XMST("tool_shell"), 
-						args, arg));
-    }
-    else
-    {
-	tool_shell = verify(XtCreateWidget("tool_shell", 
-					   vendorShellWidgetClass,
-					   tool_shell_parent, args, arg));
-    }
+    tool_shell = verify(XmCreateDialogShell(tool_shell_parent,
+                                            XMST("tool_shell"),
+                                            args, arg));
 
     AddDeleteWindowCallback(tool_shell, gdbCloseToolWindowCB);
 
@@ -132,17 +108,13 @@ void create_command_tool()
     size.width = std::max(size.width, Dimension(110));
 
     // Set shell geometry
-    Position pos_x, pos_y;
-    get_transient_pos(XtScreen(tool_shell_parent), pos_x, pos_y);
-
     std::ostringstream os;
-    os << size.width << "x" << size.height;
-    os << "+" << pos_x << "+" << pos_y;
+    os << size.width << "x" << size.height << "+0+0";
     string geometry(os);
 
     XtSetArg(args[arg], XmNgeometry, geometry.chars()); arg++;
-    XtSetArg(args[arg], XmNx, pos_x);                   arg++;
-    XtSetArg(args[arg], XmNy, pos_y);                   arg++;
+    XtSetArg(args[arg], XmNx, 0);                   arg++;
+    XtSetArg(args[arg], XmNy, 0);                   arg++;
 
     // Some FVWM flavors have trouble in finding the `best' window size.
     XtSetArg(args[arg], XmNmaxWidth,  size.width);      arg++;

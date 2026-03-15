@@ -1631,16 +1631,6 @@ XtResource ddd_resources[] = {
     },
 
     {
-        XTRESSTR(XtNdecorateTool),
-        XTRESSTR(XtCDecorate),
-        XTRESSTR(XtROnOff),
-        sizeof(OnOff),
-        XtOffsetOf(AppData, decorate_tool),
-        XmRImmediate,
-        XtPointer(Auto)
-    },
-
-    {
         XTRESSTR(XtNstickyTool),
         XTRESSTR(XtCStickyTool),
         XmRBoolean,

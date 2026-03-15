@@ -334,8 +334,6 @@
 #define XtCVerifyButtons         "VerifyButtons"
 #define XtNautoRaiseTool         "autoRaiseTool"
 #define XtCAutoRaiseTool         "AutoRaiseTool"
-#define XtNdecorateTool          "decorateTool"
-#define XtCDecorate              "Decorate"
 #define XtNstickyTool            "stickyTool"
 #define XtCStickyTool            "StickyTool"
 #define XtNtoolRightOffset       "toolRightOffset"
@@ -543,7 +541,6 @@ struct AppData {
     Boolean   sort_popdown_history;
     Boolean   verify_buttons;
     Boolean   auto_raise_tool;
-    OnOff     decorate_tool;
     Boolean   sticky_tool;
     Position  tool_right_offset;
     Position  tool_top_offset;

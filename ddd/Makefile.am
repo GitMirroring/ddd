@@ -372,8 +372,6 @@ DDD_SRC = \
 	darkmode.h \
 	dbx-lookup.C \
 	dbx-lookup.h \
-	decoration.C \
-	decoration.h \
 	deref.C      \
 	deref.h      \
 	disp-read.C  \

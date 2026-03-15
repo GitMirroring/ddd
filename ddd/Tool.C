@@ -43,7 +43,6 @@ char Tool_rcsid[] =
 #include "x11/DestroyCB.h"
 #include "base/casts.h"
 #include "buttons.h"
-#include "decoration.h"
 #include "base/strclass.h"
 #include "x11/verify.h"
 #include "windows.h"

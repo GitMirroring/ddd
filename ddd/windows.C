@@ -1122,6 +1122,12 @@ void gdbOpenToolWindowCB(Widget, XtPointer, XtPointer)
     if (tool_shell == 0 || !XtIsRealized(tool_shell))
         return;
 
+    if (state(tool_shell) == PoppedUp) // already visible?
+    {
+        popup_shell(tool_shell);
+        return;
+    }
+
     XtVaSetValues(tool_shell,
                   XmNgeometry, last_tool_shell_geometry.chars(),
                   XtPointer(0));
@@ -1307,7 +1313,7 @@ static void recenter_tool_shell(Widget ref, int top_offset, int right_offset)
 
     recentering_tool_shell_timer = 
         XtAppAddTimeOut(XtWidgetToApplicationContext(tool_shell), 
-                        500, RecenteredToolShellCB, XtPointer(0));
+                        200, RecenteredToolShellCB, XtPointer(0));
 }
 
 
@@ -1461,7 +1467,7 @@ static void paned_changed(Widget /* paned */)
     if (gdb_w != 0)
     {
         // Recenter the tool shell
-        RecenterToolShellCB();
+        FollowToolShellCB();
 
         // Make sure the current command line is visible
         end_of_lineAct(gdb_w, 0, 0, 0);

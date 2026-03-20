@@ -119,17 +119,41 @@ const static std::map<string, string> gdb2gnuplot = {
     {string("double"), string("double")}
 };
 
-
 string PlotAgent::getGnuplotType(string gdbtype)
 {
+    // Exact matches first
     auto search = gdb2gnuplot.find(gdbtype);
-    if (search == gdb2gnuplot.end())
+    if (search != gdb2gnuplot.end())
+        return search->second;
+
+    // Heuristic fallback for typedefs, references, STL aliases, etc.
+    bool is_float    = gdbtype.contains("float") || gdbtype.contains("double");
+    bool is_unsigned = gdbtype.contains("unsigned");
+
+    if (is_float)
     {
-//         printf("unknown type \"%s\"\n", gdbtype.chars());
-        return "";
+        if (gdbtype.contains("double"))
+            return "double";
+        else
+            return "float";
     }
 
-    return search->second;
+    if (gdbtype.contains("char"))
+        return is_unsigned ? "uchar" : "char";
+
+    if (gdbtype.contains("short"))
+        return is_unsigned ? "ushort" : "short";
+
+    if (gdbtype.contains("long long"))
+        return is_unsigned ? "uint" : "int";   // good enough for gnuplot
+
+    if (gdbtype.contains("long"))
+        return is_unsigned ? "ulong" : "long";
+
+    if (gdbtype.contains("int"))
+        return is_unsigned ? "uint" : "int";
+
+    return "";
 }
 
 // Flush it all
@@ -182,10 +206,9 @@ int PlotAgent::flush()
         else
             cmd += quote(elem.file) + " "; // Plot a file
 
-
         if (elements[i].binary)
         {
-            cmd += "binary format='%" + getGnuplotType(elem.gdbtype) + "' ";
+            cmd += "binary format='%" + gnuplottype + "' ";
 
             if (!elem.xdim.empty())
             {

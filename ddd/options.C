@@ -2568,24 +2568,33 @@ static bool save_options_init(unsigned long flags)
         case DEBUGGER_INVALID: break;
         }
 
-        os << string_app_value(XtNbashDisplayShortcuts,
-                               bash_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNdbgDisplayShortcuts,
-                                dbg_display_shortcuts.chars(), True)  << '\n';
-        os << string_app_value(XtNdbxDisplayShortcuts,
-                               dbx_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNgdbDisplayShortcuts, 
-                               gdb_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNmakeDisplayShortcuts,
-                               make_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNjdbDisplayShortcuts,
-                               jdb_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNperlDisplayShortcuts,
-                               perl_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNpydbDisplayShortcuts,
-                               pydb_display_shortcuts.chars(), True) << '\n';
-        os << string_app_value(XtNxdbDisplayShortcuts,
-                               xdb_display_shortcuts.chars(), True) << '\n';
+        if (!bash_display_shortcuts.empty())
+            os << string_app_value(XtNbashDisplayShortcuts,
+                                   bash_display_shortcuts.chars(), True) << '\n';
+        if (!dbg_display_shortcuts.empty())
+            os << string_app_value(XtNdbgDisplayShortcuts,
+                                   dbg_display_shortcuts.chars(), True)  << '\n';
+        if (!dbx_display_shortcuts.empty())
+            os << string_app_value(XtNdbxDisplayShortcuts,
+                                   dbx_display_shortcuts.chars(), True) << '\n';
+        if (!gdb_display_shortcuts.empty())
+            os << string_app_value(XtNgdbDisplayShortcuts,
+                                   gdb_display_shortcuts.chars(), True) << '\n';
+        if (!make_display_shortcuts.empty())
+            os << string_app_value(XtNmakeDisplayShortcuts,
+                                   make_display_shortcuts.chars(), True) << '\n';
+        if (!jdb_display_shortcuts.empty())
+            os << string_app_value(XtNjdbDisplayShortcuts,
+                                   jdb_display_shortcuts.chars(), True) << '\n';
+        if (!perl_display_shortcuts.empty())
+            os << string_app_value(XtNperlDisplayShortcuts,
+                                   perl_display_shortcuts.chars(), True) << '\n';
+        if (!pydb_display_shortcuts.empty())
+            os << string_app_value(XtNpydbDisplayShortcuts,
+                                   pydb_display_shortcuts.chars(), True) << '\n';
+        if (!xdb_display_shortcuts.empty())
+            os << string_app_value(XtNxdbDisplayShortcuts,
+                                   xdb_display_shortcuts.chars(), True) << '\n';
     }
 
     // Fonts

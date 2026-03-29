@@ -2253,6 +2253,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButton.highlightThickness: 1");
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.shadowThickness: 1");
         XrmPutLineResource(&db2, "Ddd*XmSelectionBox*XmPushButtonGadget.highlightThickness: 1");
+        XrmPutLineResource(&db2, "Ddd*detailShadowThickness: 1");
         XrmPutLineResource(&db2, "Ddd*XmSeparatorGadget*shadowThickness: 0"); // disable separator between widgets
     }
 

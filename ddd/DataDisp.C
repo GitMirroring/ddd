@@ -1844,7 +1844,7 @@ void DataDisp::dependentCB(Widget w, XtPointer client_data,
     static Widget dependent_display_dialog = 
 	create_display_dialog(w, "dependent_display_dialog", info);
 
-    XmToggleButtonSetState(info.shortcut, True, False);
+    XmToggleButtonSetState(info.shortcut, False, False);
 
     info.display_expression = disp_value_arg->full_name();
     XmTextSetString(info.text, XMST(info.display_expression.chars()));

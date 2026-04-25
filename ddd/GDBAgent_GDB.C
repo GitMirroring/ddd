@@ -310,17 +310,24 @@ void GDBAgent_GDB::restore_breakpoint_command (std::ostream& os,
     {
     case BREAKPOINT:
     {
+        bool has_cond = !cond.empty() && has_condition_command();
         switch (bp->dispo())
         {
         case BPKEEP:
-	case BPDIS:
-	    os << "break " << pos << "\n";
-	    break;
+        case BPDIS:
+            os << "break " << pos;
+            if (has_cond)
+                os << " if " << cond;
+            os << "\n";
+            break;
 
-	case BPDEL:
-	    os << "tbreak " << pos << "\n";
-	    break;
-	}
+        case BPDEL:
+            os << "tbreak " << pos;
+            if (has_cond)
+                os << " if " << cond;
+            os << "\n";
+            break;
+        }
         break;
     }
 
@@ -346,8 +353,6 @@ void GDBAgent_GDB::restore_breakpoint_command (std::ostream& os,
 	int ignore = bp->ignore_count();
 	if (ignore > 0 && has_ignore_command())
 	    os << ignore_command(num, ignore) << "\n";
-	if (!cond.empty() && has_condition_command())
-	    os << condition_command(num, cond.chars()) << "\n";
 	if (bp->commands().size() != 0)
 	{
 	    os << "commands " << num << "\n";
@@ -364,7 +369,6 @@ void GDBAgent_GDB::restore_breakpoint_command (std::ostream& os,
 // is the origin.
 void GDBAgent_GDB::set_bp(const string& a, bool set, bool temp, const char *cond)
 {
-    int new_bps = max_breakpoint_number_seen + 1;
     string address = a;
 
     if (address.contains('0', 0) && !address.contains(":"))
@@ -374,18 +378,13 @@ void GDBAgent_GDB::set_bp(const string& a, bool set, bool temp, const char *cond
     {
         // Clear bp
         gdb_command(clear_command(address));
-    }
-    else
-    {
-        if (temp)
-            gdb_command("tbreak " + address);
-        else
-            gdb_command("break " + address);
+        return;
     }
 
-    if (strlen(cond) != 0 && gdb->has_condition_command())
-    {
-        // Add condition
-        gdb_command(gdb->condition_command(itostring(new_bps), cond));
-    }
+    bool has_cond = cond && cond[0] && gdb->has_condition_command();
+
+    if (temp)
+        gdb_command(string("tbreak ") + address + (has_cond ? " if " + string(cond) : ""));
+    else
+        gdb_command(string("break ")  + address + (has_cond ? " if " + string(cond) : ""));
 }

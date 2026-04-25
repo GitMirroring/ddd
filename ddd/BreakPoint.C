@@ -1459,6 +1459,7 @@ void set_condition(const std::vector<int>& nrs, const string& cond,
                                int make_false)
 {
     CommandGroup cg;
+    bool any_changed = false;
 
     for (int i = 0; i < int(nrs.size()); i++)
     {
@@ -1482,8 +1483,13 @@ void set_condition(const std::vector<int>& nrs, const string& cond,
         {
             // Use the `cond' command to assign a condition
             gdb_command(gdb->condition_command(itostring(bp_nr), c));
+            bp->set_real_condition(c);
+            any_changed = true;
         }
     }
+
+    if (any_changed && source_view != 0)
+        SourceView::update_glyphs();
 }
 
 void enable(const std::vector<int>& nrs)

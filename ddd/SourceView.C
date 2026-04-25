@@ -4498,11 +4498,26 @@ void SourceView::SetBreakpointIgnoreCountNowCB(XtPointer client_data,
     int count = atoi(_count);
     XtFree(_count);
 
+    bool any_changed = false;
+
     for (int i = 0; i < int(info->nrs.size()); i++)
     {
-        gdb_command(gdb->ignore_command(itostring(info->nrs[i]), count));
+        int bp_nr = info->nrs[i];
+
+        gdb_command(gdb->ignore_command(itostring(bp_nr), count));
         info->ignore_spin_update++;
+
+        // Keep DDD’s model in sync so get_state() sees the new value
+        BreakPoint *bp = BP::get(bp_nr);
+        if (bp != 0)
+        {
+            bp->set_ignore_count(count);
+            any_changed = true;
+        }
     }
+
+    if (any_changed && source_view != 0)
+        SourceView::update_glyphs();
 }
 
 

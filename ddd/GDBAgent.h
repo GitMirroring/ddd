@@ -148,7 +148,7 @@ struct ReplyRequiredInfo {
 class GDBAgent: public TTYAgent {
 public:
     DECLARE_TYPE_INFO
-    int max_breakpoint_number_seen;     // TODO: Move to protected
+    int max_breakpoint_number_seen = 0;     // TODO: Move to protected
 
 protected:
     enum State {

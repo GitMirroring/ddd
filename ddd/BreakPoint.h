@@ -248,6 +248,9 @@ public:
 
     // Check if BP matches current source
     bool is_match(int line = 0);
+
+    void set_real_condition(const string& c) {mycondition = c;}
+    void set_ignore_count(int c)            { myignore_count = c; }
 };
 
 namespace BP

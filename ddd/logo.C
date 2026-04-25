@@ -990,7 +990,7 @@ static XImage *image_to_mask(Widget w, Visual *visual, const IconImage &img)
         for (int x = 0; x < img.xdim; ++x)
         {
             uint8_t g = img.at(x, y); // 0=black .. 255=white
-            if (g<128)
+            if (g<128+64)
             {
                 firstpixel = std::min(firstpixel, x);
                 lastpixel = std::max(lastpixel, x);

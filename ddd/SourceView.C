@@ -2071,6 +2071,8 @@ void SourceView::create_shells()
             if ((item->type & MMTypeMask) == MMPush)
                 item->type = (MMFlatPush | (item->type & ~MMTypeMask));
         }
+
+        modernize_scrollbar(breakpoint_list_w);
     }
 
     Widget buttons = verify(MMcreateWorkArea(edit_breakpoints_dialog_w, 
@@ -2141,9 +2143,6 @@ void SourceView::create_shells()
     up_w   = XmSelectionBoxGetChild(stack_dialog_w, XmDIALOG_OK_BUTTON);
     down_w = XmSelectionBoxGetChild(stack_dialog_w, XmDIALOG_APPLY_BUTTON);
 
-    if (!app_data.retro_style)
-        modernize_scrollbar(stack_dialog_w);
-
     set_sensitive(up_w,   False);
     set_sensitive(down_w, False);
     refresh_buttons();
@@ -2173,6 +2172,9 @@ void SourceView::create_shells()
                   XmNcancelCallback, StackDialogPoppedDownCB, 0);
     XtAddCallback(stack_dialog_w,
                   XmNhelpCallback, ImmediateHelpCB, 0);
+
+    if (!app_data.retro_style)
+        modernize_scrollbar(frame_list_w);
 
     Widget cancel_w = XmSelectionBoxGetChild(stack_dialog_w, 
                                              XmDIALOG_CANCEL_BUTTON);
@@ -2265,9 +2267,6 @@ void SourceView::create_shells()
                                                XmDIALOG_APPLY_BUTTON));
     }
 
-    if (!app_data.retro_style)
-        modernize_scrollbar(thread_dialog_w);
-
     arg = 0;
     thread_list_w = XmSelectionBoxGetChild(thread_dialog_w, XmDIALOG_LIST);
     XtVaSetValues(thread_list_w,
@@ -2293,6 +2292,9 @@ void SourceView::create_shells()
                   XmNapplyCallback,  ThreadCommandCB, XtPointer("resume"));
     XtAddCallback(thread_dialog_w,
                   XmNhelpCallback, ImmediateHelpCB, 0);
+
+    if (!app_data.retro_style)
+        modernize_scrollbar(thread_list_w);
 
     // Create remaining glyphs in the background
     XtAppAddWorkProc (app_context, CreateGlyphsWorkProc, XtPointer(0));

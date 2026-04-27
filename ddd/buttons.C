@@ -67,6 +67,7 @@ char buttons_rcsid[] =
 #include "wm.h"
 #include "base/strclass.h"
 #include "darkmode.h"
+#include "scrollbar.h"
 
 #include <Xm/Xm.h>
 #include <Xm/Label.h>
@@ -1459,6 +1460,10 @@ static void create_buttons_dialog(Widget parent)
     arg = 0;
     XtSetArg(args[arg], XmNeditMode, XmMULTI_LINE_EDIT); arg++;
     Widget text = verify(XmCreateScrolledText(box, XMST("text"), args, arg));
+
+    if (!app_data.retro_style)
+        modernize_scrollbar(text);
+ 
     XtManageChild(text);
 
     arg = 0;
@@ -1478,6 +1483,13 @@ static void create_buttons_dialog(Widget parent)
     Widget data_w = 
 	add_button("data", buttons_dialog, button_box, text, vfy,
 		   app_data.data_buttons);
+
+    if (!app_data.retro_style)
+    {
+        XtVaSetValues(console_w,     XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        XtVaSetValues(source_w,  XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+        XtVaSetValues(data_w, XmNshadowThickness, 1, XmNhighlightThickness, 1, NULL);
+    }
 
     const _XtString *str = 0;
     switch (gdb->type())

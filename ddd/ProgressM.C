@@ -145,6 +145,7 @@ bool ProgressMeter::process(int remaining_length)
     if (abs(processed - last_shown) >= UPDATE_THRESHOLD && remaining_length>40)
     {
 	// Another bunch of characters processed.  Wow!
+        total = std::max(total, 1);
 	int percent = (processed * 100) / total;
 
 	if (XtIsManaged(dialog))

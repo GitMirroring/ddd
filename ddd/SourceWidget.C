@@ -85,7 +85,7 @@ typedef struct {
     // Internal
     CtvCtx *ctx;
     XtCallbackList gain_primary_callback;
-    XtCallbackList vieport_changed_callback;
+    XtCallbackList viewport_changed_callback;
 } CtvTextPart;
 
 typedef struct _CtvTextRec {
@@ -115,7 +115,7 @@ static XtResource sv_resources[] = {
       XtOffsetOf(CtvTextRec, ctvtext.gain_primary_callback), XmRCallback, (XtPointer)NULL },
 
     { XmhNviewportChangedCallback, (char*)"ViewportChangedCallback", XmRCallback, sizeof(XtCallbackList),
-      XtOffsetOf(CtvTextRec, ctvtext.vieport_changed_callback), XmRCallback, (XtPointer)NULL },
+      XtOffsetOf(CtvTextRec, ctvtext.viewport_changed_callback), XmRCallback, (XtPointer)NULL },
 };
 
 static XtActionsRec ctv_actions[] = {
@@ -340,6 +340,8 @@ static void free_palette(Display *dpy, CtvCtx *ctx);
 static void set_hscroll(CtvCtx *ctx, int x);
 static void free_text(CtvCtx *ctx);
 static Utf8Pos line_end_no_nl(CtvCtx *ctx, int li);
+static void update_metrics_from_font(CtvCtx *ctx);
+
 
 typedef enum {
     CTV_COORD_ABSOLUTE,   // relative to (0,0) of the widget
@@ -596,9 +598,7 @@ static void ensure_font(CtvCtx *ctx)
     if (ctx->font)
     {
         // Update metrics
-        ctx->ascent = ctx->font->ascent;
-        ctx->descent = ctx->font->descent;
-        ctx->line_height = ctx->ascent + ctx->descent;
+        update_metrics_from_font(ctx);
 
         // Record resolved family so styled faces use the exact same family
         FcChar8 *fam = NULL;
@@ -1366,8 +1366,8 @@ static void draw_expose(CtvCtx *ctx, XExposeEvent *ex)
     if (viewportChanged)
     {
         CtvTextRec *tw = (CtvTextRec*)ctx->textWidget;
-        if (tw && tw->ctvtext.vieport_changed_callback)
-            XtCallCallbackList(ctx->textWidget, tw->ctvtext.vieport_changed_callback, nullptr);
+        if (tw && tw->ctvtext.viewport_changed_callback)
+            XtCallCallbackList(ctx->textWidget, tw->ctvtext.viewport_changed_callback, nullptr);
 
         ctx->prev_h = curH;
         ctx->prev_v = topLine;
@@ -2835,7 +2835,10 @@ static void update_metrics_from_font(CtvCtx *ctx)
 
     Display *dpy = XtDisplayOfObject(ctx->textWidget);
     if (!dpy || !ctx->font)
+    {
         ctx->cellwidth =  8; // fallback
+        return;
+    }
 
     // Use a representative glyph. For monospaced, any ASCII is fine.
     const FcChar8 M = (FcChar8)'M';

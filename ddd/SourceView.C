@@ -66,7 +66,7 @@ char SourceView_rcsid[] =
 // or brand of soft drink.
 
 #ifndef LOG_GLYPHS
-#define LOG_GlYPHS 0
+#define LOG_GLYPHS 0
 #endif
 
 //-----------------------------------------------------------------------------
@@ -749,19 +749,6 @@ void SourceView::bp_popup_disableCB (Widget,
     }
 }
 
-// Convert NRS to a list of numbers
-string SourceView::numbers(const std::vector<int>& nrs)
-{
-    string cmd = ""; 
-    for (int i = 0; i < int(nrs.size()); i++)
-    {
-        if (i > 0)
-            cmd += " ";
-        cmd += itostring(nrs[i]);
-    }
-    return cmd;
-}
-
 // ***************************************************************************
 //
 void SourceView::bp_popup_set_pcCB(Widget w, XtPointer client_data, 
@@ -893,70 +880,7 @@ void SourceView::text_popup_lookupCB (Widget, XtPointer client_data, XtPointer)
 // Return the normalized full path of FILE
 string SourceView::full_path(string file)
 {
-    /* Chris van Engelen <engelen@lucent.com>, Jul 10, 1997
-     *
-     * The regular expression is used to remove parts from the full path
-     * which look like "/aap/../". However, it should ***NOT*** remove
-     * the sequence "/../../" from the path, obviously ! On the other
-     * hand, sequences like "/.tmpdir.test/../" should be removed.
-     * Therefore, the regular expression reads now like:
-     *
-     * - forward slash
-     * - zero or more  characters other than forward slash (dot is allowed)
-     * - any character other than forward slash or dot: this makes sure that
-     *   a sequence like "/../../" is not modified.
-     * - forward slash, two dots, and the final forward slash.
-     *
-     * The only valid patterns which are not normalized are patterns ending
-     * in a dot: too bad, you can't win them all.
-     */
-
-#if RUNTIME_REGEX
-    static regex rxdotdot("/[^/]*[^/.]/\\.\\./");
-#endif
-
-    file += '/';
-
-    if (!file.contains('/', 0))
-        file = current_pwd + "/" + file;
-
-    /* CvE, Jul 10, 1997
-     *
-     * Repeatedly remove patterns like /dir1/../ from the file name.
-     * Note that a number of /../ patterns may follow each other, like
-     * in "/dir1/dir1/dir3/../../../"
-     */
-    unsigned int file_length = file.length();
-    unsigned int prev_file_length;
-    do {
-        prev_file_length = file_length;
-        file.gsub(rxdotdot, "/");
-        file_length = file.length();
-    } while (file_length != prev_file_length);
-
-    /* CvE, Jul 10, 1997
-     *
-     * Repeatedly remove pattern /./ from the file name.
-     * Note that a number of /./ patterns may follow each other.
-     * Note that if the first parameter of gsub is a C-string,
-     * the pattern is not regarded to be a regular expression,
-     * so the dot in the pattern does not need to be escaped!
-     */
-    file_length = file.length();
-    do {
-        prev_file_length = file_length;
-        file.gsub("/./", "/");
-        file_length = file.length();
-    } while (file_length != prev_file_length);
-
-    // Don't do this - it breaks file access on Cygwin, where
-    // `//c/foo/bar' is translated to `c:\foo\bar'.
-    // file.gsub("//", "/");
-
-    if (file.contains('/', -1))
-        file = file.before(int(file.length() - 1));
-
-    return file;
+    return sourcecode.full_path(file);
 }
 
 //TODO:  file_matches() and base_matches() should not be member functions.
@@ -2314,13 +2238,6 @@ void SourceView::create_text(Widget parent, const char *base,
     XtSetArg(args[arg], XmNpaneMaximum, 5000);              arg++;
     const string form_name = string(base) + "_form_w";
     form = verify(XmCreateForm(parent, XMST(form_name.chars()), args, arg));
-
-    arg = 0;
-    XtSetArg(args[arg], XmNselectionArrayCount, 1);               arg++;
-    XtSetArg(args[arg], XmNallowResize,       True);              arg++;
-    XtSetArg(args[arg], XmNeditMode,          XmMULTI_LINE_EDIT); arg++;
-    XtSetArg(args[arg], XmNcursorPositionVisible, True);          arg++;
-    XtSetArg(args[arg], XmNautoShowCursorPosition, True);     arg++;
 
     const string text_name = string(base) + "_text_w";
 
@@ -4530,7 +4447,7 @@ void SourceView::MakeBreakpointsTempCB(Widget, XtPointer client_data,
     BreakpointPropertiesInfo *info = 
         (BreakpointPropertiesInfo *)client_data;
 
-    gdb_command("enable delete " + numbers(info->nrs));
+    gdb_command("enable delete " + BP::numbers(info->nrs));
 }
 
 

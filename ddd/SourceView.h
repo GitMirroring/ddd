@@ -639,8 +639,6 @@ public:
         edit_bps(nrs);
     }
 
-    static string numbers(const std::vector<int>& nrs);
-            
     // Move PC to ADDRESS; return true if changed.
     static bool move_pc(const string& address);
 

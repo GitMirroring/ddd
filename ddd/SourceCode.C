@@ -100,18 +100,18 @@ bool utf8toUnicode(wchar_t &unicode, const char *text, Utf8Pos &pos, const int l
     if ((utext[pos] & 0xf0) == 0xe0 && (utext[pos+1] & 0xc0) == 0x80 && (utext[pos+2] & 0xc0) == 0x80)
     {
         // U+0800-U+FFFF
-        unicode = ((utext[pos] & 0x1f) << 12) | ((utext[pos+1] & 0x3f) << 6) | (utext[pos+2] & 0x3f);
+        unicode = ((utext[pos] & 0x0f) << 12) | ((utext[pos+1] & 0x3f) << 6) | (utext[pos+2] & 0x3f);
         pos += 3;
         return true;
     }
 
-    if (pos+2>=length || utext[pos+2] == 0)
+    if (pos+3>=length || utext[pos+3] == 0)
         return false;
 
     if ((utext[pos] & 0xf8) == 0xf0 && (utext[pos+1] & 0xc0) == 0x80 && (utext[pos+2] & 0xc0) == 0x80 && (utext[pos+3] & 0xc0) == 0x80)
     {
         // U+10000-U+10FFFF
-        unicode = ((utext[pos] & 0x1f) << 18) | ((utext[pos+1] & 0x3f) << 12) | ((utext[pos+2] & 0x3f) << 6) | (utext[pos+3] & 0x3f);
+        unicode = ((utext[pos] & 0x07) << 18) | ((utext[pos+1] & 0x3f) << 12) | ((utext[pos+2] & 0x3f) << 6) | (utext[pos+3] & 0x3f);
         pos += 4;
         return true;
     }
@@ -787,7 +787,7 @@ Utf8Pos SourceCode::getStartOfLineAtBytepos(Utf8Pos pos)
 
 /*! Determine if character at \c pos is the last character of the line
  * \param[in] pos character position
- * \return returns true for the last character
+ * \return returns the byte position of the last character in the line containing pos.
  */
 Utf8Pos SourceCode::getEndoflineAtBytepos(Utf8Pos pos)
 {

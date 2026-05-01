@@ -685,7 +685,7 @@ CXXFLAGS = $(CXXOPT) $(CXXDEBUG) $(CXXWARNINGS) $(CXXSTUFF)
 
 bin_PROGRAMS = ddd
 
-noinst_PROGRAMS = stringify ctest cxxtest vsl
+noinst_PROGRAMS = stringify ctest cxxtest vsl grabtest
 ddd_SOURCES = ddd.C \
 	$(BASE_SRC) \
 	$(TEMPLATE_SRC) \
@@ -701,6 +701,7 @@ stringify_SOURCES = stringify.C
 STRINGIFY = ./stringify$(EXEEXT)
 ctest_SOURCES     = ctest.c
 cxxtest_SOURCES   = cxxtest.C
+grabtest_SOURCES = grabtest.C
 vsl_SOURCES       = vsl.C \
 	DocSpace.c \
 	DocSpace.h \
@@ -721,6 +722,7 @@ vsl_CFLAGS = @CFLAGS@
 vsl_CFLAGS += @MINIMAL_TOC@
 
 cxxtest_LDADD = $(LIBM)
+grabtest_LDADD = $(ALL_X_LIBS) $(ALL_LIBS)
 ddd_LDADD = $(RPATH) $(ALL_X_LIBS) $(ALL_LIBS)
 vsl_LDADD = $(RPATH) $(ALL_X_LIBS) $(ALL_LIBS)
 X_INCLUDE = @X_CFLAGS@

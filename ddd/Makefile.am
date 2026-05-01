@@ -919,13 +919,6 @@ grabtest.$(OBJEXT): $(srcdir)/grabtest.C
 	   $(CXXCOMPILE) -c @CXXDEBUG@ $(srcdir)/grabtest.C -o $@;; \
 	esac
 
-bug.$(OBJEXT):	$(srcdir)/bug.C
-	@case '$(CXXFLAGS)' in \
-	*-O*) $(MAKE) $(MAKE_DEBUG_FLAGS) $@;; \
-	*) set -x; \
-	   $(CXXCOMPILE) -c @CXXDEBUG@ $(srcdir)/bug.C -o $@;; \
-	esac
-
 
 
 # -----------------------------------------------------------------------------

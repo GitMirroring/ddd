@@ -1809,6 +1809,13 @@ void gdbReloadExecCB(Widget, XtPointer, XtPointer)
 
     gdb_command(cmd);
 
+    if (source_view != 0)
+    {
+	source_view->clear_code_cache();
+	source_view->clear_file_cache();
+	source_view->reload();
+    }
+
     set_status("Reloaded executable " + quote(prog));
 }
 

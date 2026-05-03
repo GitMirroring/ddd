@@ -752,10 +752,9 @@ void graphEditRedrawNode(Widget w, GraphNode *node)
     XtCheckSubclass(w, GraphEditWidgetClass, "Bad widget class");
 
     if (!node->hidden())
-    {
-	node->redraw() = True;
-	StartRedraw(w);
-    }
+        node->redraw() = True;
+
+    StartRedraw(w);
 }
 
 // Disable redrawing for a while; return old state
@@ -3861,12 +3860,12 @@ static void graphEditRedrawOverview(Widget w)
     for (GraphNode *node = graph->firstVisibleNode();  node != 0;
          node = graph->nextVisibleNode(node))
     {
-        BoxRegion r = node->region(graphGC);
+        const BoxRegion& node_region = node->region(graphGC);
 
-        int nx = r.origin(X);
-        int ny = r.origin(Y);
-        int nw = r.space(X);
-        int nh = r.space(Y);
+        int nx = node_region.origin(X);
+        int ny = node_region.origin(Y);
+        int nw = node_region.space(X);
+        int nh = node_region.space(Y);
 
         int x = int(nx * s);
         int y = int(ny * s);
@@ -3874,9 +3873,27 @@ static void graphEditRedrawOverview(Widget w)
         int h_rect = std::max(1, int(nh * s));
 
         if (node->selected())
-            XFillRectangle(dpy, overview_win, overview_gc, x, y, w_rect, h_rect);
-        else
-            XDrawRectangle(dpy, overview_win, overview_gc, x, y, w_rect, h_rect);
+        {
+            const BoxRegion& highlight_region = node->highlightRegion(graphGC);
+            const BoxRegion& fill_region =
+                (!highlight_region.isEmpty() && highlight_region != node_region)
+                ? highlight_region
+                : node_region;
+
+            int hx = fill_region.origin(X);
+            int hy = fill_region.origin(Y);
+            int hw = fill_region.space(X);
+            int hh = fill_region.space(Y);
+
+            int fx = int(hx * s);
+            int fy = int(hy * s);
+            int fw = std::max(1, int(hw * s));
+            int fh = std::max(1, int(hh * s));
+
+            XFillRectangle(dpy, overview_win, overview_gc, fx, fy, fw, fh);
+        }
+
+        XDrawRectangle(dpy, overview_win, overview_gc, x, y, w_rect, h_rect);
     }
 
 }

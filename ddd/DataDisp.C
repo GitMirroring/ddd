@@ -115,6 +115,7 @@ char DataDisp_rcsid[] =
 #include "vsldoc.h"
 #include "windows.h"
 #include "wm.h"
+#include "scrollbar.h"
 
 // Motif includes
 #include <Xm/List.h>
@@ -7003,6 +7004,8 @@ void DataDisp::create_shells()
 	    if ((item->type & MMTypeMask) == MMPush)
 		item->type = (MMFlatPush | (item->type & ~MMTypeMask));
 	}
+
+	modernize_scrollbar(display_list_w);
     }
 
     Widget buttons = verify(MMcreateWorkArea(edit_displays_dialog_w, 

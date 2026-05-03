@@ -1068,9 +1068,9 @@ static const SheetEntry icon_sheet[] = {
 static const SheetEntry glyph_sheet[] = {
     { 3, 0, "plain_arrow" },
     { 3, 0, "grey_arrow" },
+    { 3, 1, "drag_arrow" },
     { 4, 1, "past_arrow" },
     { 4, 0, "signal_arrow" },
-    { 3, 1, "drag_arrow" },
     { 0, 0, "plain_stop" },
     { 1, 0, "plain_cond" },
     { 2, 0, "plain_temp" },
@@ -1320,6 +1320,7 @@ void install_glyphs(Widget shell)
     Display *display = XtDisplay(toplevel);
     XrmDatabase db = XtDatabase(display);
 
+    IconImage dragArrowMask;
     // Glyph icons from modern glyph sprite sheet
     for (size_t i = 0; i < glyph_sheet_count; ++i)
     {
@@ -1340,6 +1341,10 @@ void install_glyphs(Widget shell)
 
         IconImage dst(dst_size, dst_size, src.cdim);
         ScaleImage(&src, &dst);
+
+        // store drag_arrow as mask for past_arrow
+        if (strcmp(entry.name, "drag_arrow") == 0)
+            dragArrowMask = dst;
 
         string resource = string(entry.name) + ".foreground";
 
@@ -1380,6 +1385,9 @@ void install_glyphs(Widget shell)
         if (img)
             XmInstallImage(img, XMST(entry.name));
 
+        // use drag_arrow as mask for past_arrow
+        if (strcmp(entry.name, "past_arrow") ==0)
+            dst = dragArrowMask;
         XImage *mask = image_to_mask(shell, win_attr.visual, dst);
         logoCleanup.push_back(mask);
         if (mask)

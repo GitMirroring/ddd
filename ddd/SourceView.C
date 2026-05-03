@@ -7140,22 +7140,21 @@ void SourceView::process_disassemble(const string& disassemble_output)
     for (int i = 0; i < count; i++)
     {
         string& line = code_list[i];
+        if (line.contains("=> ", 0))
+            line.at(0, 3) = "   ";
         untabify(line);
         code += line + '\n';
     }
     delete[] code_list;
     code_list = 0;
 
-    set_code(code,
-             first_address(disassemble_output),
-             last_address(disassemble_output));
+    const string start = first_address(code);
+    const string end   = last_address(code);
 
-    if (cache_machine_code
-        && !current_code_start.empty()
-        && !current_code_end.empty())
-        code_cache.push_back(CodeCacheEntry(current_code_start, 
-                                     current_code_end, 
-                                     current_code));
+    set_code(code, start, end);
+
+    if (cache_machine_code && !start.empty() && !end.empty())
+        code_cache.push_back(CodeCacheEntry(start, end, code));
 }
 
 // Search PC in the current code; return beginning of line if found

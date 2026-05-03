@@ -124,7 +124,7 @@ bool utf8toUnicode(wchar_t &unicode, const char *text, Utf8Pos &pos, const int l
  * \param[in] line line number in the range 1..number of lines
  * \return returns the amount of indention
  */
-int SourceCode::calculate_indent(Utf8Pos line)
+int SourceCode::calculate_indent(int line)
 {
     line --; // convert from extenal 1.. to internal 0..
     if (line < 0 || line >= int(bytepos_of_line.size()))

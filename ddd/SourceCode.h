@@ -130,9 +130,8 @@ public:
 
     bool set_tab_width(int width);
 
-    // Return current breakpoint indent amount.  If POS is given, add
-    // the whitespace from POS.
-    int calculate_indent(Utf8Pos pos = -1);
+    // Return current breakpoint indent amount.
+    int calculate_indent(int line = -1);
 
     // True iff we have some source text
     bool have_source() { return current_source.length() != 0; }

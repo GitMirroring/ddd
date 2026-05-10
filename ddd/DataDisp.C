@@ -290,7 +290,7 @@ MMDesc DataDisp::theme_menu[] =
         { DataDisp::toggleThemeCB, XtPointer(16) }, 0, 0, 0, 0 },  
     {"t17", MMMenuToggle | MMUnmanaged,
         { DataDisp::toggleThemeCB, XtPointer(17) }, 0, 0, 0, 0 },  
-    {"t18", MMToggle | MMUnmanaged,  
+    {"t18", MMMenuToggle | MMUnmanaged,
         { DataDisp::toggleThemeCB, XtPointer(18) }, 0, 0, 0, 0 },  
     {"t19", MMMenuToggle | MMUnmanaged,
         { DataDisp::toggleThemeCB, XtPointer(19) }, 0, 0, 0, 0 },  

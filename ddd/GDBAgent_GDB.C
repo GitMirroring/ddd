@@ -302,7 +302,7 @@ void GDBAgent_GDB::parse_break_info (BreakPoint *bp, string &info)
 // to increase the breakpoint number.  If ADDR is set, use ADDR as
 // (fake) address.  If COND is set, use COND as (fake) condition.
 // Return true iff successful.
-void GDBAgent_GDB::restore_breakpoint_command (std::ostream& os, 
+void GDBAgent_GDB::restore_breakpoint_command(std::ostream& os,
                         BreakPoint *bp, string pos, string num,
                         string cond, bool as_dummy)
 {
@@ -348,7 +348,7 @@ void GDBAgent_GDB::restore_breakpoint_command (std::ostream& os,
     if (!as_dummy)
     {
         // Extra infos
-	if (!bp->enabled() && has_disable_command())
+        if (!bp->enabled() && has_disable_command())
 	    os << disable_command(num) << "\n";
 	int ignore = bp->ignore_count();
 	if (ignore > 0 && has_ignore_command())

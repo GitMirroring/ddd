@@ -68,7 +68,7 @@ public:
 	{ // x /FMT ADDRESS
 	  return "x " + fmt + " " + address; }
     void parse_break_info (BreakPoint *bp, string &info) override;
-    void restore_breakpoint_command (std::ostream& os, BreakPoint *bp,
+    void restore_breakpoint_command(std::ostream& os, BreakPoint *bp,
                                      string pos, string num, string cond,
                                      bool as_dummy) override;
     void set_bp (const string& a, bool set, bool temp,

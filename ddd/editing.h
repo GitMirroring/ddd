@@ -58,6 +58,7 @@ extern void popupAct              (Widget, XEvent*, String*, Cardinal*);
 extern void gdbModifyCB          (Widget, XtPointer, XtPointer);
 extern void gdbMotionCB          (Widget, XtPointer, XtPointer);
 extern void gdbChangeCB          (Widget, XtPointer, XtPointer);
+extern void gdbButtonReleaseEH   (Widget, XtPointer, XEvent*, Boolean*);
 
 extern void gdbNextCB            (Widget, XtPointer, XtPointer);
 extern void gdbPrevCB            (Widget, XtPointer, XtPointer);

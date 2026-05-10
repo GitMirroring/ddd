@@ -77,6 +77,13 @@ static void move_to_end_of_line(XtPointer, XtIntervalId *)
     XmTextShowPosition(gdb_w, pos);
 }
 
+static void restrict_gdb_cursor(XtPointer, XtIntervalId *)
+{
+    XmTextPosition pos = XmTextGetInsertionPosition(gdb_w);
+    if (pos < promptPosition)
+        move_to_end_of_line(0, 0);
+}
+
 static XmTextPosition start_of_line()
 {
     XmTextPosition end = XmTextGetLastPosition(gdb_w);
@@ -701,6 +708,21 @@ void gdbMotionCB(Widget, XtPointer, XtPointer call_data)
 #endif
 	}
     }
+}
+
+void gdbButtonReleaseEH(Widget w, XtPointer, XEvent *event, Boolean *)
+{
+    if (private_gdb_output)
+        return;
+
+    if (event == 0 || event->type != ButtonRelease)
+        return;
+
+    if (event->xbutton.button != Button1)
+        return;
+
+    XtAppAddTimeOut(XtWidgetToApplicationContext(w), 0,
+                    restrict_gdb_cursor, XtPointer(0));
 }
 
 // Send completed lines to GDB

@@ -2806,6 +2806,11 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
                    XmNvalueChangedCallback,
                    gdbChangeCB,
                    XtPointer(0));
+    XtAddEventHandler(gdb_w,
+                      ButtonReleaseMask,
+                      False,
+                      gdbButtonReleaseEH,
+                      XtPointer(0));
     XtManageChild (gdb_w);
 
     if (!app_data.separate_source_window || !app_data.separate_data_window)

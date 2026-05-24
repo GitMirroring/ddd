@@ -3548,6 +3548,17 @@ static void UpdateOverviewGeometry(Widget ge, Dimension cw, Dimension ch)
     unsigned int ow = 0, oh = 0;
     ComputeOverviewSize(ge, cw, ch, ow, oh);
 
+    if (app_data.overview_mode == 1 && cw > 0 && ch > 0)  // 1 == automatic
+    {
+        float frac = (float)ow * (float)oh / ((float)cw * (float)ch);
+        if (frac > 0.25f)   // 25% threshold
+        {
+            overview_enabled = False;
+            XUnmapWindow(dpy, overview_win);
+            return;
+        }
+    }
+
     int ox = std::max(OVERVIEW_MARGIN, (int)cw - (int)ow - OVERVIEW_MARGIN);
     int oy = std::max(OVERVIEW_MARGIN, (int)ch - (int)oh - OVERVIEW_MARGIN);
 

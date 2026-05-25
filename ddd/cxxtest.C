@@ -627,6 +627,7 @@ static void plot_test()
 
     (void) dr;			// Plot this
 
+    // TODO:  Improve DDD to plot dynamic arrays
     int **array = new int *[10];
     for (i = 0; i < 10; i++)
     {

@@ -55,7 +55,7 @@ for ARG in $*; do
 done 
 
 DEBIANPKGS=( \
-  "binutils" "g++" "gcc" "make" "libmotif-dev" "libx11-dev" "libxpm-dev" \
+  "binutils" "g++" "gcc" "make" "libmotif-dev" "libx11-dev" "libxpm-dev" "gnuplot" \
   "libxt-dev" "libxaw7-dev" "libxpm-dev" "libncurses-dev" "gdb" "fonts-liberation" \
   "libtinyxml2-dev" \
   )
@@ -66,7 +66,7 @@ DEBIANDEVPKGS=( \
 
 REDHATPKGS=( \
   "binutils" "gcc-c++" "gcc" "make" "motif-devel" "libX11-devel" "libXpm-devel" \
-  "libXaw-devel" "libXt-devel" "ncurses-devel" "gdb" "liberation-fonts-common" \
+  "libXaw-devel" "libXt-devel" "ncurses-devel" "gdb" "gnuplot" \
   "liberation-sans-fonts" "liberation-mono-fonts" "liberation-serif-fonts" \
   "netpbm-progs" "tinyxml2-devel" \
   )
@@ -144,7 +144,7 @@ if [ "$DISTRO" = "REDHAT" ]; then
  
   for PKG in ${PKGS[@]}
   do 
-    if dnf list installed $PKG 2> /dev/null | grep -e "$ARCH\|noarch" &> /dev/null ; then
+    if dnf list installed $PKG 2> /dev/null | grep Installed &> /dev/null ; then
       echo "$PKG installed"
     else
       echo "$PKG not installed"

@@ -4,7 +4,7 @@ autom4te.cache/
 compile
 config.guess
 config.sub
-configure~
+configure*
 ddd/Makefile.in
 ddd/config.h.in
 depcomp

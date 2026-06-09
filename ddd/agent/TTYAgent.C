@@ -809,6 +809,10 @@ int TTYAgent::setupChildCommunication()
 
     // Make this process the foreground process in the slave pty.
     result = 0;
+#if HAVE_IOCTL && defined(TIOCSCTTY)
+    // FreeBSD 15 requires explicit controlliing terminal acquisition.
+    (void)ioctl(slave, TIOCSCTTY, 1);
+#endif
 #if HAVE_TCSETPGRP
     result = tcsetpgrp(slave, pid);
 #elif HAVE_IOCTL && defined(TIOCSPGRP)

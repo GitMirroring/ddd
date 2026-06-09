@@ -843,15 +843,15 @@ $(builddocdir)/ddd.info.txt: $(srcdir)/ddd.info
 	    && $(MV) $@~ $@
 
 # EPS code stuff.
-$(srcdir)/header.str: $(srcdir)/header.ps
+header.str: $(srcdir)/header.ps
 	$(SED) 's/^.*$$/"&\\n"/' $(srcdir)/header.ps | $(DELETE_CR) \
 	    > $@~ && $(MV) $@~ $@
 
-$(srcdir)/trailer.str: $(srcdir)/trailer.ps
+trailer.str: $(srcdir)/trailer.ps
 	$(SED) 's/^.*$$/"&\\n"/' $(srcdir)/trailer.ps | $(DELETE_CR) \
 	    > $@~ && $(MV) $@~ $@
 
-$(srcdir)/eps-code.h: \
+eps-code.h: \
 	$(srcdir)/header.str $(srcdir)/trailer.str $(srcdir)/eps-code.x
 	$(SED) -e '/prolog/r $(srcdir)/header.str' \
 	       -e '/trailer/r $(srcdir)/trailer.str' $(srcdir)/eps-code.x \
@@ -1188,7 +1188,7 @@ $(htmldir)/ddd.html $(htmldir)/ddd-themes.html: $(JPG_IMAGES) \
 man_MANS = ddd.1
 
 ddd.1:	ddd.man 
-	cp $< $@
+	cp ddd.man ddd.1
 
 xmldir = $(datarootdir)/ddd-@VERSION@
 xml_DATA = $(top_builddir)/ddd/default.xml

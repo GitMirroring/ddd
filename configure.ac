@@ -288,6 +288,21 @@ dnl
 dnl Check for libtool.
 LT_INIT
 dnl
+dnl Check for FreeBSD non-standard directories
+dnl
+AC_MSG_CHECKING([fixes needed for FreeBSD])
+case "$host_os" in
+freebsd*)
+CFLAGS="$CFLAGS -isystem /usr/local/include"
+CPPFLAGS="$CPPFLAGS -isystem /usr/local/include"
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
+LIBS="$LIBS -lexecinfo"
+  AC_MSG_RESULT(yes)
+  ;;
+*)
+  AC_MSG_RESULT(no)
+  ;;
+esac
 dnl
 dnl Locate Libraries
 dnl
@@ -810,6 +825,8 @@ if test "$freetype_includes" = "no"; then
       # Check /usr/include/freetype2
       if test -f "/usr/include/freetype2/ft2build.h"; then
         freetype_includes="-I/usr/include/freetype2"
+      elif test -f "/usr/local/include/freetype2/ft2build.h"; then
+        freetype_includes="-I/usr/local/include/freetype2"
       fi
     ])
 fi
@@ -941,7 +958,7 @@ ICE_CHECK_DECL(grantpt, stdlib.h)
 AH_TEMPLATE([HAVE_GRANTPT_DECL],[Define if grantpt is declared in stdlib.h.])
 ICE_CHECK_DECL(hypot, math.h)
 AH_TEMPLATE([HAVE_HYPOT_DECL],[Define if hypot is declared in math.h.])
-ICE_CHECK_DECL(ioctl, unistd.h sys/ioctl.h)
+ICE_CHECK_DECL(ioctl, unistd.h sys/ioctl.h sys/ioccom.h)
 AH_TEMPLATE([HAVE_IOCTL_DECL],[Define if ioctl is declared in unistd.h sys/ioctl.h.])
 ICE_CHECK_DECL(link, unistd.h)
 AH_TEMPLATE([HAVE_LINK_DECL],[Define if link is declared in unistd.h.])

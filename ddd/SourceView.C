@@ -6349,28 +6349,6 @@ void SourceView::UpdateGlyphsWorkProc(XtPointer client_data, XtIntervalId *id)
         *proc_id = 0;
     }
 
-    XtAppContext app_context = XtWidgetToApplicationContext(source_text_w);
-    if (XtAppPending(app_context) & (XtIMXEvent | XtIMAlternateInput))
-    {
-        // Other events pending - check if we shall change something
-        const WidgetArray& glyphs = glyphs_to_be_updated();
-
-        if (glyphs.size() > 0)
-        {
-            // Change is imminent - unmap all glyphs that will change
-            // and try again in 50ms (change 2025: 20ms)
-            for (int i = 0; i < int(glyphs.size()); i++)
-                unmap_glyph(glyphs[i]);
-
-            XtIntervalId new_id = 
-                XtAppAddTimeOut(app_context, 20,
-                                UpdateGlyphsWorkProc, client_data);
-            if (proc_id != 0)
-                *proc_id = new_id;
-            return;
-        }
-    }
-
     change_glyphs = true;
     update_glyphs_now();
 }
@@ -6554,6 +6532,23 @@ void SourceView::update_glyphs_now()
     {
         update_source_glyphs = false;
         update_code_glyphs   = false;
+
+        // workaround for Xwayland:
+        // For each glyph whose geometry changed in this update, force
+        // an Expose so Motif redraws its label pixmap.
+        for (int i = 0; i < int(changed_glyphs.size()); ++i)
+        {
+            Widget g = changed_glyphs[i];
+            if (!g || !XtIsRealized(g))
+                continue;
+
+            Display *dpy = XtDisplay(g);
+            Window   win = XtWindow(g);
+            if (!win)
+                continue;
+
+            XClearArea(dpy, win, 0, 0, 0, 0, True);
+        }
     }
 
     // std::clog << "done.\n";

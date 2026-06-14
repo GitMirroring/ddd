@@ -2158,6 +2158,8 @@ static void configureEH(Widget, XtPointer client, XEvent *ev, Boolean*)
     ctx->viewport_width  = ev->xconfigure.width;
     ctx->viewport_height = ev->xconfigure.height;
     update_scrollbars(ctx);
+
+    queue_redraw(ctx);
 }
 
 // How many full lines fit in the viewport?

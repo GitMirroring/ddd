@@ -51,6 +51,44 @@ char toolbar_rcsid[] =
 // Helpers
 //-----------------------------------------------------------------------
 
+static void toolbar_configure_eh(Widget w, XtPointer, XEvent *ev, Boolean *)
+{
+    if (!ev || ev->type != ConfigureNotify || !XtIsRealized(w))
+        return;
+
+    Display *dpy = XtDisplay(w);
+    Window   win = XtWindow(w);
+    if (!win)
+        return;
+
+    // Force full repaint of the toolbar background
+    XClearArea(dpy, win, 0, 0, 0, 0, True);
+
+    // And force repaint of all child widgets (buttons, label, combo box)
+    if (XtIsComposite(w))
+    {
+        WidgetList children = nullptr;
+        Cardinal   nchildren = 0;
+        XtVaGetValues(w,
+                        XmNchildren,    &children,
+                        XmNnumChildren, &nchildren,
+                        nullptr);
+
+        for (Cardinal i = 0; i < nchildren; ++i)
+        {
+            Widget c = children[i];
+            if (!XtIsRealized(c))
+                continue;
+
+            Window cwin = XtWindow(c);
+            if (!cwin)
+                continue;
+
+            XClearArea(dpy, cwin, 0, 0, 0, 0, True);
+        }
+    }
+}
+
 // Return the preferred height of W
 static Dimension preferred_height(Widget w)
 {
@@ -222,7 +260,11 @@ Widget create_toolbar(Widget parent, const string& /* name */,
     XtSetArg(args[arg], XmNborderWidth,        0); arg++;
     XtSetArg(args[arg], XmNhighlightThickness, 0); arg++;
     Widget toolbar = verify(XmCreateForm(parent, XMST(toolbar_name.chars()), args, arg));
-
+    XtAddEventHandler(toolbar,
+                      StructureNotifyMask,
+                      False,
+                      toolbar_configure_eh,
+                      NULL);
     // Create `():'
     label = create_arg_label(toolbar);
 

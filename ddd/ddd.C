@@ -2985,13 +2985,9 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     if (source_view_shell && data_disp_shell)
         unmanage_sashes(paned_work_w);
 
-
-    if (!app_data.retro_style)
-    {     
-        install_sash_handlers(paned_work_w);
-        if (paned_work_w != left_paned_work_w)
-            install_sash_handlers(left_paned_work_w);
-    }
+    install_sash_handlers(paned_work_w);
+    if (paned_work_w != left_paned_work_w)
+        install_sash_handlers(left_paned_work_w);
 
     hide_sash_for_child(status_w);
 
@@ -4908,6 +4904,42 @@ static void dddPopupPreferencesCB (Widget, XtPointer, XtPointer)
 // Create status line
 //-----------------------------------------------------------------------------
 
+static void status_configure_eh(Widget w, XtPointer, XEvent *ev, Boolean *)
+{
+    if (!ev || ev->type != ConfigureNotify || !XtIsRealized(w))
+        return;
+
+    Display *dpy = XtDisplay(w);
+    Window   win = XtWindow(w);
+    if (!win)
+        return;
+
+    XClearArea(dpy, win, 0, 0, 0, 0, True);   // force a full repaint
+
+    if (XtIsComposite(w))
+    {
+        WidgetList children = nullptr;
+        Cardinal   nchildren = 0;
+        XtVaGetValues(w,
+                      XmNchildren,    &children,
+                      XmNnumChildren, &nchildren,
+                      nullptr);
+
+        for (Cardinal i = 0; i < nchildren; ++i)
+        {
+            Widget c = children[i];
+            if (!XtIsRealized(c))
+                continue;
+
+            Window cwin = XtWindow(c);
+            if (!cwin)
+                continue;
+
+            XClearArea(dpy, cwin, 0, 0, 0, 0, True);
+        }
+    }
+}
+
 static void create_status(Widget parent)
 {
     Arg args[15];
@@ -4915,6 +4947,11 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNresizePolicy, XmRESIZE_ANY); arg++;
     Widget status_form = verify(XmCreateForm(parent, XMST("status_form"), args, arg));
     XtManageChild(status_form);
+    XtAddEventHandler(status_form,
+                      StructureNotifyMask,
+                      False,
+                      status_configure_eh,
+                      NULL);
 
     // Create LED
     arg = 0;
@@ -4932,6 +4969,11 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNvisibleWhenOff, true); arg++;
     led_w = verify(XmCreateToggleButton(status_form, XMST("led"), args, arg));
     XtManageChild(led_w);
+    XtAddEventHandler(led_w,
+                      StructureNotifyMask,
+                      False,
+                      status_configure_eh,
+                      NULL);
 
     XtAddCallback(led_w, XmNvalueChangedCallback, ToggleBlinkCB, XtPointer(0));
 
@@ -4955,6 +4997,11 @@ static void create_status(Widget parent)
         { XtSetArg(args[arg], XmNdetailShadowThickness,   0); arg++; }
     Widget arrow_w = verify(XmCreateArrowButton(status_form, XMST("arrow"), args, arg));
     XtManageChild(arrow_w);
+    XtAddEventHandler(arrow_w,
+                      StructureNotifyMask,
+                      False,
+                      status_configure_eh,
+                      NULL);
 
     arg = 0;
     XtSetArg(args[arg], XmNtopAttachment,    XmATTACH_FORM); arg++;
@@ -4968,6 +5015,11 @@ static void create_status(Widget parent)
     XtSetArg(args[arg], XmNshadowThickness,  0); arg++;
     status_w = verify(XmCreatePushButton(status_form, XMST("status"), args, arg));
     XtManageChild(status_w);
+    XtAddEventHandler(status_w,
+                      StructureNotifyMask,
+                      False,
+                      status_configure_eh,
+                      NULL);
 
     // Initialize status history
     status_history_size = app_data.status_history_size;

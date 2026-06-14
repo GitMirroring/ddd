@@ -130,6 +130,18 @@ static void draw_sash_line_internal(Widget w, unsigned char orientation)
     XFreeGC(dpy, gc);
 }
 
+static void sash_configure_handler(Widget w, XtPointer client,
+                                   XEvent *event, Boolean *)
+{
+    if (!event || event->type != ConfigureNotify)
+        return;
+
+    unsigned char orientation = (unsigned char)(uintptr_t)client;
+
+    // Repaint this sash for its new geometry
+    draw_sash_line_internal(w, orientation);
+}
+
 void draw_sash_line(Widget w, XtPointer client, XEvent *event, Boolean*)
 {
     if (event->type != Expose)
@@ -260,6 +272,13 @@ void install_sash_handlers(Widget paned)
                           ExposureMask,
                           False,
                           draw_sash_line,
+                          (XtPointer)(uintptr_t)orientation);
+
+        // redraw when the sash is resized/moved
+        XtAddEventHandler(w,
+                          StructureNotifyMask,   // for ConfigureNotify
+                          False,
+                          sash_configure_handler,
                           (XtPointer)(uintptr_t)orientation);
 
         // Fix-up after drag

@@ -90,6 +90,11 @@ static void scrollbar_hover_handler(Widget w, XtPointer client,
     switch (event->type)
     {
 
+        case ConfigureNotify:
+            // geometry changed; force repaint of current state
+            scrollbar_force_bg(w, st, st->hovered);
+            break;
+
         case Expose:
             // First expose after realize: enforce hidden state (base_bg)
             if (!st->initialized)
@@ -108,7 +113,7 @@ static void scrollbar_hover_handler(Widget w, XtPointer client,
             // hide ONLY if not dragging from a press that started inside
             if (!st->pressed_inside)
                 scrollbar_apply_bg(w, st, False);
-        break;
+            break;
 
         case ButtonPress:
             if (be->button == Button1)
@@ -234,6 +239,7 @@ void install_scrollbar_hover_style(Widget scrollbar)
     // Hover + press/drag behavior + startup init (Expose)
     XtAddEventHandler(scrollbar,
                       ExposureMask |
+                      StructureNotifyMask |
                       EnterWindowMask | LeaveWindowMask |
                       ButtonPressMask | ButtonReleaseMask,
                       False,

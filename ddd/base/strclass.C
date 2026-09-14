@@ -41,6 +41,8 @@ extern "C" int malloc_verify();
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <algorithm>
+
 void string::error(const char* msg) const
 {
     std::cerr << "string: " << msg << "\n";
@@ -224,7 +226,7 @@ static strRep *string_Sresize(strRep* old, int newlen)
     strRep* rep;
     if (old == 0)
 	rep = string_Snew(newlen);
-    else if (unsigned(newlen) > old->allocated)
+    else if (unsigned(newlen) > string_Sremainder(old))
     {
 	rep = string_Snew(newlen);
 	ncopy0(old->s, rep->s, old->len);
@@ -243,6 +245,7 @@ void string::alloc (int newsize)
     unsigned int old_len = rep->len;
     rep = string_Sresize(rep, newsize);
     rep->len = old_len;
+    rep->s[old_len] = '\0';
 }
 
 
@@ -395,7 +398,11 @@ strRep* string_Sprepend(strRep* old, const char* t, int tlen)
 
     rep->len = newlen;
 
-    revcopy(&(s[srclen]), &(rep->s[newlen]), srclen+1);
+    if (srclen == 0)
+        rep->s[newlen] = '\0';
+    else
+        revcopy(&(s[srclen]), &(rep->s[newlen]), srclen + 1);
+
     ncopy(t, rep->s, tlen);
 
     if (old != rep && old != 0)
@@ -535,24 +542,39 @@ int compare(const char *x, const subString& y)
 int string::search(int start, int sl, char c) const
 {
     const char* s = chars();
-    if (sl > 0)
+    if (sl < 0)
+        return -1;
+
+    sl = std::max(int(rep->len), sl);
+
+    if (start >= 0)
     {
-	if (start >= 0)
-	{
-	    const char* a = &(s[start]);
-	    const char* lasta = &(s[sl]);
-	    while (a < lasta)
-		if (*a++ == c)
-		    return --a - s;
-	}
-	else
-	{
-	    const char* a = &(s[sl + start + 1]);
-	    while (--a >= s)
-		if (*a == c)
-		    return a - s;
-	}
+        if (start >= sl)
+            return -1;
+
+        const char* a = &(s[start]);
+        const char* lasta = &(s[sl]);
+        while (a < lasta)
+            if (*a++ == c)
+                return --a - s;
     }
+    else
+    {
+        int pos = sl + start + 1;
+
+        if (pos <= 0)
+            return -1;
+
+        const char* a = &(s[pos]);
+
+        while (a > s)
+        {
+            --a;
+            if (*a == c)
+                return a - s;
+        }
+    }
+
     return -1;
 }
 
@@ -562,39 +584,54 @@ int string::search(int start, int sl, const char* t, int tl) const
     if (tl < 0)
 	tl = slen(t);
 
-    if (sl > 0 && tl > 0)
+    if (sl < 0 || tl <= 0 || t==0)
+        return -1;
+
+    sl = std::min(sl, int(length()));
+
+    if (tl > sl)
+        return -1;
+
+    if (start >= 0)
     {
-	if (start >= 0)
-	{
-	    const char* lasts = &(s[sl - tl]);
-	    const char* lastt = &(t[tl]);
-	    const char* p = &(s[start]);
+        if (start >= sl)
+            return -1;
 
-	    while (p <= lasts)
-	    {
-		const char* x = p++;
-		const char* y = t;
-		while (*x++ == *y++)
-		    if (y >= lastt)
-			return --p - s;
-	    }
-	}
-	else
-	{
-	    const char* firsts = &(s[tl - 1]);
-	    const char* lastt =  &(t[tl - 1]);
-	    const char* p = &(s[sl + start + 1]); 
+        const char* lasts = &(s[sl - tl]);
+        const char* lastt = &(t[tl]);
+        const char* p = &(s[start]);
 
-	    while (--p >= firsts)
-	    {
-		const char* x = p;
-		const char* y = lastt;
-		while (*x-- == *y--)
-		    if (y < t)
-			return ++x - s;
-	    }
-	}
+        while (p <= lasts)
+        {
+            const char* x = p++;
+            const char* y = t;
+            while (*x++ == *y++)
+                if (y >= lastt)
+                    return --p - s;
+        }
     }
+    else
+    {
+        int pos = sl + start + 1;
+
+        if (pos < tl)
+            return -1;
+
+        const char* firsts = &(s[tl - 1]);
+        const char* lastt =  &(t[tl - 1]);
+        const char* p = &(s[sl + start + 1]);
+
+        while (p > firsts)
+        {
+            --p;
+            const char* x = p;
+            const char* y = lastt;
+            while (*x-- == *y--)
+                if (y < t)
+                    return ++x - s;
+        }
+    }
+
     return -1;
 }
 
@@ -843,6 +880,10 @@ void string::del(const regex& r, int startpos)
 {
     int mlen;
     int first = r.search(chars(), length(), mlen, startpos);
+
+    if (first < 0)
+        return;
+
     del(first, mlen);
 }
 

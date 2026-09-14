@@ -1776,7 +1776,7 @@ inline bool constSubString::contains(const constSubString&  y) const
 
 inline bool constSubString::contains(char c) const
 {
-    return S.search(pos, pos+len, 0, c) >= 0;
+    return S.search(pos, pos+len, c) >= 0;
 }
 
 inline bool constSubString::contains(const regex& r) const

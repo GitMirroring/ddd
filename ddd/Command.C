@@ -49,7 +49,6 @@ char Command_rcsid[] =
 #include "history.h"
 #include "ddd.h"
 #include "base/cook.h"
-#include "template/Queue.h"
 #include "windows.h"
 #include "GDBAgent.h"
 #include "agent/TimeOut.h"
@@ -62,6 +61,8 @@ char Command_rcsid[] =
 #include <Xm/Xm.h>
 #include <Xm/Text.h>
 #include <X11/StringDefs.h>
+
+#include <list>
 
 // ANSI C++ doesn't like the XtIsRealized() macro
 #ifdef XtIsRealized
@@ -507,26 +508,20 @@ bool CommandGroup::first_command = true;
 // Command queue
 //-----------------------------------------------------------------------------
 
-typedef Queue<Command> CommandQueue;
-typedef QueueIter<Command> CommandQueueIter;
-
-static CommandQueue commandQueue;
+static std::list<Command> commandQueue;
 
 #if LOG_COMMAND_QUEUE
-static std::ostream& operator<<(std::ostream& os, const CommandQueue& queue)
+static std::ostream& operator<<(std::ostream& os, const std::list<Command>& queue)
 {
     os << "[";
     bool first = true;
-    for (CommandQueueIter i = queue; i.ok(); i = i.next())
+    for (const Command& c : queue)
     {
-	const Command& c = i();
+        if (!first)
+            os << ", ";
+        first = false;
 
-	if (first)
-	    first = false;
-	else
-	    os << ", ";
-
-	os << c;
+        os << c;
     }
 
     return os << "]";
@@ -535,13 +530,12 @@ static std::ostream& operator<<(std::ostream& os, const CommandQueue& queue)
 
 void clearCommandQueue()
 {
-    CommandQueue oldCommandQueue(commandQueue);
-    static CommandQueue emptyQueue;
-    commandQueue = emptyQueue;
+    std::list<Command> oldCommandQueue;
+    oldCommandQueue.swap(commandQueue);
 
-    while (!oldCommandQueue.isEmpty())
+    while (!oldCommandQueue.empty())
     {
-	const Command& cmd = oldCommandQueue.first();
+	const Command& cmd = oldCommandQueue.front();
 	if (cmd.callback != 0)
 	{
 	    // We're deleting a command with associated callback.
@@ -550,7 +544,7 @@ void clearCommandQueue()
 	    // will be added to the command queue.
 	    cmd.callback(NO_GDB_ANSWER, cmd.data);
 	}
-	oldCommandQueue -= cmd;
+	oldCommandQueue.pop_front();
     }
 
 #if LOG_COMMAND_QUEUE
@@ -560,7 +554,7 @@ void clearCommandQueue()
 
 bool emptyCommandQueue()
 {
-    return commandQueue.isEmpty();
+    return commandQueue.empty();
 }
 
 static string last_user_reply = "";
@@ -644,38 +638,14 @@ static void gdb_enqueue_command(const Command& c)
 
     // Enqueue before first command with lower priority.  This
     // ensures that user commands are placed at the end.
-    CommandQueueIter i(commandQueue);
-    CommandQueueIter pos(commandQueue);
+    std::list<Command>::iterator i = commandQueue.begin();
 
-    while (i.ok() && c.priority <= i().priority)
-    {
-	pos = i; i = i.next();
-    }
+    while (i != commandQueue.end() && c.priority <= i->priority)
+        ++i;
 
-    if (!i.ok())
-    {
-	assert(!pos.ok() || pos().priority >= c.priority);
-
-	// End of queue reached
-	commandQueue.enqueue_at_end(c);
-    }
-    else if (pos().priority >= c.priority)
-    {
-	assert(pos().priority >= c.priority && c.priority > i().priority);
-
-	// Enqueue after POS
-	commandQueue.enqueue_after(c, pos);
-    }
-    else
-    {
-	CommandQueueIter start(commandQueue);
-	(void) start;	// Use it
-	assert(!start.ok() || start().priority < c.priority);
-
-	// Higher priority than first element
-	commandQueue.enqueue_at_start(c);
-    }
-
+    // Enqueue before i
+    commandQueue.insert(i, c);
+ 
 #if LOG_COMMAND_QUEUE
     std::clog << "Command queue: " << commandQueue << "\n";
 #endif
@@ -699,9 +669,8 @@ void processCommandQueue(XtPointer, XtIntervalId *id)
 
     if (can_do_gdb_command())
     {
-	Command& c = commandQueue.first();
-	Command cmd(c);
-	commandQueue.dequeue(c);
+        Command cmd = commandQueue.front();
+        commandQueue.pop_front();
 	do_gdb_command(cmd);
 
 	gdb_keyboard_command = false;

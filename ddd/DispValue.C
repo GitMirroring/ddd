@@ -2378,6 +2378,12 @@ bool DispValue::plotImage(PlotAgent *&plotter) const
     if (plotter==nullptr)
         return false;
 
+    // Prevent GDB crashes caused by non-positive image dimensions.
+    const int width = atoi(xdimstr.chars());
+    const int height = atoi(ydimstr.chars());
+    if (width <= 0 || height <= 0)
+        return false;
+
     PlotElement &eldata = plotter->start_plot(make_title(full_name()));
     eldata.plottype = PlotElement::IMAGE;
 

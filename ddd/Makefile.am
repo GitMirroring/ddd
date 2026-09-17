@@ -115,7 +115,6 @@ TEMPLATE_SRC = \
 	template/Assoc.h      \
 	template/IntIntAA.h   \
 	template/Map.h        \
-	template/Queue.h      \
 	template/StatArray.h  \
 	template/StringSA.h   \
 	template/VoidArray.h

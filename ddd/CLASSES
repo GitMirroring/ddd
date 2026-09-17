@@ -46,7 +46,6 @@ Base Classes:
 	MemChecker
 	OptionTableEntry
 	PosBuffer
-	Queue
 	QueueIter
 	QueueRec
 	Range
@@ -313,15 +312,6 @@ Dependency tree for OptionTableEntry:
 
 Dependency tree for PosBuffer:
 	PosBuffer (PosBuffer.h)
-
-Dependency tree for Queue:
-	Queue (Queue.h)
-
-Dependency tree for QueueIter:
-	QueueIter (Queue.h)
-
-Dependency tree for QueueRec:
-	QueueRec (Queue.h)
 
 Dependency tree for Range:
 	Range (Range.h)

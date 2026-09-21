@@ -5,6 +5,7 @@ compile
 config.guess
 config.sub
 configure*
+config.h.in~
 ddd/Makefile.in
 ddd/config.h.in
 depcomp

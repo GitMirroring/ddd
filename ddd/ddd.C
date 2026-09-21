@@ -4644,7 +4644,7 @@ static void ResetPreferencesCB(Widget w, XtPointer client_data,
         ResetDataPreferencesCB(w, client_data, call_data);
     else if (panel_name == "startup")
         ResetStartupPreferencesCB(w, client_data, call_data);
-    else if (panel_name == "fonts")
+    else if (panel_name == "appearance")
         ResetFontPreferencesCB(w, client_data, call_data);
     else if (panel_name == "helpers")
         ResetHelpersPreferencesCB(w, client_data, call_data);
@@ -4666,7 +4666,7 @@ void update_reset_preferences()
             sensitive = data_preferences_changed();
         else if (panel_name == "startup")
             sensitive = startup_preferences_changed();
-        else if (panel_name == "fonts")
+        else if (panel_name == "appearance")
             sensitive = font_preferences_changed();
         else if (panel_name == "helpers")
             sensitive = helpers_preferences_changed();

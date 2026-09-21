@@ -523,6 +523,11 @@ static XrmOptionDescRec options[] = {
 { XRMOPTSTR("-trace"),                 XRMOPTSTR(XtNtrace),                
                                         XrmoptionNoArg,  XPointer(ON) },
 
+{ XRMOPTSTR("--log"),                   XRMOPTSTR(XtNLog),              
+                                        XrmoptionNoArg, XPointer(OFF) },
+{ XRMOPTSTR("-log"),                   XRMOPTSTR(XtNLog),              
+                                        XrmoptionNoArg, XPointer(OFF) },
+
 { XRMOPTSTR("--play-log"),                   XRMOPTSTR(XtNplayLog),              
                                         XrmoptionSepArg, XPointer(0) },
 { XRMOPTSTR("-play-log"),                   XRMOPTSTR(XtNplayLog),              
@@ -1937,7 +1942,6 @@ const int STRUCTURE_MASK = StructureNotifyMask | VisibilityChangeMask;
 // Message handling
 static MString version_warnings;
 
-
 //-----------------------------------------------------------------------------
 // DDD main program
 //-----------------------------------------------------------------------------
@@ -1992,6 +1996,7 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
     // `--nw'   - no windows (GDB)
     // `-L'     - no windows (XDB)
     // `--PLAY' - logplayer mode (DDD)
+    // '--log'	- generate log file (DDD)
     // and options that would otherwise be eaten by Xt
     std::vector<string> saved_options;
     string gdb_name = "";
@@ -2397,7 +2402,10 @@ ddd_exit_t pre_main_loop(int argc, char *argv[])
 
     // Create a `~/.ddd/log' file for this session; 
     // log invocation and configuration
-    init_dddlog();
+    if (app_data.log)
+    {
+        init_dddlog();
+    }
 
     // Warn for incompatible `Ddd' and `~/.ddd/init' files
     setup_ddd_version_warnings();

@@ -113,6 +113,16 @@ XtResource ddd_resources[] = {
         XtPointer(False)
     },
 
+    {
+        XTRESSTR(XtNLog),
+        XTRESSTR(XtCLog),
+        XmRBoolean,
+        sizeof(Boolean),
+        XtOffsetOf(AppData, log),
+        XtRString,
+        XtPointer(0)
+    },
+
     { 
         XTRESSTR(XtNplayLog),
         XTRESSTR(XtCPlayLog),
@@ -1899,6 +1909,7 @@ XtResource ddd_resources[] = {
         XtRString,
         XtPointer(0)
     }
+
 };
 
 const int ddd_resources_size = XtNumber(ddd_resources);

@@ -113,6 +113,7 @@ void show_invocation(const string& gdb_command, std::ostream& os)
 	"  --debugger CMD     Invoke inferior debugger as CMD.",
 	"  --host USER@HOST   Run inferior debugger on HOST.",
 	"  --rhost USER@HOST  Like --host, but use a rlogin connection.",
+	"  --log              Create debugger log in ~/.ddd/log.",
 	"  --trace            Show interaction with inferior debugger"
 	" on standard error.",
         "  --tty              Use controlling tty"

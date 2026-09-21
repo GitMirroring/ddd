@@ -675,10 +675,6 @@ Getting Diagnostics
 * Debugging @DDD{}::            Facilities to debug @DDD{}.
 * Customizing Diagnostics::     All diagnostics resources.
 
-Logging
-
-* Disabling Logging::           
-
 Configuration Notes
 
 * GDB::                         Using @DDD{} with @GDB{}
@@ -1937,7 +1933,16 @@ Giving this option is equivalent to setting the @DDD{}
 @samp{showLicense} resource to @var{on}.  @xref{Diagnostics}, for
 details.
 
-
+@item --log
+@flindex log
+@flindex ~
+Show the interaction between @DDD{} and the inferior debugger on
+standard error.  This is useful for debugging @DDD{}.
+If @option{--log} is specified and @option{--trace} is not specified,
+this information is written into
+@file{~/.@value{ddd}/log} (@file{~} stands for your home directory),
+such that you can also do a post-mortem debugging.  @xref{Logging}, for
+details about logging.
 
 @item --login @var{username}
 @itemx -l @var{username}
@@ -2151,7 +2156,8 @@ Debugger Interaction}, for details.
 @flindex ~
 Show the interaction between @DDD{} and the inferior debugger on
 standard error.  This is useful for debugging @DDD{}.  If
-@option{--trace} is not specified, this information is written into
+@option{--trace} is not specified, and @option{--log}
+this information is written into
 @file{~/.@value{ddd}/log} (@file{~} stands for your home directory),
 such that you can also do a post-mortem debugging.  @xref{Logging}, for
 details about logging.
@@ -9993,7 +9999,8 @@ restore previous commands.  Gnuplot error messages (if any) are also
 shown in the history area.
 
 @flindex log
-The interaction between @DDD{} and Gnuplot is logged in the file
+If @option{--log} is specified, the interaction between @DDD{} and Gnuplot
+is logged in the file
 @file{~/.@value{ddd}/log} (@pxref{Logging}).  The @DDD{}
 @option{--trace} option logs this interaction on standard output.
 
@@ -11932,7 +11939,8 @@ $ @kbd{@value{ddd} --trace}
 @end example
 
 This shows the interaction between @DDD{} and the inferior debugger
-on standard error while @DDD{} is running.  (If @option{--trace} is
+on standard error while @DDD{} is running.  If @option{--log} is
+specified and @option{--trace} is
 not given, this interaction is logged in the file
 @file{~/.@value{ddd}/log}; @pxref{Logging}) Compare the debugger output
 to the output of @DDD{} and determine which one is wrong.
@@ -12036,8 +12044,9 @@ Be sure to include this information in @emph{every} single bug report.
 @cindex Logging
 @flindex log
 If things go wrong, the first and most important information source is
-the @dfn{@DDD{} log file}.  This file, created in
-@file{~/.@value{ddd}/log} (@file{~} stands for your home directory),
+the @dfn{@DDD{} log file}.  When you run @DDD{} with the @option{--log}
+command line option, this file is created in
+@file{~/.@value{ddd}/log} (@file{~} stands for your home directory) and
 records the following information:
 
 @itemize @bullet{}
@@ -12085,35 +12094,6 @@ is included at the end.
 
 This information, all in one place, should give you (and anyone
 maintaining @DDD{}) a first insight of what's going wrong.
-
-
-@menu
-* Disabling Logging::           
-@end menu
-
-@node Disabling Logging
-@subsubsection Disabling Logging
-
-@cindex Logging, disabling
-The log files created by @DDD{} can become quite large, so you
-might want to turn off logging.  There is no explicit @DDD{}
-feature that allows you to do that.  However, you can easily create a
-@emph{symbolic link} from @file{~/.@value{ddd}/log} to @samp{/dev/null},
-such that logging information is lost.  Enter the following commands at
-the shell prompt:
-
-@example
-$ @kbd{cd}
-$ @kbd{rm .@value{ddd}/log}
-$ @kbd{ln -s /dev/null .@value{ddd}/log}
-$ _
-@end example
-
-Be aware, though, that having logging turned off makes diagnostics much
-more difficult; in case of trouble, it may be hard to reproduce the
-error.
-
-
 
 @node Debugging @DDD{}
 @subsection Debugging @value{DDD}

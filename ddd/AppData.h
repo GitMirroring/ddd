@@ -59,6 +59,8 @@
 #define XtCOpenSelection         "OpenSelection"
 #define XtNtrace                 "trace"
 #define XtCTrace                 "Trace"
+#define XtNLog                   "Log"
+#define XtCLog                   "Log"
 #define XtNplayLog               "playLog"
 #define XtCPlayLog               "PlayLog"
 #define XtNrestartCommands       "restartCommands"
@@ -378,6 +380,8 @@
 #define XtNdddinitVersion        "dddinitVersion"
 #define XtNappDefaultsVersion    "appDefaultsVersion"
 #define XtCVersion               "Version"
+#define XtNgenLog		 "GenLog"
+#define XtCGenLog		 "GenLog"
 
 struct AppData {
     const _XtString    session;
@@ -387,6 +391,7 @@ struct AppData {
     Boolean   auto_debugger;
     Boolean   open_selection;
     Boolean   trace;
+    int	      log;
     const _XtString    play_log;
     const _XtString    restart_commands;
     Boolean   source_init_commands;

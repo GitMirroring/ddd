@@ -37,8 +37,29 @@ To build a complete DDD from sources, you need:
      -   libxft
      -   libfontconfig
 
+   * TinyXML-2 XML parsing library.
+     -   tinyxml2
+
+
 Be sure to install the headers for these libraries, usually in a 
-a package named <pkg>-devel or similar.
+package named <pkg>-devel or similar.
+
+For example, common development package names include:
+
+   * Debian and Ubuntu:
+     libmotif-dev libx11-dev libxt-dev libxext-dev libxpm-dev
+     libncurses-dev libfreetype-dev libxft-dev libfontconfig-dev
+     libtinyxml2-dev
+
+   * Fedora, RHEL, Rocky Linux, and AlmaLinux:
+     motif-devel libX11-devel libXt-devel libXext-devel libXpm-devel
+     ncurses-devel freetype-devel libXft-devel fontconfig-devel
+     tinyxml2-devel
+
+   * openSUSE:
+     motif-devel libX11-devel libXt-devel libXext-devel libXpm-devel
+     ncurses-devel freetype2-devel libXft-devel fontconfig-devel
+     tinyxml2-devel
 
 If (and only if) you make changes to the DDD sources, or if you build
 DDD from the repository, you may also need:
@@ -227,12 +248,14 @@ To run DDD, you need:
 
      If you are running a UNIX-like system, you certainly have X.  
 
-   * A command-line debugger (the so-called `inferior' debugger).
+   * GDB, the GNU debugger (the so-called `inferior' debugger).
 
-     - To debug binary executables, best results are achieved with
-       GDB, the GNU debugger.  Using GDB, you can debug programs written 
-       in C, C++, GNU Java (`guavac'), GNU Ada (`gnat'), GNU Fortran (`g77'),
-       GNU Chill and GNU Modula-2.
+       DDD requires an inferior debugger. GDB is the required and supported
+       debugger for the packaged Linux version of DDD and should be installed
+       together with DDD.
+
+     - GDB supports debugging programs written in C, C++, GNU Ada (`gnat'),
+       GNU Fortran (`g77'), GNU Chill and GNU Modula-2.
 
        GDB also supports WDB, a GDB variant found on HP-UX systems.
 
@@ -280,6 +303,11 @@ To run DDD, you need:
      done in many years.  How well DDD works with them, or if it works
      at all, is uncertain.
 
+   * The `gnuplot' program, version 5.4 or later.
+
+     DDD requires `gnuplot' to plot array, history data and images.  It
+     should be installed together with DDD.
+
    * Fonts
 
      DDD uses the Liberation Open Source fonts by default.  These are
@@ -305,11 +333,6 @@ The following recommended helper applications should be in the user path:
      - `info -f libc' should show libc documentation.  DDD uses this
        give online help on the various signals.
 
-   * The `xfontsel' font selection program.  With `xfontsel', you can
-     select fonts interactively.
-
-   * The `gnuplot' program, version 3.5 or later.  DDD uses `gnuplot'
-     to plot array and history data.
 
 
 Installation Details

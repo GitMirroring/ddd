@@ -93,13 +93,11 @@ NEEDED=""
 if grep -E "Debian|Ubuntu|Raspbian" /etc/os-release > /dev/null; then
   DISTRO="DEBIAN"
   dpkg -l | tail -n +6 | cut -d ' ' -f 3 | tr ' ' '\n' > /tmp/debian.dpkg.$$
-elif grep -i "suse" /etc/os-release > /dev/null; then
+elif grep -qi "suse" /etc/os-release > /dev/null; then
   DISTRO="SUSE"
-  INSTALLED=$(zypper search -i | tr -s ' ' | cut -d ' ' -f 3)
-  if [ "$ARCH" = "x86_64" ]; then
-    INSTALLED=$(echo $INSTALLED | grep -v '32bit')
-  fi
-elif grep -iE "Fedora|Red Hat Enterprise Linux|Rocky Linux|AlmaLinux" /etc/redhat-release > /dev/null; then
+elif grep Fedora /etc/redhat-release > /dev/null; then
+  DISTRO="REDHAT"
+elif grep AlmaLinux /etc/redhat-release > /dev/null; then
   DISTRO="REDHAT"
 else
   DISTRO="UNKNOWN"
@@ -156,17 +154,16 @@ fi
 
 if [ "$DISTRO" = "SUSE" ]; then
   echo "Checking pre-req's for $DISTRO"
-  echo ""
+  echo
 
-  if [ $MAINTAINER = 1 ]; then
-    PKGS=( ${SUSEPKGS[*]} ${SUSEDEVPKGS[*]} )
+  if [ "$MAINTAINER" = 1 ]; then
+    PKGS=("${SUSEPKGS[@]}" "${SUSEDEVPKGS[@]}")
   else
-    PKGS=( ${SUSEPKGS[*]} )
+    PKGS=("${SUSEPKGS[@]}")
   fi
-  
-  for PKG in ${PKGS[@]}
-  do 
-    if echo $INSTALLED | grep " $PKG " | grep $ARCH &> /dev/null ; then
+
+  for PKG in "${PKGS[@]}"; do
+    if rpm -q --quiet "$PKG"; then
       echo "$PKG installed"
     else
       echo "$PKG not installed"

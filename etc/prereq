@@ -55,9 +55,10 @@ for ARG in $*; do
 done 
 
 DEBIANPKGS=( \
-  "binutils" "g++" "gcc" "make" "libmotif-dev" "libx11-dev" "libxpm-dev" "gnuplot" \
-  "libxt-dev" "libxaw7-dev" "libxpm-dev" "libncurses-dev" "gdb" "fonts-liberation" \
-  "libtinyxml2-dev" \
+  "binutils" "g++" "gcc" "make" "libmotif-dev" "libx11-dev" "gnuplot" \
+  "libxt-dev" "libxpm-dev" "libncurses-dev" "gdb" "fonts-liberation" \
+  "libtinyxml2-dev" "libxext-dev" "libfreetype-dev" "libxft-dev" \
+  "libfontconfig-dev" \
   )
 DEBIANDEVPKGS=( \
   "automake" "autoconf" "libtool" "bison" "flex" "texinfo" "netpbm" "fig2dev" \
@@ -66,9 +67,10 @@ DEBIANDEVPKGS=( \
 
 REDHATPKGS=( \
   "binutils" "gcc-c++" "gcc" "make" "motif-devel" "libX11-devel" "libXpm-devel" \
-  "libXaw-devel" "libXt-devel" "ncurses-devel" "gdb" "gnuplot" \
+  "libXt-devel" "ncurses-devel" "gdb" "gnuplot" "libXext-devel"\
   "liberation-sans-fonts" "liberation-mono-fonts" "liberation-serif-fonts" \
-  "netpbm-progs" "tinyxml2-devel" \
+  "netpbm-progs" "tinyxml2-devel" "freetype-devel" "libXft-devel" \
+  "fontconfig-devel"\
   )
 REDHATDEVPKGS=( \
   "automake" "autoconf" "libtool" "bison" "flex" "texinfo" "netpbm" "transfig" \
@@ -77,8 +79,9 @@ REDHATDEVPKGS=( \
 
 SUSEPKGS=( \
   "binutils" "gcc-c++" "gcc" "make" "motif-devel" "libX11-devel" "libXpm-devel" \
-  "libXaw-devel" "libXt-devel" "ncurses-devel" "gdb" "liberation-fonts" \
-  "netpbm" "tinyxml2-devel" \
+  "libXt-devel" "ncurses-devel" "gdb" "liberation-fonts" "gnuplot"\
+  "netpbm" "tinyxml2-devel" "freetype2-devel" \
+  "libXft-devel" "fontconfig-devel" \
   )
 SUSEDEVPKGS=( \
   "automake" "autoconf" "libtool" "bison" "flex" "texinfo" "netpbm" "transfig" \
@@ -90,15 +93,13 @@ NEEDED=""
 if grep -E "Debian|Ubuntu|Raspbian" /etc/os-release > /dev/null; then
   DISTRO="DEBIAN"
   dpkg -l | tail -n +6 | cut -d ' ' -f 3 | tr ' ' '\n' > /tmp/debian.dpkg.$$
-elif grep USE /etc/os-release > /dev/null; then
+elif grep -i "suse" /etc/os-release > /dev/null; then
   DISTRO="SUSE"
   INSTALLED=$(zypper search -i | tr -s ' ' | cut -d ' ' -f 3)
   if [ "$ARCH" = "x86_64" ]; then
     INSTALLED=$(echo $INSTALLED | grep -v '32bit')
   fi
-elif grep Fedora /etc/redhat-release > /dev/null; then
-  DISTRO="REDHAT"
-elif grep AlmaLinux /etc/redhat-release > /dev/null; then
+elif grep -iE "Fedora|Red Hat Enterprise Linux|Rocky Linux|AlmaLinux" /etc/redhat-release > /dev/null; then
   DISTRO="REDHAT"
 else
   DISTRO="UNKNOWN"

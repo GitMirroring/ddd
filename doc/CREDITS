@@ -11,7 +11,7 @@ Major code contributions:
 
 Rocky BERNSTEIN <rocky@gnu.org>           - BASH debugger support
                                           - GNU Make debugger support
-                                            (well, actually the 
+                                            (well, actually the
 	                                    debuggers too)
 	                                  - Post 2006 Python support
 J.H.M. DASSEN <jdassen@wi.leidenuniv.nl>  - Tips and bug reports

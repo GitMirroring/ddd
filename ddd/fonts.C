@@ -83,23 +83,12 @@ static void title(const AppData& ad, const string& s)
 static void get_derived_sizes(Dimension size,
 			      Dimension& small_size,
 			      Dimension& tiny_size,
-			      Dimension& llogo_size,
-                              bool calcPixel=false)
+			      Dimension& llogo_size)
 {
-    if (calcPixel)
-    {
-        // size i pixels
-        small_size = (size * 8) / 9;
-        tiny_size  = (size * 6) / 9;
-        llogo_size = (size * 3) / 2;
-    }
-    else
-    {
-        // last digit has to be zero for size in points
-        small_size = ((size * 8) / 90) * 10;
-        tiny_size  = ((size * 6) / 90) * 10;
-        llogo_size = ((size * 3) / 20) * 10;
-    }
+    // size i pixels
+    small_size = (size * 8) / 9;
+    tiny_size  = (size * 6) / 9;
+    llogo_size = (size * 3) / 2;
 }
 
 //-----------------------------------------------------------------------------
@@ -111,76 +100,16 @@ static void setup_xft_fonts(AppData& ad, XrmDatabase& db)
     if (ad.fixed_width_font_size >=80)
         ad.fixed_width_font_size = 11; // size seem to be in points -> set default
 
-    // according to hints from Joe Nelson
-    XrmPutLineResource(&db, "Ddd*source_text_w.renderTable: tt");
-    XrmPutLineResource(&db, "Ddd*code_text_w.renderTable: tt");
-    XrmPutLineResource(&db, "Ddd*gdb_w.renderTable: tt");
-    XrmPutLineResource(&db, "Ddd*help_area*text.renderTable: tt");
-
-    XrmPutLineResource(&db, "Ddd*tt*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*tt*fontName: ") + ad.fixed_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*tt*fontSize: ") + itostring(ad.fixed_width_font_size)).chars());
-
-    XrmPutLineResource(&db, "Ddd*tb*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*tb*fontName: ") + ad.fixed_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*tb*fontSize: ") + itostring(ad.fixed_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*tb*fontStyle: Bold");
-
     if (ad.variable_width_font_size>=80)
         ad.variable_width_font_size = 11; // size seem to be in points -> set default
 
+    // according to hints from Joe Nelson
+    XrmPutLineResource(&db, "Ddd*gdb_w.renderTable: tt");
+    XrmPutLineResource(&db, "Ddd*help_area*text.renderTable: tt");
+
+
     XrmPutLineResource(&db, "Ddd*renderTable: rm,tt,llogo,logo,small,tb,key,bf,sl,bs,accel");
 
-    XrmPutLineResource(&db, "Ddd*rm*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*rm*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*rm*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-
-    XrmPutLineResource(&db, "Ddd*bf*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*bf*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*bf*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*bf*fontStyle: Bold");
-
-    XrmPutLineResource(&db, "Ddd*sl*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*sl*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*sl*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*sl*fontStyle: Bold"); // Oblique fonts do not work in Motif
-
-    XrmPutLineResource(&db, "Ddd*bs*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*bs*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*bs*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*bs*fontStyle: Bold"); // combination of Bold and Oblique not possible in Motif
-
-    XrmPutLineResource(&db, "Ddd*small*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*small*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*small*fontSize: ") + itostring(ad.variable_width_font_size*.8)).chars());
-
-    XrmPutLineResource(&db, "Ddd*llogo*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*llogo*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*llogo*fontSize: ") + itostring(ad.variable_width_font_size*2)).chars());
-    XrmPutLineResource(&db, (string("Ddd*llogo*fontStyle: Bold").chars()));
-
-    XrmPutLineResource(&db, "Ddd*logo*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*logo*fontName: ") + ad.variable_width_font).chars() );
-    XrmPutLineResource(&db, (string("Ddd*logo*fontSize: ") + itostring(ad.variable_width_font_size*1.2)).chars());
-    XrmPutLineResource(&db, "Ddd*logo*fontStyle: Bold");
-
-    XrmPutLineResource(&db, "Ddd*key*fontType: FONT_IS_XFT");
-    XrmPutLineResource(&db, (string("Ddd*key*fontName: ") + ad.variable_width_font).chars());
-    XrmPutLineResource(&db, (string("Ddd*key*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    XrmPutLineResource(&db, "Ddd*key*fontStyle: Bold");
-
-    if (ad.retro_style)
-    {
-        XrmPutLineResource(&db, "Ddd*accel*fontType: FONT_IS_XFT");
-        XrmPutLineResource(&db, (string("Ddd*accel*fontName: ") + ad.variable_width_font).chars());
-        XrmPutLineResource(&db, (string("Ddd*accel*fontSize: ") + itostring(ad.variable_width_font_size)).chars());
-    }
-    else
-    {
-        XrmPutLineResource(&db, "Ddd*accel*fontType: FONT_IS_XFT");
-        XrmPutLineResource(&db, (string("Ddd*accel*fontName: ") + ad.fixed_width_font).chars());
-        XrmPutLineResource(&db, (string("Ddd*accel*fontSize: ") + itostring(ad.variable_width_font_size*0.8)).chars());
-    }
 }
 
 string make_xftfont(const AppData& ad, DDDFont base)
@@ -214,10 +143,10 @@ void replace_vsl_xftfont(string& defs, const string& func,
 static void setup_vsl_fonts(AppData& ad)
 {
     Dimension small_size, tiny_size, llogo_size;
-    if (ad.data_font_size >=80)
+    if (ad.data_font_size >=80 || ad.data_font_size < 6)
         ad.data_font_size = 11;
 
-    get_derived_sizes(ad.data_font_size, small_size, tiny_size, llogo_size, true);
+    get_derived_sizes(ad.data_font_size, small_size, tiny_size, llogo_size);
 
     static string defs; // defs.chars() is used in AppData
     defs = "";
@@ -329,8 +258,11 @@ void SetFontNameCB(Widget w, XtPointer client_data, XtPointer)
     DDDFont font = (DDDFont) (long) client_data;
     String s = XmTextFieldGetString(w);
 
-    if (s[0] == 0)
+    if (s == nullptr || s[0] == 0)
+    {
+        XtFree(s);
         return;
+    }
 
     set_font(font, s);
     XtFree(s);
@@ -342,9 +274,16 @@ void SetFontSizeCB(Widget w, XtPointer client_data, XtPointer)
 {
     DDDFont font = (DDDFont) (long) client_data;
     String s = XmTextFieldGetString(w);
-    set_font_size(font, atoi(s));
+
+    int size = 0;
+    if (s != nullptr)
+        size = atoi(s);
     XtFree(s);
 
+    if (size < 6 || size >= 80)
+        return;                                 // keep previous value
+
+    set_font_size(font, size);
     update_reset_preferences();
 }
 

@@ -52,8 +52,11 @@ char converters_rcsid[] =
 #include "template/StringSA.h"
 #include "string-fun.h"
 #include "motif/MString.h"
+#include "AppData.h"
+
 
 #include <Xm/Xm.h>
+#include <Xm/XmStrDefs.h>
 
 #define new new_w
 #define class class_w
@@ -95,9 +98,7 @@ extern "C" {
 #include <Xm/XmP.h>
 
 // <Xm/PrimitiveP.h> only exists in Motif 1.2 and later
-#if XmVersion >= 1002
 #include <Xm/PrimitiveP.h>
-#endif
 }
 
 #undef new
@@ -114,7 +115,7 @@ extern "C" {
 
 
 // Do we want to define our own @STRING@ to font converters?
-#define OWN_FONT_CONVERTERS 0
+#define OWN_RENDER_TABLE_CONVERTER 1
 
 // Declarations
 
@@ -227,6 +228,128 @@ static string str(XrmValue *from, bool strip)
 
     return v;
 }
+
+#if OWN_RENDER_TABLE_CONVERTER
+
+struct TagSpec
+{
+    const char *tag;
+    bool  fixed_family;     // fixed_width_font vs. variable_width_font
+    bool  fixed_size;       // which *_font_size is the base
+    double factor;          // size multiplier
+    const char *style;      // 0 == do not set XmNfontStyle
+};
+
+// Keep this list in sync with setup_xft_fonts() in fonts.C.
+// Note: Motif cannot combine Bold and Oblique, and Oblique alone does not
+// work, so `sl' and `bs' use Bold as well (as before).
+static const TagSpec tag_specs[] = {
+    { "rm",    false, false, 1.0, 0      },
+    { "bf",    false, false, 1.0, "Bold" },
+    { "sl",    false, false, 1.0, "Bold" },
+    { "bs",    false, false, 1.0, "Bold" },
+    { "key",   false, false, 1.0, "Bold" },
+    { "small", false, false, 0.8, 0      },
+    { "logo",  false, false, 1.2, "Bold" },
+    { "llogo", false, false, 2.0, "Bold" },
+    { "tt",    true,  true,  1.0, 0      },
+    { "tb",    true,  true,  1.0, "Bold" },
+    { "accel", true,  false, 0.8, 0      },
+};
+
+static const TagSpec *find_tag_spec(const string &tag)
+{
+    for (Cardinal i = 0; i < XtNumber(tag_specs); i++)
+        if (tag == tag_specs[i].tag)
+            return &tag_specs[i];
+    return 0;
+}
+
+// Build one rendition entirely from an arglist: GetResources() then marks
+// every resource as found[] and never consults the resource database.
+// This is a workaround for a bug in Motif
+static XmRendition make_rendition(Widget w, const TagSpec &spec)
+{
+    bool   fixed_family = spec.fixed_family;
+    bool   fixed_size   = spec.fixed_size;
+    double factor       = spec.factor;
+
+    const char *family = fixed_family ? app_data.fixed_width_font : app_data.variable_width_font;
+    if (family == 0 || family[0] == '\0')
+        family = fixed_family ? "monospace" : "sans";
+
+    int base = fixed_size ? app_data.fixed_width_font_size : app_data.variable_width_font_size;
+
+    int size = int(base * factor + 0.5);
+
+    Arg args[10];
+    Cardinal arg = 0;
+
+    XtSetArg(args[arg], XmNfontName, CONST_CAST(char *, family)); arg++;
+    XtSetArg(args[arg], XmNfontType,  XmFONT_IS_XFT);      arg++;
+    XtSetArg(args[arg], XmNfontSize,  size);               arg++;
+    XtSetArg(args[arg], XmNloadModel, XmLOAD_IMMEDIATE);   arg++;
+
+    if (spec.style != 0)
+    {
+        // Motif accepts only one style; Bold is used for `sl'/`bs' too,
+        // because Oblique does not work and cannot be combined.
+        XtSetArg(args[arg], XmNfontStyle, CONST_CAST(char *, spec.style));  arg++;
+    }
+
+    assert(arg <= XtNumber(args));
+
+    return XmRenditionCreate(w, CONST_CAST(char *, spec.tag), args, arg);
+}
+
+// Convert String to RenderTable, honouring the requested tag list but
+// never letting Motif merge renditions out of the resource database.
+static Boolean CvtStringToXmRenderTable(Display *display, XrmValue *args, Cardinal *num_args,
+                                        XrmValue *fromVal, XrmValue *toVal, XtPointer *)
+{
+    Widget w = 0;
+    if (*num_args >= 1)
+        w = *(Widget *)args[0].addr;
+    if (w == 0)
+        return False;                    // cannot build without a widget
+
+    const string source = str(fromVal, true);
+    const int n_tags = source.freq(',') + 1;
+    string *tags = new string[n_tags];
+    split(source, tags, n_tags, ',');
+
+    XmRendition *rends = new XmRendition[n_tags];
+    Cardinal n = 0;
+
+    for (int i = 0; i < n_tags; i++)
+    {
+        string tag = tags[i];
+        strip_space(tag);
+        const TagSpec *spec = find_tag_spec(tag);
+        if (spec == 0)
+            continue;                    // unknown tag: silently skip
+        XmRendition r = make_rendition(w, *spec);
+        if (r != 0)
+            rends[n++] = r;
+    }
+    delete[] tags;
+
+    // Single call with oldtable == NULL -> the fully initialising branch
+    XmRenderTable target = XmRenderTableAddRenditions(0, rends, n, XmMERGE_REPLACE);
+    for (Cardinal i = 0; i < n; i++)
+        XmRenditionFree(rends[i]);
+    delete[] rends;
+
+    if (target == 0)
+    {
+        XtDisplayStringConversionWarning(display, fromVal->addr, XmRRenderTable);
+        return False;
+    }
+
+    donef(XmRenderTable, target, XmRenderTableFree(target));
+}
+#endif
+
 
 // Convert String to Widget
 // This is based on Asente/Swick: The X Window System Toolkit,
@@ -621,143 +744,6 @@ static Boolean CvtStringToXmString(Display *display,
 }
 
 
-#if OWN_FONT_CONVERTERS
-
-static bool convert_fontspec(Display *display,
-			     string& fontspec, const string& name)
-{
-    if (fontspec.contains('@', 0))
-    {
-	string c = fontspec.after('@');
-	c = c.before('@');
-	if (conversionMacroTable.has(c))
-	{
-	    // Replace macro by value
-	    fontspec = conversionMacroTable[c];
-	}
-	else
-	{
-	    // No such macro
-	    Cardinal num_params = 1;
-	    String params = CONST_CAST(char*,c.chars());
-	    XtAppWarningMsg(XtDisplayToApplicationContext(display),
-			    "noSuchMacro", name.chars(),
-			    "XtToolkitError",
-			    "No such macro: @%s@",
-			    &params, &num_params);
-	    return false;
-	}
-    }
-
-    return true;
-}
-
-
-// Convert String to FontStruct, relacing `@NAME@' by symbolic font specs.
-static Boolean CvtStringToFontStruct(Display *display, 
-				     XrmValue *, Cardinal *, 
-				     XrmValue *fromVal, XrmValue *toVal,
-				     XtPointer *)
-{
-    string fontspec = str(fromVal, false);
-    strip_space(fontspec);
-
-    if (!convert_fontspec(display, fontspec, "CvtStringToFontStruct"))
-	return False;
-
-    XFontStruct *font = XLoadQueryFont(display, fontspec.chars());
-    if (font == 0)
-    {
-	Cardinal num_params = 1;
-	String params = CONST_CAST(char*,fontspec.chars());
-	XtAppWarningMsg(XtDisplayToApplicationContext(display),
-			"noSuchFont", "CvtStringToFontStruct",
-			"XtToolkitError",
-			"No such font: %s",
-			&params, &num_params);
-	return False;
-    }
-
-    done(XFontStruct *, font);
-}
-
-static void
-CvtStringToXmFontListDestroy(XtAppContext /* app */,
-			     XrmValue* to,
-			     XtPointer /* converter_data */,
-			     XrmValue* /* args */,
-			     Cardinal* /* num_args */
-			     )
-{
-  XmFontListFree( *((XmFontList *) to->addr));
-  return;
-}
-
-// Convert String to FontList, relacing `@NAME@' by symbolic font specs.
-static Boolean CvtStringToXmFontList(Display *display, 
-				     XrmValue *, Cardinal *, 
-				     XrmValue *fromVal, XrmValue *toVal,
-				     XtPointer *)
-{
-    // Get string
-    const string source = str(fromVal, false);
-    const int n_segments = source.freq(',') + 1;
-    string *segments = new string[n_segments];
-    
-    split(source, segments, n_segments, ',');
-
-    XmRenderTable target = 0;
-    for (int i = 0; i < n_segments; i++)
-    {
-	const string& segment = segments[i];
-	string fontspec = segment.before('=');
-	string charset  = segment.after('=');
-
-	if (!segment.contains('='))	// "fixed" occurs in Motif 1.1
-	{
-	    fontspec = segment;
-	    charset  = MSTRING_DEFAULT_CHARSET;
-	}
-
-	strip_space(fontspec);
-	strip_space(charset);
-
-	if (fontspec.empty() || 
-	    (charset.empty() && charset != MSTRING_DEFAULT_CHARSET))
-	{
-	    Cardinal num_params = 1;
-	    String params = CONST_CAST(char*,segment.chars());
-	    XtAppWarningMsg(XtDisplayToApplicationContext(display),
-			    "syntaxError", "CvtStringToXmFontList",
-			    "XtToolkitError",
-			    "Syntax error in %s",
-			    &params, &num_params);
-	    continue;
-	}
-
-	if (!convert_fontspec(display, fontspec, "CvtStringToXmFontList"))
-	    continue;
-
-	XmFontListEntry entry = XmFontListEntryLoad(display, XMST(fontspec.chars()),
-						    XmFONT_IS_FONT, (char*)charset.chars());
-        //printf("fontspec %s  charset %s\n", fontspec.chars(), charset.chars());
-	target = XmFontListAppendEntry(target, entry);
-	XmFontListEntryFree(&entry);
-    }
-
-    delete[] segments;
-
-    if (target == 0)
-    {
-	XtDisplayStringConversionWarning(display, fromVal->addr, XmRXmString);
-	return False;
-    }
-    
-    donef(XmFontList, target, XmFontListFree(target));
-}
-
-#endif
-
 
 // Convert the strings 'beginning', 'center' and 'end' in any case to a value
 // suitable for the specification of the XmNentryAlignment-resource in 
@@ -1021,12 +1007,10 @@ void registerOwnConverters()
 		       thisCvtArgs, XtNumber(thisCvtArgs), XtCacheNone,
 		       XtDestructor(0));
 
-#if XmVersion >= 1002
     // String -> AnimationPixmap
     XtSetTypeConverter(XtRString, XmRAnimationPixmap, CvtStringToPixmap,
 		       thisCvtArgs, XtNumber(thisCvtArgs), XtCacheNone,
 		       XtDestructor(0));
-#endif
 
     // String -> Bitmap
     XtSetTypeConverter(XtRString, XtRBitmap, CvtStringToBitmap,
@@ -1037,18 +1021,6 @@ void registerOwnConverters()
     XtSetTypeConverter(XmRString, XmRXmString, CvtStringToXmString,
 		       XtConvertArgList(0), 0, XtCacheNone,
 		       CvtStringToXmStringDestroy);
-
-#if OWN_FONT_CONVERTERS
-    // String -> FontList
-    XtSetTypeConverter(XmRString, XmRFontList, CvtStringToXmFontList,
-		       XtConvertArgList(0), 0, (XtCacheAll | XtCacheRefCount),
-		       CvtStringToXmFontListDestroy);
-
-    // String -> FontStruct
-    XtSetTypeConverter(XmRString, XtRFontStruct, CvtStringToFontStruct,
-		       XtConvertArgList(0), 0, XtCacheAll,
-		       XtDestructor(0));
-#endif
 
     // String -> UnitType
     XtSetTypeConverter(XmRString, XmRUnitType, CvtStringToUnitType,
@@ -1087,6 +1059,17 @@ void registerOwnConverters()
     XtSetTypeConverter(XtRString, XmNpacking, CvtStringToPacking,
 		       parentCvtArgs, XtNumber(parentCvtArgs), XtCacheNone,
 		       XtDestructor(0));
+
+#if OWN_RENDER_TABLE_CONVERTER
+    // String -> RenderTable / FontList
+    XtSetTypeConverter(XmRString, XmRRenderTable, CvtStringToXmRenderTable,
+                       thisCvtArgs, XtNumber(thisCvtArgs), XtCacheAll,
+                       XtDestructor(0));
+    XtSetTypeConverter(XmRString, XmRFontList, CvtStringToXmRenderTable,
+                       thisCvtArgs, XtNumber(thisCvtArgs), XtCacheAll,
+                       XtDestructor(0));
+#endif
+
 }
 
 // Define a macro: @NAME@ will be replaced by VALUE in CvtStringToXmString

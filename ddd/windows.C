@@ -1618,7 +1618,6 @@ static int resizable_children(Widget paned)
                   XmNnumChildren, &numChildren, XtPointer(0));
 
     // Fetch current constraints
-    MinMaxAssoc sizes;
     Cardinal i;
     int n = 0;
     for (i = 0; i < numChildren; i++)
@@ -1627,13 +1626,15 @@ static int resizable_children(Widget paned)
         if (is_internal_paned_child(child) || !XtIsManaged(child))
             continue;
 
-        MinMax& size = sizes[child];
-        XtVaGetValues(children[i], 
-                      XmNpaneMinimum, &size.min, 
-                      XmNpaneMaximum, &size.max,
+        // MinMax& size = sizes[child];
+        Dimension pane_min = 0;
+        Dimension pane_max = 0;
+        XtVaGetValues(children[i],
+                      XmNpaneMinimum, &pane_min,
+                      XmNpaneMaximum, &pane_max,
                       XtPointer(0));
 
-        if (size.min < size.max)
+        if (pane_min < pane_max)
             n++;
     }
 

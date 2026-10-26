@@ -209,7 +209,8 @@ Pixmap iconmask(Widget w)
 Pixmap dddsplash(Widget w, const string& color_key,
 		 Dimension& width, Dimension& height)
 {
-    Pixmap logo = 0;
+    width = 0;
+    height = 0;
 
     Window window = None;
     if (XtIsRealized(w))
@@ -219,41 +220,42 @@ Pixmap dddsplash(Widget w, const string& color_key,
 
     assert(window != None);
 
-    XWindowAttributes win_attr;
-    XGetWindowAttributes(XtDisplay(w), window, &win_attr);
+    XWindowAttributes win_attr{};
+    if (!XGetWindowAttributes(XtDisplay(w), window, &win_attr))
+        return None;
 
-    XpmAttributes attr = {};
-    attr.valuemask    = XpmVisual | XpmColormap | XpmDepth;
+    XpmAttributes attr{};
+    attr.valuemask    = XpmVisual | XpmColormap | XpmDepth | XpmSize;
     attr.visual       = win_attr.visual;
     attr.colormap     = win_attr.colormap;
     attr.depth        = win_attr.depth;
     add_color_key(attr, color_key);
     add_closeness(attr);
 
+    Pixmap logo = None;
     int ret = xpm("splash.xpm",
                     XpmCreatePixmapFromData(XtDisplay(w), window,
                                             (char **)dddsplash_xpm, &logo,
                                             (Pixmap *)0, &attr));
-    XpmFreeAttributes(&attr);
 
     if (ret == XpmSuccess)
     {
         // Xpm has filled these
         width  = attr.width;
         height = attr.height;
-        XpmFreeAttributes(&attr);
-        return logo;
     }
 
     XpmFreeAttributes(&attr);
 
-    if (logo != 0)
-        XFreePixmap(XtDisplay(w), logo);
-    logo = 0;
+    if (ret != XpmSuccess)
+    {
+        if (logo != None)
+            XFreePixmap(XtDisplay(w), logo);
 
-    width  = 0;
-    height = 0;
-    return 0;
+        return None;
+    }
+
+    return logo;
 }
 
 //-----------------------------------------------------------------------

@@ -894,11 +894,7 @@ MAKE_DEBUG_FLAGS = \
 	$(SED) 's/-O[^ ]*//' | $(SED) 's/-DNDEBUG//'`"
 
 cxxtest.$(OBJEXT): $(srcdir)/cxxtest.C
-	@case '$(CXXFLAGS)' in \
-	*-O*) $(MAKE) $(MAKE_DEBUG_FLAGS) $@;; \
-	*) set -x; \
-	   $(CXXCOMPILE) -c @CXXDEBUG@ $(srcdir)/cxxtest.C -o $@;; \
-	esac
+	$(CXXCOMPILE) -O0 -g -c $(srcdir)/cxxtest.C -o $@
 
 ctest.$(OBJEXT): $(srcdir)/ctest.c
 	@case '$(CFLAGS)' in \

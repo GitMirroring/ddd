@@ -1100,7 +1100,7 @@ static Utf8Pos xy_to_pos(CtvCtx *ctx, int x, int y, CtvCoordMode mode)
     Utf8Pos ls = ctx->line_starts[li];
     Utf8Pos le = line_end_no_nl(ctx, li);
 
-    int cw = ctx->cellwidth;
+    int cw = std::max(ctx->cellwidth, 1);
 
     int colTarget = 0;
     int xContent = x - ctx->gutter_px;

@@ -8519,7 +8519,7 @@ You may wish to \n\
 @Ddd@*item_selected.helpString: \
 @rm You have selected some item from the program source code.\n\
 \n\
-@tt \342\227\276 @rm To look up further occurences in the source code, use @charset Find@small<< @charset()@rm \n\
+@tt \342\227\276 @rm To look up further occurrences in the source code, use @charset Find@small<< @charset()@rm \n\
     and @charset Find@small>> @charset()@rm .  \
 @bf Lookup ()@rm  leads you to the item's definition.\n\
 @tt \342\227\276 @rm To display the value, use @bf Print ()@rm  (for simple values)\n\

@@ -679,7 +679,7 @@ public:
     bool matches(char* t, int pos = 0) const;
     bool matches(const regex& r, int pos = 0) const;
 
-    // Return number of occurences of target in string
+    // Return number of occurrences of target in string
     int freq(char c) const; 
     int freq(const string& y) const;
     int freq(const subString& y) const;

@@ -7138,7 +7138,7 @@ ITEM If some previous invocation of your program has failed, and\n\
 Ddd*item_selected.helpString: \
 @rm You have selected some item from the program source code.\n\
 \n\
-ITEM To look up further occurences in the source code, use LBL_FIND_BACKWARD\n\
+ITEM To look up further occurrences in the source code, use LBL_FIND_BACKWARD\n\
     and LBL_FIND_FORWARD.  \
 LBL(Lookup ()) leads you to the item's definition.\n\
 ITEM To display the value, use LBL(Print ()) (for simple values)\n\

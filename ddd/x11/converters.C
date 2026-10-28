@@ -237,7 +237,7 @@ struct TagSpec
     bool  fixed_family;     // fixed_width_font vs. variable_width_font
     bool  fixed_size;       // which *_font_size is the base
     double factor;          // size multiplier
-    const char *style;      // 0 == do not set XmNfontStyle
+    const char *style;      // 0 == no font style
 };
 
 // Keep this list in sync with setup_xft_fonts() in fonts.C.
@@ -265,9 +265,9 @@ static const TagSpec *find_tag_spec(const string &tag)
     return 0;
 }
 
-// Build one rendition entirely from an arglist: GetResources() then marks
-// every resource as found[] and never consults the resource database.
-// This is a workaround for a bug in Motif
+// Supply every font-related resource explicitly.  This prevents wildcard
+// resources such as *Font and *XftFont from affecting the rendition.
+// Non-font rendition resources may still be obtained from Xrm.
 static XmRendition make_rendition(Widget w, const TagSpec &spec)
 {
     bool   fixed_family = spec.fixed_family;
@@ -287,6 +287,10 @@ static XmRendition make_rendition(Widget w, const TagSpec &spec)
 
     XtSetArg(args[arg], XmNfontName, CONST_CAST(char *, family)); arg++;
     XtSetArg(args[arg], XmNfontType,  XmFONT_IS_XFT);      arg++;
+
+    XtSetArg(args[arg], XmNfont, (XtPointer)0);            arg++;
+    XtSetArg(args[arg], XmNxftFont, (XtPointer)0);         arg++;
+
     XtSetArg(args[arg], XmNfontSize,  size);               arg++;
     XtSetArg(args[arg], XmNloadModel, XmLOAD_IMMEDIATE);   arg++;
 
@@ -296,14 +300,23 @@ static XmRendition make_rendition(Widget w, const TagSpec &spec)
         // because Oblique does not work and cannot be combined.
         XtSetArg(args[arg], XmNfontStyle, CONST_CAST(char *, spec.style));  arg++;
     }
+    else
+    {
+        // pass NULL explicitly to prevent "*FontStyle" to be inherited from Xrm.
+        XtSetArg(args[arg], XmNfontStyle,  (String)0);     arg++;
+    }
+
+    XtSetArg(args[arg], XmNfontFoundry, (String)0);        arg++;
+    XtSetArg(args[arg], XmNfontEncoding, (String)0);       arg++;
+
 
     assert(arg <= XtNumber(args));
 
     return XmRenditionCreate(w, CONST_CAST(char *, spec.tag), args, arg);
 }
 
-// Convert String to RenderTable, honouring the requested tag list but
-// never letting Motif merge renditions out of the resource database.
+// Convert String to RenderTable, honouring DDD's tag list while preventing
+// Xrm font resources from changing the constructed Xft renditions.
 static Boolean CvtStringToXmRenderTable(Display *display, XrmValue *args, Cardinal *num_args,
                                         XrmValue *fromVal, XrmValue *toVal, XtPointer *)
 {
@@ -333,6 +346,22 @@ static Boolean CvtStringToXmRenderTable(Display *display, XrmValue *args, Cardin
             rends[n++] = r;
     }
     delete[] tags;
+
+    // create fallback if empty
+    if (n == 0)
+    {
+        XmRendition fallback = make_rendition(w, tag_specs[0]); // "rm"
+        if (fallback != 0)
+        {
+            rends[n++] = fallback;
+        }
+        else
+        {
+            delete[] rends;
+            XtDisplayStringConversionWarning(display, fromVal->addr, XmRRenderTable);
+            return False;
+        }
+    }
 
     // Single call with oldtable == NULL -> the fully initialising branch
     XmRenderTable target = XmRenderTableAddRenditions(0, rends, n, XmMERGE_REPLACE);
